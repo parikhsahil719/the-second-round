@@ -1,0 +1,17 @@
+# raw scraped data stays out of the public repo (source ToS respect)
+data/raw/
+*.http-cache/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# node
+web/node_modules/
+web/.next/
+
+# secrets
+.env
+*.key
