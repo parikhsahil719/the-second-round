@@ -22,7 +22,47 @@ Built on the framework a quant uses for any prediction market:
 
 ## Status
 
-🚧 Phase 0 complete — all data sources spiked and verified. Next: Phase 1 (acquisition + entity resolution).
+Model, board, scout-notes layer, war room, and app are built and verified locally.
+Remaining: report + public deployment.
+
+## Running locally
+
+Prereqs: Python 3.11+, Node 20+. All data sources are free; the only spend is
+pennies of Claude API usage for live note extraction (optional — a keyword
+fallback runs without a key).
+
+```bash
+# 1. Python environment
+python -m venv .venv
+.venv/Scripts/pip install -r requirements.txt        # (Scripts -> bin on mac/linux)
+
+# 2. Data pipeline (one-time, ~15 min: polite rate-limited scraping, disk-cached)
+.venv/Scripts/python pipeline/pull.py                # all sources -> parquet
+.venv/Scripts/python pipeline/resolve.py             # entity crosswalk (99.8%)
+.venv/Scripts/python pipeline/labels.py              # outcome tiers + spot-check
+.venv/Scripts/python pipeline/features.py            # feature matrix w/ EB shrinkage
+.venv/Scripts/python pipeline/headshots.py           # ESPN headshots (best-effort)
+
+# 3. Model
+.venv/Scripts/python model/prior.py                  # slot-implied market prior
+.venv/Scripts/python model/train.py                  # LOCO-CV shootout + calibration
+.venv/Scripts/python model/score.py                  # 2026 board + artifacts
+.venv/Scripts/python model/simulate.py               # war-room availability sim
+.venv/Scripts/python model/notes.py                  # Bayesian layer self-test
+.venv/Scripts/python model/notes_demo.py             # seeded notes end-to-end
+
+# 4. Serve
+.venv/Scripts/python -m uvicorn api.main:app --port 8765
+cd web && npm install && npm run dev                 # http://localhost:3000
+```
+
+Optional env:
+- `.env` at repo root: `ANTHROPIC_API_KEY=...` enables live Claude note extraction
+  (otherwise the keyword mock runs).
+- `web/.env.local`: `NEXT_PUBLIC_API_URL` (defaults to `http://127.0.0.1:8765`),
+  plus `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` to enable
+  scout accounts (create a free Supabase project, run `supabase/schema.sql` in its
+  SQL editor, enable the Email provider). Without them the app runs account-less.
 
 ## Repo layout
 
