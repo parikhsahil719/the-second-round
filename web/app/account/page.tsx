@@ -65,7 +65,7 @@ export default function AccountPage() {
           </button>
           {sent && (
             <p className="mt-2 text-xs" style={{ color: "var(--pos)" }}>
-              Link sent — check your email.
+              Link sent. Check your email.
             </p>
           )}
           {error && (

@@ -2,18 +2,18 @@
 
 **A quant-style NBA Draft intelligence product.** Fair-value tier probabilities for draft
 prospects, compared against the market (draft slot + consensus boards) to find who was
-overdrafted, who was underdrafted — and why. Plus a scout-notes layer (free-text notes →
+overdrafted, who was underdrafted, and why. Plus a scout-notes layer (free-text notes →
 LLM extraction → capped Bayesian updates), a draft-day availability war room, and
 Fan / Front-office / Scout viewing lenses.
 
 ## Headline results (2009–2021 backtest, leave-one-class-out)
 
-- **The market beats the model on average** (log loss 1.129 vs 1.266) — stated up front,
+- **The market beats the model on average** (log loss 1.129 vs 1.266), stated up front,
   because pretending otherwise would poison everything downstream.
 - **At the extremes of disagreement the model wins**: its top-40 out-of-sample favorites
   realized **+5.3 utility above their draft-slot price** (permutation p < 0.0002); its
   top-40 fades realized −2.1 below (p < 0.0002).
-- **The market is least efficient in picks 31–45** — the only region where the model's
+- **The market is least efficient in picks 31-45**, the only region where the model's
   out-of-sample log loss beats the slot prior. Bane, Kyle Anderson, and Brunson country.
 - A 25/75 model-market blend beats the market alone (1.124 vs 1.129): the box score still
   carries signal the league underweights.
@@ -26,18 +26,18 @@ rendered in-app at `/methodology`. Every modeling decision and its rationale:
 
 Built on the framework a quant uses for any prediction market:
 
-1. **Define the tradeable event** — six career tiers over a player's first 4 NBA seasons:
+1. **Define the tradeable event**: six career tiers over a player's first 4 NBA seasons:
    Out of League / Fringe / Rotation / Starter / All-Star / Elite
-2. **Convert the market to implied probability** — historical tier rates by draft slot,
+2. **Convert the market to implied probability**: historical tier rates by draft slot,
    applied to both actual slots and consensus board ranks
-3. **Build a base-rate prior** — age, size, class, production, competition level
-4. **Add signal features** — research-backed college signals with empirical-Bayes shrinkage
-5. **Model the full distribution** — calibrated tier probabilities with bootstrap intervals,
+3. **Build a base-rate prior**: age, size, class, production, competition level
+4. **Add signal features**: research-backed college signals with empirical-Bayes shrinkage
+5. **Model the full distribution**: calibrated tier probabilities with bootstrap intervals,
    never a single score
-6. **Update with new evidence** — scout notes → LLM extraction → capped likelihood ratios →
+6. **Update with new evidence**: scout notes → LLM extraction → capped likelihood ratios →
    Bayesian posterior
-7. **Compare fair value to market** — EV edge + star-tail disagreement flags
-8. **Backtest and calibrate** — leave-one-draft-class-out CV on the 2011–2021 classes
+7. **Compare fair value to market**: EV edge + star-tail disagreement flags
+8. **Backtest and calibrate**: leave-one-draft-class-out CV on the 2009-2021 classes
 
 ## Status
 
@@ -47,7 +47,7 @@ Remaining: report + public deployment.
 ## Running locally
 
 Prereqs: Python 3.11+, Node 20+. All data sources are free; the only spend is
-pennies of Claude API usage for live note extraction (optional — a keyword
+pennies of Claude API usage for live note extraction (optional; a keyword
 fallback runs without a key).
 
 ```bash
@@ -99,15 +99,15 @@ report/     methodology writeup + final 2026 board
 
 Barttorvik/T-Rank, Basketball-Reference, nba_api (combine), CBBpy/ESPN,
 RSCI (via Sports-Reference), Rookie Scale + NBADraft.net consensus boards.
-Raw scraped tables are **not** redistributed in this repo — the pipeline
+Raw scraped tables are **not** redistributed in this repo. The pipeline
 rebuilds them, politely rate-limited and cached.
 
 ## Deploying
 
-See [DEPLOY.md](DEPLOY.md) — GitHub + Render + Vercel + Supabase, all free tiers,
+See [DEPLOY.md](DEPLOY.md): GitHub + Render + Vercel + Supabase, all free tiers,
 ~30–45 minutes.
 
 ## License
 
-MIT. Built by Sahil Parikh — [portfolio](https://YOUR_LINK_HERE).
+MIT. Built by Sahil Parikh, [portfolio](https://YOUR_LINK_HERE).
 See [DECISIONS.md](DECISIONS.md) for the modeling rationale behind every choice.

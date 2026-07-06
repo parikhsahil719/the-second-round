@@ -31,7 +31,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ slug: s
       {p.coverage !== "model" ? (
         <div className="card mt-6 px-5 py-6 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
           {p.coverage === "outside_coverage"
-            ? "This player didn't play a Division 1 college season, so the fair-value model doesn't score him — international and alternative-pathway prospects are outside v1 coverage. His market prices still count in the slot base rates."
+            ? "This player didn't play a Division 1 college season, so the fair-value model doesn't score him. International and alternative-pathway prospects are outside coverage for now. His market prices still count in the slot base rates."
             : "This player's college sample is below the reliability floor (40% of team minutes), so the model declines to score him rather than fake confidence. Market prices only."}
         </div>
       ) : (

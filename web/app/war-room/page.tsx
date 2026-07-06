@@ -45,8 +45,8 @@ export default function WarRoom() {
       <h1 className="serif text-3xl">The war room</h1>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
         {lens === "fan"
-          ? "Pretend your team is on the clock. Slide to your pick and see who was realistically still on the board — and who the numbers loved."
-          : "You hold a pick. 10,000 simulated drafts — calibrated on how far players actually slid from consensus in 2026 — say who's likely to be there when you're on the clock."}
+          ? "Pretend your team is on the clock. Slide to your pick and see who was realistically still on the board, and who the numbers loved."
+          : "You hold a pick. We simulated the draft 10,000 times, calibrated on how far players actually slid from consensus in 2026. Here is who is likely to be there when you're on the clock."}
       </p>
 
       <div className="card mt-6 flex flex-wrap items-center gap-4 px-5 py-4">
@@ -115,8 +115,9 @@ export default function WarRoom() {
         )}
       </div>
       <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--faint)" }}>
-        {note} Sorted by model EV — the top of this list is “best realistically available.”
-        Availability % = share of simulations where the player is still on the board.
+        {note} Sorted by model EV, so the top of this list is the best realistically
+        available. Availability % is the share of simulations where the player is still
+        on the board.
       </p>
     </>
   );

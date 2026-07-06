@@ -1,22 +1,40 @@
 [
   {
     "player_name": "AJ Dybantsa",
-    "note": "Legit 6-9 three-level scorer with advanced footwork for creation and real competitiveness \u2014 the rare scoring prospect profile. My concern is consistency: too many nights he coasts until the second half, and he still has to prove he can impact winning for 40 minutes, not just take over quarters.",
+    "note": "Legit 6-9 three-level scorer with advanced footwork for creation and real competitiveness. The rare scoring prospect profile. My concern is consistency: too many nights he coasts until the second half, and he still has to prove he can impact winning for 40 minutes, not just take over quarters.",
     "source": "Adapted from ESPN Draft Confidential (scouts/coaches on the No. 1 pick race) and Floor & Ceiling scouting notes",
     "source_url": "https://www.espn.com/nba/story/_/id/47306186/no-1-pick-nba-draft-confidential-darryn-peterson-aj-dybantsa-cameron-boozer",
     "extraction_mode": "llm",
     "traits": [
       {
         "trait": "shooting",
-        "score": 1,
-        "confidence": 0.8,
+        "score": 2,
+        "confidence": 0.85,
         "evidence": "Legit 6-9 three-level scorer"
       },
       {
         "trait": "handle_creation",
         "score": 1,
-        "confidence": 0.75,
+        "confidence": 0.8,
         "evidence": "advanced footwork for creation"
+      },
+      {
+        "trait": "finishing",
+        "score": 1,
+        "confidence": 0.75,
+        "evidence": "three-level scorer with advanced footwork for creation"
+      },
+      {
+        "trait": "motor_compete",
+        "score": 0,
+        "confidence": 0.7,
+        "evidence": "real competitiveness but too many nights he coasts until the second half"
+      },
+      {
+        "trait": "basketball_iq",
+        "score": -1,
+        "confidence": 0.65,
+        "evidence": "he still has to prove he can impact winning for 40 minutes, not just take over quarters"
       }
     ],
     "prior": [
@@ -30,18 +48,18 @@
     "posterior": [
       0.0001,
       0.0001,
-      0.1169,
-      0.3416,
-      0.1685,
-      0.3729
+      0.1006,
+      0.319,
+      0.1706,
+      0.4096
     ],
-    "tilt": 0.232,
+    "tilt": 0.435,
     "p_star_prior": 0.4963,
-    "p_star_posterior": 0.5414
+    "p_star_posterior": 0.5802
   },
   {
     "player_name": "Darryn Peterson",
-    "note": "Dynamic 6-6 shotmaker who showed a level of shot-making at Kansas nobody knew existed \u2014 gets to the rim, scores at all levels, and keeps improving as a distributor. Not a complete point guard yet; he may always need a second handler next to him. Medical flag: the durability issues from last season need to be behind him.",
+    "note": "Dynamic 6-6 shotmaker who showed a level of shot-making at Kansas nobody knew existed. Gets to the rim, scores at all levels, and keeps improving as a distributor. Not a complete point guard yet; he may always need a second handler next to him. Medical flag: the durability issues from last season need to be behind him.",
     "source": "Adapted from ESPN Draft Confidential and Floor & Ceiling scouting notes",
     "source_url": "https://www.espn.com/nba/story/_/id/47306186/no-1-pick-nba-draft-confidential-darryn-peterson-aj-dybantsa-cameron-boozer",
     "extraction_mode": "llm",
@@ -50,25 +68,31 @@
         "trait": "shooting",
         "score": 2,
         "confidence": 0.9,
-        "evidence": "Dynamic shotmaker who showed a level of shot-making at Kansas nobody knew existed \u2014 scores at all levels"
+        "evidence": "Dynamic shotmaker who showed a level of shot-making at Kansas nobody knew existed. Scores at all levels"
       },
       {
         "trait": "finishing",
         "score": 1,
         "confidence": 0.85,
-        "evidence": "gets to the rim, scores at all levels"
+        "evidence": "Gets to the rim, scores at all levels"
       },
       {
         "trait": "handle_creation",
         "score": 0,
-        "confidence": 0.75,
+        "confidence": 0.7,
+        "evidence": "Not a complete point guard yet; he may always need a second handler next to him"
+      },
+      {
+        "trait": "passing_feel",
+        "score": 0,
+        "confidence": 0.6,
         "evidence": "keeps improving as a distributor"
       },
       {
-        "trait": "basketball_iq",
-        "score": -1,
-        "confidence": 0.7,
-        "evidence": "Not a complete point guard yet; he may always need a second handler next to him"
+        "trait": "frame_length",
+        "score": 1,
+        "confidence": 0.8,
+        "evidence": "Dynamic 6-6 shotmaker"
       }
     ],
     "prior": [
@@ -80,20 +104,20 @@
       0.2226
     ],
     "posterior": [
-      0.0337,
+      0.0273,
       0.0001,
-      0.1799,
-      0.3717,
-      0.134,
-      0.2806
+      0.1646,
+      0.3614,
+      0.1384,
+      0.3081
     ],
-    "tilt": 0.342,
+    "tilt": 0.494,
     "p_star_prior": 0.3444,
-    "p_star_posterior": 0.4146
+    "p_star_posterior": 0.4466
   },
   {
     "player_name": "Cameron Boozer",
-    "note": "Highest floor in the draft and the ceiling is underrated. Started his career as an at-rim bully and has grown into a face-up threat who pushes in transition and creates his own shot from the perimeter. The knock from front offices is athletic limitation \u2014 no run-and-jump pop, and there's a real question whether he guards 4s or 5s at the next level.",
+    "note": "Highest floor in the draft and the ceiling is underrated. Started his career as an at-rim bully and has grown into a face-up threat who pushes in transition and creates his own shot from the perimeter. The knock from front offices is athletic limitation. No run-and-jump pop, and there's a real question whether he guards 4s or 5s at the next level.",
     "source": "Adapted from ESPN Draft Confidential and Floor & Ceiling scouting notes",
     "source_url": "https://www.espn.com/nba/story/_/id/47306186/no-1-pick-nba-draft-confidential-darryn-peterson-aj-dybantsa-cameron-boozer",
     "extraction_mode": "llm",
@@ -111,27 +135,27 @@
         "evidence": "has grown into a face-up threat who pushes in transition and creates his own shot from the perimeter"
       },
       {
-        "trait": "handle_creation",
-        "score": 1,
-        "confidence": 0.75,
-        "evidence": "creates his own shot from the perimeter"
-      },
-      {
         "trait": "athleticism",
         "score": -1,
         "confidence": 0.9,
-        "evidence": "athletic limitation \u2014 no run-and-jump pop"
+        "evidence": "athletic limitation. No run-and-jump pop"
       },
       {
         "trait": "perimeter_defense",
-        "score": -1,
-        "confidence": 0.7,
+        "score": 0,
+        "confidence": 0.6,
+        "evidence": "there's a real question whether he guards 4s or 5s at the next level"
+      },
+      {
+        "trait": "rim_protection",
+        "score": 0,
+        "confidence": 0.6,
         "evidence": "there's a real question whether he guards 4s or 5s at the next level"
       },
       {
         "trait": "role_translatability",
         "score": 1,
-        "confidence": 0.8,
+        "confidence": 0.85,
         "evidence": "Highest floor in the draft and the ceiling is underrated"
       }
     ],
@@ -147,17 +171,17 @@
       0.0001,
       0.0001,
       0.0001,
-      0.0637,
-      0.3282,
-      0.6079
+      0.0638,
+      0.3284,
+      0.6076
     ],
-    "tilt": 0.227,
+    "tilt": 0.225,
     "p_star_prior": 0.9266,
-    "p_star_posterior": 0.9361
+    "p_star_posterior": 0.936
   },
   {
     "player_name": "Caleb Wilson",
-    "note": "Explosive athlete with a go-go-go motor and a 7-foot wingspan who thrived at the rim and in transition all season. The question is what happens when he isn't dunking \u2014 can he finish through contact with touch, and can he create anything rather than just finishing plays? A bit one-note offensively at UNC.",
+    "note": "Explosive athlete with a go-go-go motor and a 7-foot wingspan who thrived at the rim and in transition all season. The question is what happens when he isn't dunking. Can he finish through contact with touch, and can he create anything rather than just finishing plays? A bit one-note offensively at UNC.",
     "source": "Adapted from CBS Sports 2026 draft grades and Bleacher Report (Wasserman) profiles",
     "source_url": "https://www.cbssports.com/nba/news/2026-nba-draft-grades-pick-by-pick-analysis-round-2/",
     "extraction_mode": "llm",
@@ -169,21 +193,21 @@
         "evidence": "Explosive athlete with a go-go-go motor and a 7-foot wingspan who thrived at the rim and in transition all season"
       },
       {
-        "trait": "motor_compete",
-        "score": 2,
-        "confidence": 0.9,
-        "evidence": "go-go-go motor"
-      },
-      {
         "trait": "frame_length",
-        "score": 1,
+        "score": 2,
         "confidence": 0.95,
         "evidence": "7-foot wingspan"
       },
       {
+        "trait": "motor_compete",
+        "score": 2,
+        "confidence": 0.95,
+        "evidence": "go-go-go motor"
+      },
+      {
         "trait": "handle_creation",
         "score": -1,
-        "confidence": 0.85,
+        "confidence": 0.9,
         "evidence": "can he create anything rather than just finishing plays? A bit one-note offensively at UNC"
       }
     ],
@@ -198,18 +222,18 @@
     "posterior": [
       0.0001,
       0.0001,
-      0.1193,
-      0.1942,
-      0.2643,
-      0.422
+      0.1088,
+      0.1854,
+      0.2641,
+      0.4415
     ],
-    "tilt": 0.358,
+    "tilt": 0.473,
     "p_star_prior": 0.6216,
-    "p_star_posterior": 0.6863
+    "p_star_posterior": 0.7056
   },
   {
     "player_name": "Mikel Brown Jr.",
-    "note": "Combo-guard scoring punch \u2014 broke the ACC freshman scoring record with a 45-point, ten-three night, and his half-court finishing (nearly 69% at the rim) answered his biggest pre-season question. But he needs serious strength work, and the back issues are scary: eight games missed midseason and it resurfaced to end his year. Assist numbers undersell his passing because of how Louisville staggered his minutes.",
+    "note": "Combo-guard scoring punch. Broke the ACC freshman scoring record with a 45-point, ten-three night, and his half-court finishing (nearly 69% at the rim) answered his biggest pre-season question. But he needs serious strength work, and the back issues are scary: eight games missed midseason and it resurfaced to end his year. Assist numbers undersell his passing because of how Louisville staggered his minutes.",
     "source": "Adapted from CBS Sports 2026 draft grades and Bleacher Report (Wasserman) profiles",
     "source_url": "https://www.cbssports.com/nba/news/2026-nba-draft-grades-pick-by-pick-analysis-round-2/",
     "extraction_mode": "llm",
@@ -218,31 +242,25 @@
         "trait": "shooting",
         "score": 2,
         "confidence": 0.95,
-        "evidence": "broke the ACC freshman scoring record with a 45-point, ten-three night"
+        "evidence": "Broke the ACC freshman scoring record with a 45-point, ten-three night"
       },
       {
         "trait": "finishing",
-        "score": 1,
+        "score": 2,
         "confidence": 0.9,
         "evidence": "his half-court finishing (nearly 69% at the rim) answered his biggest pre-season question"
       },
       {
-        "trait": "passing_feel",
-        "score": 1,
-        "confidence": 0.65,
-        "evidence": "Assist numbers undersell his passing because of how Louisville staggered his minutes"
-      },
-      {
         "trait": "frame_length",
         "score": -1,
-        "confidence": 0.8,
+        "confidence": 0.85,
         "evidence": "he needs serious strength work"
       },
       {
-        "trait": "motor_compete",
-        "score": -1,
+        "trait": "passing_feel",
+        "score": 1,
         "confidence": 0.7,
-        "evidence": "back issues are scary: eight games missed midseason and it resurfaced to end his year"
+        "evidence": "Assist numbers undersell his passing because of how Louisville staggered his minutes"
       }
     ],
     "prior": [
@@ -254,20 +272,20 @@
       0.0415
     ],
     "posterior": [
-      0.1094,
-      0.1059,
-      0.472,
-      0.2011,
-      0.0478,
-      0.0639
+      0.0922,
+      0.0964,
+      0.464,
+      0.2135,
+      0.0548,
+      0.0791
     ],
-    "tilt": 0.365,
+    "tilt": 0.558,
     "p_star_prior": 0.0775,
-    "p_star_posterior": 0.1116
+    "p_star_posterior": 0.1339
   },
   {
     "player_name": "Nate Ament",
-    "note": "Great overlap of positional size, fluidity, and touch \u2014 soft natural hands, a high release point, and a terrific left hand. From mid-January on he scored like a lottery pick and hit 39% from three. He badly needs strength: plays upright without much bend, and physicality bothers him on both ends.",
+    "note": "Great overlap of positional size, fluidity, and touch. Soft natural hands, a high release point, and a terrific left hand. From mid-January on he scored like a lottery pick and hit 39% from three. He badly needs strength: plays upright without much bend, and physicality bothers him on both ends.",
     "source": "Adapted from CBS Sports 2026 draft grades and Bleacher Report (Wasserman) profiles",
     "source_url": "https://www.cbssports.com/nba/news/2026-nba-draft-grades-pick-by-pick-analysis-round-2/",
     "extraction_mode": "llm",
@@ -279,34 +297,46 @@
         "evidence": "scored like a lottery pick and hit 39% from three"
       },
       {
+        "trait": "handle_creation",
+        "score": 1,
+        "confidence": 0.7,
+        "evidence": "Soft natural hands, a high release point, and a terrific left hand"
+      },
+      {
         "trait": "finishing",
         "score": 1,
         "confidence": 0.8,
-        "evidence": "soft natural hands, a high release point, and a terrific left hand"
+        "evidence": "Great overlap of positional size, fluidity, and touch"
       },
       {
         "trait": "frame_length",
         "score": 1,
-        "confidence": 0.85,
-        "evidence": "Great overlap of positional size, fluidity, and touch \u2014 high release point"
+        "confidence": 0.8,
+        "evidence": "Great overlap of positional size, high release point"
       },
       {
         "trait": "athleticism",
         "score": -1,
-        "confidence": 0.8,
+        "confidence": 0.7,
         "evidence": "plays upright without much bend"
       },
       {
         "trait": "perimeter_defense",
         "score": -1,
-        "confidence": 0.75,
+        "confidence": 0.8,
         "evidence": "physicality bothers him on both ends"
       },
       {
         "trait": "rim_protection",
         "score": -1,
-        "confidence": 0.75,
+        "confidence": 0.8,
         "evidence": "physicality bothers him on both ends"
+      },
+      {
+        "trait": "motor_compete",
+        "score": -1,
+        "confidence": 0.7,
+        "evidence": "badly needs strength"
       }
     ],
     "prior": [
@@ -318,20 +348,20 @@
       0.0743
     ],
     "posterior": [
-      0.0442,
-      0.0439,
-      0.3724,
-      0.3637,
-      0.0883,
-      0.0874
+      0.0423,
+      0.0428,
+      0.3683,
+      0.3656,
+      0.0902,
+      0.0907
     ],
-    "tilt": 0.171,
+    "tilt": 0.211,
     "p_star_prior": 0.1547,
-    "p_star_posterior": 0.1757
+    "p_star_posterior": 0.1809
   },
   {
     "player_name": "Bennett Stirtz",
-    "note": "True point guard with an elite feel for the game \u2014 one of the smartest players in the draft. Big-time shooter, ultra-reliable, graded out excellent as a pick-and-roll handler (91st percentile) and finishing at the rim (90th). The tools are the problem: solid size but no elite burst, limited rim pressure and separation against NBA athletes, and real questions about who he guards at the point of attack.",
+    "note": "True point guard with an elite feel for the game. One of the smartest players in the draft. Big-time shooter, ultra-reliable, graded out excellent as a pick-and-roll handler (91st percentile) and finishing at the rim (90th). The tools are the problem: solid size but no elite burst, limited rim pressure and separation against NBA athletes, and real questions about who he guards at the point of attack.",
     "source": "Adapted from Babcock Hoops draft profiles and CBS Sports 2026 draft grades",
     "source_url": "https://www.babcockhoops.com/post/babcock-hoops-2026-nba-draft",
     "extraction_mode": "llm",
@@ -340,7 +370,13 @@
         "trait": "basketball_iq",
         "score": 2,
         "confidence": 0.95,
-        "evidence": "True point guard with an elite feel for the game \u2014 one of the smartest players in the draft"
+        "evidence": "One of the smartest players in the draft"
+      },
+      {
+        "trait": "passing_feel",
+        "score": 2,
+        "confidence": 0.95,
+        "evidence": "True point guard with an elite feel for the game"
       },
       {
         "trait": "shooting",
@@ -351,32 +387,26 @@
       {
         "trait": "handle_creation",
         "score": 1,
-        "confidence": 0.85,
+        "confidence": 0.9,
         "evidence": "graded out excellent as a pick-and-roll handler (91st percentile)"
       },
       {
         "trait": "finishing",
         "score": 1,
-        "confidence": 0.85,
-        "evidence": "excellent as a pick-and-roll handler (91st percentile) and finishing at the rim (90th)"
+        "confidence": 0.9,
+        "evidence": "finishing at the rim (90th)"
       },
       {
         "trait": "athleticism",
         "score": -1,
-        "confidence": 0.8,
-        "evidence": "no elite burst, limited rim pressure and separation against NBA athletes"
+        "confidence": 0.85,
+        "evidence": "solid size but no elite burst, limited rim pressure and separation against NBA athletes"
       },
       {
         "trait": "perimeter_defense",
         "score": -1,
-        "confidence": 0.75,
+        "confidence": 0.8,
         "evidence": "real questions about who he guards at the point of attack"
-      },
-      {
-        "trait": "frame_length",
-        "score": 0,
-        "confidence": 0.6,
-        "evidence": "solid size but no elite burst"
       }
     ],
     "prior": [
@@ -388,16 +418,16 @@
       0.0137
     ],
     "posterior": [
-      0.1705,
-      0.1576,
-      0.4905,
-      0.1338,
-      0.0219,
-      0.0257
+      0.1383,
+      0.1433,
+      0.5003,
+      0.1531,
+      0.0281,
+      0.0369
     ],
-    "tilt": 0.469,
+    "tilt": 0.755,
     "p_star_prior": 0.0278,
-    "p_star_posterior": 0.0476
+    "p_star_posterior": 0.065
   },
   {
     "player_name": "Christian Anderson Jr.",
@@ -407,7 +437,7 @@
     "extraction_mode": "llm",
     "traits": [
       {
-        "trait": "passing_feel",
+        "trait": "handle_creation",
         "score": 1,
         "confidence": 0.75,
         "evidence": "ran a high-major offense with poise beyond his class"
@@ -415,25 +445,13 @@
       {
         "trait": "shooting",
         "score": 1,
-        "confidence": 0.7,
-        "evidence": "shotmaking volume and real pull-up range"
-      },
-      {
-        "trait": "handle_creation",
-        "score": 0,
-        "confidence": 0.6,
-        "evidence": "Productive lead guard who ran a high-major offense"
-      },
-      {
-        "trait": "frame_length",
-        "score": -1,
         "confidence": 0.8,
-        "evidence": "Undersized; slight frame"
+        "evidence": "believers see shotmaking volume and real pull-up range"
       },
       {
         "trait": "perimeter_defense",
         "score": -1,
-        "confidence": 0.65,
+        "confidence": 0.7,
         "evidence": "Undersized, so the margin for error defensively is thin"
       }
     ],
@@ -446,15 +464,15 @@
       0.1286
     ],
     "posterior": [
-      0.0514,
+      0.0452,
       0.0001,
-      0.2127,
-      0.3871,
-      0.2177,
-      0.1309
+      0.2029,
+      0.3848,
+      0.2256,
+      0.1414
     ],
-    "tilt": 0.024,
+    "tilt": 0.128,
     "p_star_prior": 0.3444,
-    "p_star_posterior": 0.3487
+    "p_star_posterior": 0.367
   }
 ]

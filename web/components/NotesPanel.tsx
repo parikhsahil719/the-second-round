@@ -167,9 +167,9 @@ export default function NotesPanel({
         )}
       </div>
       <p className="mt-1 max-w-2xl text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
-        Write what you saw on film. The system extracts it into a fixed rubric and
-        Bayesian-updates the statistical prior — capped, so a note is evidence, never a
-        veto.{signedIn ? " Saved notes combine latest-per-trait into your view." : ""}
+        Write what you saw on film. The system reads it against a fixed checklist of
+        skills and nudges the numbers. The update is capped, so a note is evidence, never
+        a veto.{signedIn ? " Saved notes combine into your view, newest word per skill." : ""}
       </p>
 
       {myView && (
