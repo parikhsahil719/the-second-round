@@ -55,8 +55,11 @@ def calibrate(board: pd.DataFrame) -> tuple[float, float]:
 def _simulate(ranks: np.ndarray, a: float, b: float, n_sims: int,
               rng: np.random.Generator) -> np.ndarray:
     """Returns (n_sims, n_players) matrix of simulated pick numbers (1-based order)."""
+    # Student-t (df=4) noise: real drafts have fat tails — medical/intel slides of
+    # 10-20 spots (Veesaar 2026: consensus 31 -> pick 52) that Gaussian noise calls
+    # impossible. Heavy tails price those falls honestly.
     sigma = a + b * ranks
-    values = ranks[None, :] + rng.normal(0, 1, (n_sims, len(ranks))) * sigma[None, :]
+    values = ranks[None, :] + rng.standard_t(4, (n_sims, len(ranks))) * sigma[None, :]
     order = np.argsort(values, axis=1)
     picks = np.empty_like(order)
     rows = np.arange(n_sims)[:, None]
