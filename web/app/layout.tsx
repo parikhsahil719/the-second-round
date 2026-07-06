@@ -43,8 +43,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             style={{ color: "var(--faint)", borderColor: "var(--border)" }}
           >
             Built by Sahil Parikh (
-            <a href="https://YOUR_LINK_HERE" className="underline">
-              portfolio
+            <a href="https://www.linkedin.com/in/sahilparikh719/" className="underline">
+              LinkedIn
             </a>
             ). Free public data: Barttorvik, Basketball-Reference, nba_api. Tested against
             every draft from 2009 to 2021. On the average pick the market beats the model.

@@ -1,7 +1,21 @@
-requests
-pandas
-pyarrow
-duckdb
-lxml
-beautifulsoup4
-nba_api
+# Pinned for reproducible deploys (Render installs this at build).
+# Pipeline + model + API in one env; the API only imports a subset,
+# but one pinned file beats two drifting ones.
+requests==2.34.2
+pandas==3.0.3
+pyarrow==24.0.0
+duckdb==1.5.4
+lxml==6.1.1
+beautifulsoup4==4.15.0
+nba_api==1.11.4
+numpy==2.4.6
+scikit-learn==1.9.0
+lightgbm==4.6.0
+statsmodels==0.14.6
+matplotlib==3.11.0
+joblib==1.5.3
+mord==0.7
+fastapi==0.139.0
+uvicorn==0.50.2
+pydantic==2.13.4
+anthropic==0.116.0

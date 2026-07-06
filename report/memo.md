@@ -178,4 +178,4 @@ one command each, all sources free, raw scrapes cached and never redistributed.
 
 ---
 
-*Built by Sahil Parikh ([YOUR_LINK_HERE]). Code: github.com/parikhsahil719/the-second-round.*
+*Built by Sahil Parikh (linkedin.com/in/sahilparikh719). Code: github.com/parikhsahil719/the-second-round.*

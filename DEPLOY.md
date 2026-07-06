@@ -5,10 +5,10 @@ optional). Do them in this order.
 
 ## 0. Before you start
 
-- [ ] Edit the two placeholders: `YOUR_LINK_HERE` in `web/app/layout.tsx` and the
-      byline links at the bottom of `report/memo.md`.
-- [ ] Rotate your Anthropic API key if you haven't since development
-      (console.anthropic.com → API keys) and update `.env`.
+- [x] Byline links filled (LinkedIn) in the app footer, memo, and README.
+- [x] Anthropic API key rotated and updated in `.env`.
+- [x] Pre-publication security review passed (BYO-key isolation, proxy-aware rate
+      limits, no secrets in git history, runtime state untracked, pinned dependencies).
 
 ## 1. GitHub
 

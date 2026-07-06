@@ -34,8 +34,8 @@ GLOBAL_MONTHLY = 2000
 USAGE_FILE = ROOT / "api" / "usage.json"
 
 app = FastAPI(title="The Second Round")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
-                   allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=["*"],
+                   allow_methods=["GET", "POST"], allow_headers=["content-type"])
 
 # feature -> (phrase when it helps, phrase when it hurts). Fallback: prettified name.
 TRANSLATE = {
@@ -292,18 +292,22 @@ def notes(body: NoteIn, request: Request):
         raise HTTPException(404, "player not model-scored")
     r = hit.iloc[0]
 
-    _check_caps(request.client.host if request.client else "?", bool(body.api_key))
+    # behind Render's proxy every request shares the proxy IP; the real client is
+    # the first hop in X-Forwarded-For
+    fwd = request.headers.get("x-forwarded-for", "")
+    ip = fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else "?")
+    _check_caps(ip, bool(body.api_key))
 
     import os
     from extract import extract_llm, extract_mock, _load_env
     from notes import update
     _load_env()
-    if body.api_key:
-        os.environ["ANTHROPIC_API_KEY"] = body.api_key
+    # BYO key is passed per-call only; it must never touch shared process state
+    key = body.api_key or os.environ.get("ANTHROPIC_API_KEY")
     try:
-        traits = extract_llm(body.note) if os.environ.get("ANTHROPIC_API_KEY") \
+        traits = extract_llm(body.note, api_key=body.api_key) if key \
             else extract_mock(body.note)
-        mode = "llm" if os.environ.get("ANTHROPIC_API_KEY") else "mock"
+        mode = "llm" if key else "mock"
     except Exception:
         traits, mode = extract_mock(body.note), "mock_fallback"
 
