@@ -156,6 +156,15 @@ def public_row(r) -> dict:
     return d
 
 
+@app.get("/memo")
+def memo():
+    from fastapi.responses import PlainTextResponse
+    path = ROOT / "report" / "memo.md"
+    if not path.exists():
+        raise HTTPException(404, "memo not written yet")
+    return PlainTextResponse(path.read_text(encoding="utf-8"))
+
+
 @app.get("/board")
 def board():
     rows = [public_row(r) for r in BOARD.itertuples()]
