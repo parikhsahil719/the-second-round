@@ -30,7 +30,7 @@ from common import TIERS, TIERS5, UTILITY, FEATURES  # noqa: E402
 
 PROCESSED = ROOT / "data" / "processed"
 FIGS = ROOT / "report" / "figs"
-CLASSES = list(range(2011, 2022))
+CLASSES = list(range(2009, 2022))
 
 
 def load_training():

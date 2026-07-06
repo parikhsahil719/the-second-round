@@ -7,6 +7,23 @@ TIERS5 = ["OOL", "FRINGE", "ROTATION", "STARTER", "STAR"]  # AS+ELITE merged
 UTILITY = {"OOL": 0.0, "FRINGE": 1.0, "ROTATION": 3.0, "STARTER": 8.0,
            "ALL_STAR": 20.0, "ELITE": 40.0}
 
+
+def value_grade(shortfall: float) -> str:
+    """Market-relative outcome grade: realized utility minus slot-implied EV.
+
+    Two-axis framework (DECISIONS.md D14): the tier says what a player became;
+    this grade says what the pick cost. Self-adjusting by slot — a 55th pick who
+    never plays 'Delivered' (nothing was promised), a #1 who becomes a starter
+    merely 'Underdelivered' (Wiggins), and 'Bust' is reserved for Bennett-grade
+    shortfalls."""
+    if shortfall < -7:
+        return "Bust"
+    if shortfall < -3:
+        return "Underdelivered"
+    if shortfall <= 3:
+        return "Delivered"
+    return "Outperformed"
+
 FEATURES = [
     "age_at_draft", "height_in", "class_ord", "rec_score", "rec_missing", "power_conf",
     "min_pct", "usg", "ts", "efg", "ortg", "adjoe", "porpag", "adrtg", "dporpag",

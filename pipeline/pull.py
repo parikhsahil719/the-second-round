@@ -31,7 +31,7 @@ BARTTORVIK_COLS = [
     "role", "col65", "birthdate",
 ]
 
-SEASONS = range(2011, 2027)  # college seasons 2010-11 .. 2025-26
+SEASONS = range(2009, 2027)  # college seasons 2008-09 .. 2025-26 (Barttorvik starts 2008)
 
 
 def pull_barttorvik() -> pd.DataFrame:
@@ -64,7 +64,7 @@ def _bref_player_id(cell) -> str | None:
 
 def pull_bref_drafts() -> pd.DataFrame:
     rows = []
-    for yr in range(2011, 2027):
+    for yr in range(2009, 2027):
         html = get(f"https://www.basketball-reference.com/draft/NBA_{yr}.html", f"bref/draft_{yr}.html")
         soup = BeautifulSoup(html, "lxml")
         table = soup.find("table", id="stats")
@@ -93,7 +93,7 @@ def pull_bref_nba_seasons() -> pd.DataFrame:
     One page per season covers every player — no per-player scraping needed.
     """
     rows = []
-    for end_yr in range(2012, 2027):
+    for end_yr in range(2010, 2027):
         html = get(f"https://www.basketball-reference.com/leagues/NBA_{end_yr}_advanced.html",
                    f"bref/advanced_{end_yr}.html")
         soup = BeautifulSoup(uncomment(html), "lxml")
@@ -137,14 +137,14 @@ def pull_bref_accolades() -> pd.DataFrame:
         if not season or len(cells) < 5:
             continue
         end_yr = int(season[:4]) + 1
-        if end_yr < 2012 or "ABA" in tr.get_text():
+        if end_yr < 2010 or "ABA" in tr.get_text():
             continue
         for td in cells:
             pid = _bref_player_id(td)
             if pid:
                 rows.append({"season_end": end_yr, "bref_id": pid, "honor": "all_nba"})
-    # All-Star rosters: one page per year (no game in 2099; 2012-2026 all exist)
-    for end_yr in range(2012, 2027):
+    # All-Star rosters: one page per year
+    for end_yr in range(2010, 2027):
         html = get(f"https://www.basketball-reference.com/allstar/NBA_{end_yr}.html",
                    f"bref/allstar_{end_yr}.html")
         soup = BeautifulSoup(uncomment(html), "lxml")
@@ -164,7 +164,7 @@ def pull_combine() -> pd.DataFrame:
 
     # season_all_time="2018-19" holds the May 2018 combine, i.e. the 2018 draft class
     frames = []
-    for yr in range(2011, 2027):
+    for yr in range(2009, 2027):
         season = f"{yr}-{str(yr + 1)[-2:]}"
         cache = PROCESSED.parent / "raw" / "combine" / f"{season}.json"
         if cache.exists():
@@ -191,7 +191,7 @@ def pull_combine() -> pd.DataFrame:
 
 def pull_rsci() -> pd.DataFrame:
     rows = []
-    for yr in range(2006, 2026):
+    for yr in range(2004, 2026):
         html = get(f"https://www.basketball-reference.com/awards/recruit_rankings_{yr}.html",
                    f"bref/rsci_{yr}.html")
         soup = BeautifulSoup(uncomment(html), "lxml")
