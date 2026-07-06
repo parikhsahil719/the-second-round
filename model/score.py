@@ -92,17 +92,20 @@ def star_split_ratio(prior):
     return (prior.ELITE / star.clip(lower=1e-9)).clip(0.05, 0.8)
 
 
-def attribution(model, sc, X_row, top_n=4):
-    """Exact latent-score contributions: coef * standardized value."""
+def attribution(model, sc, X_row, top_n=8):
+    """Exact latent-score contributions: coef * standardized value.
+    Returns [[feature, contribution, z], ...] — z lets the API phrase what is TRUE
+    about the player (value sign) separately from which way it PUSHES (contribution
+    sign); they differ on negative-coefficient features like recruiting pedigree."""
     z = (X_row - sc.mean_) / sc.scale_
     contrib = model.coef_ * z
     order = np.argsort(-np.abs(contrib))
     out = []
-    for i in order[:top_n * 2]:
+    for i in order[:top_n]:
         if abs(contrib[i]) < 0.05:
             break
-        out.append(f"{'+' if contrib[i] > 0 else '-'} {FEATURES[i]} ({contrib[i]:+.2f})")
-    return out[:top_n * 2]
+        out.append([FEATURES[i], round(float(contrib[i]), 3), round(float(z[i]), 3)])
+    return out
 
 
 if __name__ == "__main__":
@@ -163,7 +166,8 @@ if __name__ == "__main__":
     scored["star_tail_slot"] = slot_p[:, 4] + slot_p[:, 5]
     scored["star_flag"] = (scored.star_tail_model - scored.star_tail_slot).abs() > 0.05
 
-    scored["why"] = [" | ".join(attribution(model, sc, X26[i])) for i in range(len(scored))]
+    import json as _json
+    scored["why"] = [_json.dumps(attribution(model, sc, X26[i])) for i in range(len(scored))]
 
     # comps: k=5 nearest historical players — position-gated, outcome-weighted
     # (display only: weights = |ordinal coefficients|, so similarity lives in

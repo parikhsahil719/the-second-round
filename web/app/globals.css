@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #1d1b22;
+  --panel: #26232c;
+  --card: #2a2733;
+  --card-hover: #322e3c;
+  --border: #38343e;
+  --text: #f2eee6;
+  --muted: #8f8a94;
+  --faint: #6b6672;
+  --pos: #5dcaa5;
+  --neg: #e08a7a;
+  --purple: #8a7bd8;
+  --gold: #f5b83d;
+  --t-ool: #3a3642;
+  --t-fringe: #4b4656;
+  --t-rotation: #665e7a;
+  --t-starter: #8a7bd8;
+  --t-allstar: #74b7c9;
+  --t-elite: #5dcaa5;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.serif { font-family: var(--font-serif), Georgia, serif; }
+.num { font-variant-numeric: tabular-nums; }
+
+.chip {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.chip-buy { background: rgba(93, 202, 165, 0.15); color: var(--pos); }
+.chip-hold { background: rgba(143, 138, 148, 0.15); color: var(--muted); }
+.chip-fade { background: rgba(224, 138, 122, 0.15); color: var(--neg); }
+.chip-na { background: rgba(107, 102, 114, 0.15); color: var(--faint); }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.card-link { transition: background 0.12s; }
+.card-link:hover { background: var(--card-hover); }
+
+.pick-square {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 600;
+  background: var(--panel);
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.pick-square.lottery { background: var(--gold); color: #1d1b22; }
+.pick-square.small-label { font-size: 9px; letter-spacing: 0.04em; }
+
+input[type="text"], textarea {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 14px;
+  width: 100%;
+  outline: none;
+}
+input[type="text"]:focus, textarea:focus { border-color: var(--purple); }
+
+.btn {
+  background: var(--purple);
+  color: #16141b;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+.btn:disabled { opacity: 0.45; cursor: default; }
