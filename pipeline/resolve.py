@@ -32,6 +32,7 @@ NAME_ALIASES = {
     "bones hyland": "nahshon hyland",
     "cam thomas": "cameron thomas",
     "gg jackson": "gregory jackson",
+    "cam boozer": "cameron boozer",
 }
 
 

@@ -46,12 +46,25 @@ def build() -> pd.DataFrame:
     pool = pd.read_parquet(PROCESSED / "undrafted_pool.parquet")
     combine = pd.read_parquet(PROCESSED / "combine.parquet")
 
+    # 2026 board scope includes consensus-top-60 D1 players who went undrafted
+    cons = pd.read_parquet(PROCESSED / "consensus_2026.parquet")
+    college_2026 = pd.read_parquet(PROCESSED / "college_seasons.parquet")
+    college_2026 = college_2026[college_2026.season == 2026].assign(
+        nname=lambda d: d.player_name.map(norm))
+    drafted_2026 = set(pd.read_parquet(PROCESSED / "crosswalk.parquet")
+                       .query("draft_year == 2026").player_name.map(norm))
+    cons_und = cons[(cons["rank"] <= 60) & ~cons.player_name.map(norm).isin(drafted_2026)]
+    cons_und = cons_und.assign(nname=cons_und.player_name.map(norm)).merge(
+        college_2026[["nname", "bt_pid"]].drop_duplicates("nname"), on="nname")
+
     entities = pd.concat([
         xw[xw.bt_pid.notna()][["draft_year", "pick", "player_name", "bref_id",
                                "bt_pid", "bt_final_season"]].assign(undrafted=False),
         pool[pool.matched][["draft_year", "player_name", "bt_pid", "bt_final_season"]]
             .assign(pick=np.nan, bref_id=None, undrafted=True),
-    ], ignore_index=True)
+        cons_und[["player_name", "bt_pid"]].assign(
+            draft_year=2026, bt_final_season=2026, pick=np.nan, bref_id=None, undrafted=True),
+    ], ignore_index=True).drop_duplicates(["bt_pid", "draft_year"])
 
     # final college season row per entity (dedupe transfer duplicates on max minutes)
     college = college.assign(mp_total=college.mpg * college.gp)
