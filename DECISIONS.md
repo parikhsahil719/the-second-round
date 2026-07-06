@@ -170,6 +170,20 @@ Curry/Harden/George label correctly). The gate verdict is unchanged by more data
 structural, not sample noise. Free-data ceiling: beyond this live tracking/on-off/medical
 data that aren't free.
 
+## D16. Product posture: free, reputation-first, live for the 2026-27 season
+
+Not just a portfolio demo — a real free product for the draft-nerd/creator community, on the
+D-Lee/Barttorvik path (the app builds the author's name; monetization, if ever, comes through
+the author, not the app). This keeps the data posture defensible: personal/research use of
+scraped sources, our derived probabilities as the published IP, no paywall touching
+third-party data. ESPN headshots are hotlinked (gray area, swappable to initials avatars in
+one env change). Live mode (weekly in-season scoring, live consensus capture, predictive war
+room for the 2027 draft) ships by November 2026 — the retrospective is proof of method, the
+season is the product. Infra: free tiers now (Vercel/Render/Supabase), ~$20/mo on traction.
+Accounts store emails + private notes → privacy policy and delete-my-data path required at
+public launch. BYO-key passthrough is demo-only; a real paid extraction tier replaces it
+before any scale.
+
 ---
 
 *Log continues as phases complete.*

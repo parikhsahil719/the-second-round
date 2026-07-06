@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { type BoardRow } from "@/lib/api";
+import { chipLabel, useLens, type Lens } from "@/lib/lens";
+import Headshot from "./Headshot";
 import { TierBar, TierLegend } from "./TierBar";
 
-function Chip({ chip }: { chip?: string }) {
+function Chip({ chip, lens }: { chip?: string; lens: Lens }) {
   const cls =
     chip === "BUY" ? "chip-buy" : chip === "FADE" ? "chip-fade" : chip === "HOLD" ? "chip-hold" : "chip-na";
-  return <span className={`chip ${cls}`}>{chip ?? "N/A"}</span>;
+  return <span className={`chip ${cls}`}>{chipLabel(chip, lens)}</span>;
 }
 
 function PickSquare({ row }: { row: BoardRow }) {
@@ -20,12 +22,14 @@ function PickSquare({ row }: { row: BoardRow }) {
 }
 
 export function Row({ row }: { row: BoardRow }) {
+  const { lens } = useLens();
   return (
     <Link
       href={`/player/${row.slug}`}
       className="card card-link flex items-center gap-3 px-3.5 py-3"
     >
       <PickSquare row={row} />
+      <Headshot url={row.headshot_url} name={row.player_name} size={36} />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <span className="serif truncate text-[15px]">{row.player_name}</span>
@@ -56,8 +60,8 @@ export function Row({ row }: { row: BoardRow }) {
         )}
       </div>
       <div className="flex w-24 flex-col items-end gap-1">
-        <Chip chip={row.chip} />
-        {row.edge_slot != null && (
+        <Chip chip={row.chip} lens={lens} />
+        {lens !== "fan" && row.edge_slot != null && (
           <span
             className="num text-sm"
             style={{ color: row.edge_slot > 0 ? "var(--pos)" : "var(--neg)" }}
