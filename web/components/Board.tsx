@@ -54,8 +54,8 @@ export function Row({ row }: { row: BoardRow }) {
         ) : (
           <p className="mt-1 text-xs" style={{ color: "var(--faint)" }}>
             {row.coverage === "outside_coverage"
-              ? "Outside model coverage (no D1 season) — market prices only"
-              : "Insufficient college sample — market prices only"}
+              ? "Outside model coverage (no D1 season): market prices only"
+              : "Insufficient college sample: market prices only"}
           </p>
         )}
       </div>

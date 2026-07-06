@@ -30,7 +30,7 @@ export function TierLegend() {
         </span>
       ))}
       <span style={{ color: "var(--faint)" }}>
-        — each bar is the model&apos;s probability the player&apos;s first 4 NBA seasons land in that tier
+        Each bar is the model&apos;s chance the player&apos;s first 4 NBA seasons land in that tier.
       </span>
     </div>
   );

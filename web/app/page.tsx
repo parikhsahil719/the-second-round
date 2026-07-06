@@ -39,9 +39,9 @@ export default async function Home() {
       <section>
         <h1 className="serif text-3xl leading-snug">What the market missed in 2026</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
-          A fair-value model built only on pre-draft information — no draft slots, no
-          consensus boards — priced every college prospect, then compared its numbers to
-          where players actually went. On average the market wins. At the extremes of
+          A fair-value model priced every college prospect using only what was knowable
+          before draft night. No draft slots, no mock drafts. Then we compared its numbers
+          to where players actually went. On average the market wins. At the extremes of
           disagreement, history says the model does. These are the loud disagreements.
         </p>
       </section>

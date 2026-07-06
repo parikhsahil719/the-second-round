@@ -1,4 +1,4 @@
-export const metadata = { title: "Privacy — The Second Round" };
+export const metadata = { title: "Privacy | The Second Round" };
 
 export default function Privacy() {
   return (
@@ -11,7 +11,7 @@ export default function Privacy() {
       <ul className="mt-4 list-disc space-y-3 pl-5" style={{ color: "var(--muted)" }}>
         <li>
           <span style={{ color: "var(--text)" }}>Without an account:</span> nothing. Notes
-          you type are processed to compute an update and immediately discarded — they are
+          you type are processed to compute an update and immediately discarded. They are
           never written to disk or logs. Rate limiting counts requests per IP for one day.
         </li>
         <li>
