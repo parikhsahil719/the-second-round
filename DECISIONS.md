@@ -91,6 +91,17 @@ recruiting percentile score (verified: Flagg 100.0/pick 1, Ace Bailey 99.8, unra
 The planned ESPN play-by-play ETL for rim/dunk rates is unnecessary; transition share is the
 only PBP-only feature left, and it's cut unless the model needs it.
 
+## D11. G League Ignite / OTE / international prospects: in the market, out of the model
+
+Three different roles, handled separately. (1) **Model scoring:** excluded in v1 — no free
+pace/SOS-adjusted stat source comparable to Barttorvik, and only ~10 Ignite players were ever
+drafted, so there is no sample to calibrate how that production translates; scoring them would
+be confident guessing. (2) **Slot base rates:** included — the market prior is about what a
+draft slot historically yields regardless of pipeline, so Dyson Daniels' outcome still informs
+"what pick 8 is worth." (3) **Board display:** shown with slot-implied distribution and an
+explicit "outside model coverage" badge, same as zero-data cases like Shaedon Sharpe.
+v2 roadmap: internationals + alternative pathways once a defensible translation layer exists.
+
 ---
 
 *Log continues as phases complete.*
