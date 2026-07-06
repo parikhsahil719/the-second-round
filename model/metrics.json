@@ -1,0 +1,14 @@
+{
+  "market_slot_prior": 1.1345,
+  "marginal": 1.4179,
+  "ordinal_a1_6tier": 1.2653,
+  "ordinal_a4_6tier": 1.2589,
+  "lgbm_6tier": 1.3223,
+  "ordinal_a1_5tier": 1.2634,
+  "ordinal_a4_5tier": 1.2572,
+  "lgbm_5tier": 1.3141,
+  "ordinal_a4_5tier_calibrated": 1.2096,
+  "winner": "ordinal_a4_5tier",
+  "gate_passed": false,
+  "n_train": 729
+}

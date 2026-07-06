@@ -124,6 +124,26 @@ draft slot historically yields regardless of pipeline, so Dyson Daniels' outcome
 explicit "outside model coverage" badge, same as zero-data cases like Shaedon Sharpe.
 v2 roadmap: internationals + alternative pathways once a defensible translation layer exists.
 
+## D13. The validation gate failed — and the finding got better, not worse ⭐
+
+**Result:** out-of-sample (leave-one-class-out, 2011–2021, honest LOCO market baseline), the
+stats-only model's log loss is 1.257 (1.210 calibrated) vs the slot prior's 1.134. The market,
+on average, beats the box score — as the literature predicts (slot encodes scouting, workouts,
+medical, intel we don't see). We do not hide this; it anchors the writeup's credibility.
+
+**But averages aren't where a fair-value model makes money.** At the extremes of disagreement,
+the model is significantly right: its top-40 OOF favorites realized +5.33 utility above their
+market price (permutation p < 0.0002; Zion, Mobley, AD, Haliburton-at-12, Kyle Anderson-at-30),
+and its top-40 fades realized −2.07 below market (p < 0.0002; Bennett, Waiters, Kris Dunn,
+Davion Mitchell). Decomposition: the model matches the market on undrafted (LL 1.00) and late
+seconds (1.03) and loses in the lottery/mid-rounds (1.31–1.38) where private information lives.
+Headline reframe: "don't re-rank the whole board — trust the model where it disagrees loudly."
+
+**Model choice:** ordinal logistic (LogisticAT, alpha=4) on the 5-tier merged-STAR target won;
+LightGBM lost even after regularization (n=729 is logistic-regression country). The 5-tier
+merge won the variant race, so P(STAR) is modeled and split into All-Star/Elite at display
+time by the slot-conditioned historical share.
+
 ---
 
 *Log continues as phases complete.*
