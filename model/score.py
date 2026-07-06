@@ -165,13 +165,18 @@ if __name__ == "__main__":
 
     scored["why"] = [" | ".join(attribution(model, sc, X26[i])) for i in range(len(scored))]
 
-    # comps: k=5 nearest historical players in z-space
+    # comps: k=5 nearest historical players — position-gated, outcome-weighted
+    # (display only: weights = |ordinal coefficients|, so similarity lives in
+    # career-relevant space; same broad position group required)
     Xh, _ = prep_X(train, med)
     Zh, Z26 = sc.transform(Xh), sc.transform(X26)
+    w = np.sqrt(np.abs(model.coef_))
     tinfo = train.reset_index(drop=True)
     comps = []
     for i in range(len(Z26)):
-        d = np.linalg.norm(Zh - Z26[i], axis=1)
+        same_pos = (tinfo.pos == scored.pos.iloc[i]).to_numpy()
+        d = np.linalg.norm((Zh - Z26[i]) * w, axis=1)
+        d[~same_pos] = np.inf
         near = np.argsort(d)[:5]
         comps.append(" | ".join(f"{tinfo.player_name[j]} ({tinfo.tier[j]})" for j in near))
     scored["comps"] = comps
