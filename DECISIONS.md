@@ -144,6 +144,32 @@ LightGBM lost even after regularization (n=729 is logistic-regression country). 
 merge won the variant race, so P(STAR) is modeled and split into All-Star/Elite at display
 time by the slot-conditioned historical share.
 
+## D14. "Bust" is market-relative: the two-axis outcome framework ⭐
+
+**Choice:** every historical player gets (1) an absolute tier — what he became — and (2) a
+value grade = realized utility minus slot-implied EV: Bust < −7, Underdelivered −7..−3,
+Delivered −3..+3, Outperformed > +3 (`model/common.py::value_grade`). Annotation only, never
+a model target.
+
+**Why:** "bust" conflates two judgments. Anthony Bennett (FRINGE at #1, shortfall −11.6) and
+Andrew Wiggins (STARTER at #1, −4.6) are not the same story — Wiggins returned ~65% of slot
+value, a disappointment; Bennett returned 8%, a bust. The shortfall self-adjusts by slot: a
+55th pick who never sticks "Delivered," because nothing was promised. Pre-draft model FADES
+(the model's skepticism) and post-draft BUSTS (realized shortfall) are kept as separate
+concepts in the report.
+
+## D15. Gate-failure diagnostics: where the market wins, and the measured ceiling
+
+Region decomposition (OOF): the model loses worst in the lottery (+0.17 log-loss gap — thin
+freshman samples, maximal private info) and BEATS the market in picks 31–45 (−0.07): the
+early second round is the market's least efficient region. Blend test: mixing ~25% model into
+the market improves the market's own log loss (1.135→1.124) — the model carries genuinely
+incremental signal, just not enough to replace the market. Learning curve still descending at
+10 classes (~0.008/class), so training was extended to 2009–2021 (13 classes, 847 rows;
+Curry/Harden/George label correctly). The gate verdict is unchanged by more data — it is
+structural, not sample noise. Free-data ceiling: beyond this live tracking/on-off/medical
+data that aren't free.
+
 ---
 
 *Log continues as phases complete.*

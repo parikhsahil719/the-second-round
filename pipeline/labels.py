@@ -30,7 +30,7 @@ from resolve import norm
 PROCESSED = Path(__file__).resolve().parent.parent / "data" / "processed"
 
 TIERS = ["OOL", "FRINGE", "ROTATION", "STARTER", "ALL_STAR", "ELITE"]
-LABELED_CLASSES = range(2011, 2022)
+LABELED_CLASSES = range(2009, 2022)
 ELITE_VORP_PCT = 0.98
 ELITE_BPM, ALLSTAR_BPM, PEAK_MIN_MP = 3.5, 2.2, 2500
 
@@ -159,6 +159,8 @@ def label_undrafted() -> pd.DataFrame:
 
 
 SPOT_CHECK = [
+    (2009, "Stephen Curry", "ELITE"), (2009, "James Harden", "ELITE"),
+    (2009, "Hasheem Thabeet", "FRINGE/ROTATION"), (2010, "Paul George", "ELITE/ALL_STAR"),
     (2011, "Kyrie Irving", "ELITE"), (2011, "Kawhi Leonard", "ELITE"),
     (2011, "Jimmy Butler", "ALL_STAR"), (2011, "Klay Thompson", "ALL_STAR"),
     (2012, "Anthony Davis", "ELITE"), (2012, "Andre Drummond", "STARTER (politics evicted)"),
@@ -182,8 +184,8 @@ if __name__ == "__main__":
     out = first4_outcomes()
     labeled = assign_tiers(out)
     labeled["undrafted"] = False
-    print(f"elite VORP threshold (p{ELITE_VORP_PCT:.0%} of drafted 2011-21): "
-          f"{labeled.attrs['elite_vorp']:.1f}")
+    print(f"elite VORP threshold (p{ELITE_VORP_PCT:.0%} of drafted "
+          f"{min(LABELED_CLASSES)}-{max(LABELED_CLASSES)}): {labeled.attrs['elite_vorp']:.1f}")
 
     undrafted = assign_tiers(label_undrafted(), elite_vorp=labeled.attrs["elite_vorp"])
     undrafted["undrafted"] = True

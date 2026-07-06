@@ -147,7 +147,7 @@ def build() -> pd.DataFrame:
 if __name__ == "__main__":
     f = build()
     f.to_parquet(PROCESSED / "features.parquet")
-    labeled = f[f.draft_year.between(2011, 2021)]
+    labeled = f[f.draft_year.between(2009, 2021)]
     print(f"features: {len(f)} rows ({f.undrafted.sum()} undrafted), "
           f"{f.eligible.mean():.1%} eligible")
     print(f"training-era rows: {len(labeled)}; age coverage "
