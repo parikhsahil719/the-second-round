@@ -20,7 +20,7 @@ interface WarRoomRow {
 
 export default function WarRoom() {
   const { lens } = useLens();
-  const [pick, setPick] = useState(9);
+  const [pick, setPick] = useState(1);
   const [rows, setRows] = useState<WarRoomRow[] | null>(null);
   const [note, setNote] = useState("");
 
