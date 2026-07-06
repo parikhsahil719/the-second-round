@@ -2,7 +2,18 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 // Graceful degradation: without env keys the app runs account-less
 // (sign-in hidden, notes stay session-only).
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// The env var must be the bare project origin; people paste the REST endpoint
+// (with /rest/v1/) from the dashboard often enough that we normalize it here.
+function origin(u: string | undefined): string | null {
+  if (!u) return null;
+  try {
+    return new URL(u).origin;
+  } catch {
+    return null;
+  }
+}
+
+const url = origin(process.env.NEXT_PUBLIC_SUPABASE_URL);
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export const supabase: SupabaseClient | null =
