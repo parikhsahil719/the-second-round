@@ -1,0 +1,7 @@
+requests
+pandas
+pyarrow
+duckdb
+lxml
+beautifulsoup4
+nba_api
