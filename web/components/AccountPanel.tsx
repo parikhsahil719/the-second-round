@@ -12,7 +12,9 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [newConfirm, setNewConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +22,10 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const { lens, setLens } = useLens();
   const router = useRouter();
+
+  const canSubmit = !busy && email.includes("@") &&
+    (mode === "signin" ? password.length >= 1
+                       : password.length >= 8 && confirm === password);
 
   useEffect(() => {
     if (!supabase) return;
@@ -118,14 +124,29 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           <p className="text-sm">Set a new password for {user.email}.</p>
           <input
             type="password"
+            autoComplete="new-password"
             placeholder="New password (8+ characters)"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="mt-3 text-sm"
             aria-label="New password"
           />
+          <input
+            type="password"
+            autoComplete="new-password"
+            placeholder="Confirm new password"
+            value={newConfirm}
+            onChange={(e) => setNewConfirm(e.target.value)}
+            className="mt-2 text-sm"
+            aria-label="Confirm new password"
+          />
+          {newConfirm.length > 0 && newConfirm !== newPassword && (
+            <p className="mt-1 text-xs" style={{ color: "var(--neg)" }}>
+              Passwords don&apos;t match yet.
+            </p>
+          )}
           <button className="btn mt-3 text-sm" onClick={saveNewPassword}
-                  disabled={busy || newPassword.length < 8}>
+                  disabled={busy || newPassword.length < 8 || newConfirm !== newPassword}>
             Save new password
           </button>
         </div>
@@ -152,8 +173,15 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
               ? "One confirmation email, then it's just your password from there. Accounts keep your scout notes across visits."
               : "Welcome back. Email and password, or have a one-time link emailed instead."}
           </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (canSubmit) (mode === "signin" ? signIn : signUp)();
+            }}
+          >
           <input
-            type="text"
+            type="email"
+            autoComplete="email"
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -162,33 +190,53 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           />
           <input
             type="password"
+            autoComplete={mode === "signup" ? "new-password" : "current-password"}
             placeholder={mode === "signup" ? "Choose a password (8+ characters)" : "Password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="mt-2 text-sm"
             aria-label="Password"
           />
+          {mode === "signup" && (
+            <>
+              <input
+                type="password"
+                autoComplete="new-password"
+                placeholder="Confirm password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                className="mt-2 text-sm"
+                aria-label="Confirm password"
+              />
+              {confirm.length > 0 && confirm !== password && (
+                <p className="mt-1 text-xs" style={{ color: "var(--neg)" }}>
+                  Passwords don&apos;t match yet.
+                </p>
+              )}
+            </>
+          )}
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <button
+              type="submit"
               className="btn text-sm"
-              onClick={mode === "signin" ? signIn : signUp}
-              disabled={busy || !email.includes("@") || password.length < (mode === "signup" ? 8 : 1)}
+              disabled={!canSubmit}
             >
               {busy ? "One moment…" : mode === "signin" ? "Sign in" : "Create account"}
             </button>
             {mode === "signin" && (
               <>
-                <button className="text-xs underline" style={{ color: "var(--faint)" }}
+                <button type="button" className="text-xs underline" style={{ color: "var(--faint)" }}
                         onClick={forgot} disabled={busy || !email.includes("@")}>
                   Forgot password?
                 </button>
-                <button className="text-xs underline" style={{ color: "var(--faint)" }}
+                <button type="button" className="text-xs underline" style={{ color: "var(--faint)" }}
                         onClick={magicLink} disabled={busy || !email.includes("@")}>
                   Email me a link instead
                 </button>
               </>
             )}
           </div>
+          </form>
           {info && (
             <p className="mt-2 text-xs" style={{ color: "var(--pos)" }}>{info}</p>
           )}
