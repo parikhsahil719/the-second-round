@@ -6,18 +6,28 @@ import { supabase } from "@/lib/supabase";
 import type { Lens } from "@/lib/lens";
 import { useLens } from "@/lib/lens";
 
+type Mode = "signin" | "signup";
+
 export default function AccountPage() {
+  const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
-  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [recovery, setRecovery] = useState(false);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const { lens, setLens } = useLens();
   const router = useRouter();
 
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      setUser(s?.user ?? null);
+      if (event === "PASSWORD_RECOVERY") setRecovery(true);
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -30,15 +40,65 @@ export default function AccountPage() {
       </div>
     );
 
-  async function sendLink() {
+  async function run(fn: () => Promise<string | null>) {
+    setBusy(true);
     setError(null);
-    const { error } = await supabase!.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin + "/account" },
-    });
-    if (error) setError(error.message);
-    else setSent(true);
+    setInfo(null);
+    try {
+      const msg = await fn();
+      if (msg) setInfo(msg);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong. Try again.");
+    } finally {
+      setBusy(false);
+    }
   }
+
+  const signIn = () =>
+    run(async () => {
+      const { error } = await supabase!.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      return null;
+    });
+
+  const signUp = () =>
+    run(async () => {
+      const { error } = await supabase!.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: window.location.origin + "/account" },
+      });
+      if (error) throw error;
+      return "Almost there. Check your email to confirm your account, then come back and sign in.";
+    });
+
+  const magicLink = () =>
+    run(async () => {
+      const { error } = await supabase!.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.origin + "/account" },
+      });
+      if (error) throw error;
+      return "Sign-in link sent. Check your email.";
+    });
+
+  const forgot = () =>
+    run(async () => {
+      const { error } = await supabase!.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/account",
+      });
+      if (error) throw error;
+      return "Password reset email sent. The link brings you back here to set a new one.";
+    });
+
+  const saveNewPassword = () =>
+    run(async () => {
+      const { error } = await supabase!.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setRecovery(false);
+      setNewPassword("");
+      return "Password updated. You're signed in.";
+    });
 
   const roles: { id: Lens; label: string; blurb: string; dest: string; action: string }[] = [
     { id: "fan", label: "Fan", blurb: "Plain-English verdicts, comps, no jargon",
@@ -52,10 +112,45 @@ export default function AccountPage() {
   return (
     <div className="mx-auto max-w-md">
       <h1 className="serif text-2xl">Your account</h1>
-      {!user ? (
+
+      {user && recovery ? (
         <div className="card mt-4 px-5 py-5">
-          <p className="text-sm" style={{ color: "var(--muted)" }}>
-            Sign in with a magic link to save scout notes across sessions. No password.
+          <p className="text-sm">Set a new password for {user.email}.</p>
+          <input
+            type="password"
+            placeholder="New password (8+ characters)"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="mt-3 text-sm"
+            aria-label="New password"
+          />
+          <button className="btn mt-3 text-sm" onClick={saveNewPassword}
+                  disabled={busy || newPassword.length < 8}>
+            Save new password
+          </button>
+        </div>
+      ) : !user ? (
+        <div className="card mt-4 px-5 py-5">
+          <div className="flex gap-4 text-sm">
+            <button
+              onClick={() => setMode("signin")}
+              className={mode === "signin" ? "font-semibold underline" : ""}
+              style={{ color: mode === "signin" ? "var(--text)" : "var(--muted)" }}
+            >
+              Sign in
+            </button>
+            <button
+              onClick={() => setMode("signup")}
+              className={mode === "signup" ? "font-semibold underline" : ""}
+              style={{ color: mode === "signup" ? "var(--text)" : "var(--muted)" }}
+            >
+              Create account
+            </button>
+          </div>
+          <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
+            {mode === "signup"
+              ? "One confirmation email, then it's just your password from there. Accounts keep your scout notes across visits."
+              : "Welcome back. Email and password, or have a one-time link emailed instead."}
           </p>
           <input
             type="text"
@@ -65,22 +160,47 @@ export default function AccountPage() {
             className="mt-3 text-sm"
             aria-label="Email address"
           />
-          <button className="btn mt-3 text-sm" onClick={sendLink} disabled={!email.includes("@")}>
-            Send magic link
-          </button>
-          {sent && (
-            <p className="mt-2 text-xs" style={{ color: "var(--pos)" }}>
-              Link sent. Check your email.
-            </p>
+          <input
+            type="password"
+            placeholder={mode === "signup" ? "Choose a password (8+ characters)" : "Password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mt-2 text-sm"
+            aria-label="Password"
+          />
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              className="btn text-sm"
+              onClick={mode === "signin" ? signIn : signUp}
+              disabled={busy || !email.includes("@") || password.length < (mode === "signup" ? 8 : 1)}
+            >
+              {busy ? "One moment…" : mode === "signin" ? "Sign in" : "Create account"}
+            </button>
+            {mode === "signin" && (
+              <>
+                <button className="text-xs underline" style={{ color: "var(--faint)" }}
+                        onClick={forgot} disabled={busy || !email.includes("@")}>
+                  Forgot password?
+                </button>
+                <button className="text-xs underline" style={{ color: "var(--faint)" }}
+                        onClick={magicLink} disabled={busy || !email.includes("@")}>
+                  Email me a link instead
+                </button>
+              </>
+            )}
+          </div>
+          {info && (
+            <p className="mt-2 text-xs" style={{ color: "var(--pos)" }}>{info}</p>
           )}
           {error && (
-            <p className="mt-2 text-xs" style={{ color: "var(--neg)" }}>
-              {error}
-            </p>
+            <p className="mt-2 text-xs" style={{ color: "var(--neg)" }}>{error}</p>
           )}
         </div>
       ) : (
         <div className="card mt-4 px-5 py-5">
+          {info && (
+            <p className="mb-2 text-xs" style={{ color: "var(--pos)" }}>{info}</p>
+          )}
           <p className="text-sm">
             You&apos;re in as <span style={{ color: "var(--purple)" }}>{user.email}</span>
           </p>
