@@ -69,6 +69,28 @@ The LRs are hand-calibrated designer priors — documented as such, fittable onc
 accumulate. Subjective traits (motor, IQ) get the smallest caps. Low-confidence extractions
 attenuate toward LR=1 (no update): same shrinkage philosophy as D4.
 
+## D8. Undrafted training pool: combine invitees, not historical consensus boards
+
+**Plan said:** consensus-top-75-but-undrafted players join training to fix survivorship bias.
+**Implemented:** combine-invitees-who-went-undrafted instead.
+
+**Why the swap:** historical pre-draft consensus boards (2011–2021) aren't reliably archived on
+free sources — reconstructing them means Wayback Machine archaeology per year. The NBA combine
+invite list is the league's own revealed top-~70 market signal, already in our nba_api pull,
+identical in spirit ("market said maybe, then said no on draft night"), and exactly reproducible.
+
+## D9. NBA outcomes from league-wide Advanced pages, not per-player pages
+
+One B-Ref page per season (~15 pages) carries G/MP/WS/BPM/VORP for every player-season —
+versus ~550 individual player pages. Same numbers, 97% fewer requests, kinder to the source.
+
+## D10. PBP athleticism bundle came free
+
+Barttorvik player rows already include rim/mid makes+attempts, dunk makes+attempts, and a
+recruiting percentile score (verified: Flagg 100.0/pick 1, Ace Bailey 99.8, unranked NaN).
+The planned ESPN play-by-play ETL for rim/dunk rates is unnecessary; transition share is the
+only PBP-only feature left, and it's cut unless the model needs it.
+
 ---
 
 *Log continues as phases complete.*
