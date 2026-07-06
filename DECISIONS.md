@@ -91,6 +91,28 @@ recruiting percentile score (verified: Flagg 100.0/pick 1, Ace Bailey 99.8, unra
 The planned ESPN play-by-play ETL for rim/dunk rates is unnecessary; transition share is the
 only PBP-only feature left, and it's cut unless the model needs it.
 
+## D12. Top tiers are production bands; voter accolades are annotations, never labels ⭐
+
+**Choice:** ELITE = best 2-consecutive-played-seasons MP-weighted BPM >= +3.5 (min 2500 MP in
+the stretch) or 4-yr VORP >= p98; ALL_STAR = peak-2 BPM >= +2.2 (ESPN's published
+All-Star-level band). All-Star/All-NBA selections are shown as annotations only.
+
+**Why:** The first hybrid rule (any All-NBA selection = Elite) put Andre Drummond (peak BPM
+1.8, 3rd-team politics) a tier above Donovan Mitchell (9.5 VORP). Research consensus (ESPN's
+model: SPM bands, years 2-5; PRISM: production-only eWINS, later-years weighted) keeps voter
+awards out of labels entirely. The peak-2-season stretch is the PRISM trajectory insight:
+it catches SGA, Bam, Zion, Embiid, and Mobley INSIDE the window — players every accolade rule
+missed — while evicting the 3rd-team-politics cohort (Drummond, Cade, Klay, Siakam).
+
+**Costs, stated plainly:** Anthony Edwards' peak-2 BPM is 2.1 — 0.1 below the published band —
+so he labels STARTER with late_bloom=ELITE and All-NBA annotations. We do not bend thresholds
+for single players; patches erode the mechanical integrity that makes labels defensible.
+Clutch usage was researched as an alternative elite signal and rejected: clutch scoring bumps
+come from taking more shots (role), not making them (skill), and clutch samples (~100
+possessions/yr) are noise. Late bloomers (Brunson) are handled by the late_bloom annotation
+(band reached in seasons 5-7), never by stretching the modeled window — that would cost the
+2019-2021 training classes and credit drafting teams for other teams' development.
+
 ## D11. G League Ignite / OTE / international prospects: in the market, out of the model
 
 Three different roles, handled separately. (1) **Model scoring:** excluded in v1 — no free
