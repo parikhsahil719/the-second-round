@@ -120,10 +120,19 @@ BOARD = load_board()
 SEEDS = json.loads((PROCESSED / "seed_note_results.json").read_text(encoding="utf-8")) \
     if (PROCESSED / "seed_note_results.json").exists() else []
 
+AVAIL = pd.read_parquet(PROCESSED / "availability.parquet") \
+    if (PROCESSED / "availability.parquet").exists() else None
+if (PROCESSED / "headshots.parquet").exists():
+    _hs = pd.read_parquet(PROCESSED / "headshots.parquet")
+    HEADSHOTS = dict(zip(_hs.player_name, _hs.headshot_url))
+else:
+    HEADSHOTS = {}
+
 
 def public_row(r) -> dict:
     d = {"slug": r.slug, "player_name": r.player_name,
          "college": None if pd.isna(r.college) else r.college,
+         "headshot_url": HEADSHOTS.get(r.player_name),
          "pick": None if pd.isna(r.pick) else int(r.pick),
          "consensus_rank": None if pd.isna(r.consensus_rank) else int(r.consensus_rank),
          "coverage": r.coverage, "pos": None if pd.isna(r.pos) else r.pos}
@@ -166,6 +175,63 @@ def player(slug: str):
                       for c in (r.comps or "").split(" | ") if "(" in c]
     d["seed_notes"] = [s for s in SEEDS if s["player_name"] == r.player_name]
     return d
+
+
+@app.get("/warroom/{pick}")
+def warroom(pick: int):
+    """Standing at pick N: availability % and model view for every relevant player."""
+    if AVAIL is None:
+        raise HTTPException(503, "availability simulation not built")
+    if not 1 <= pick <= 60:
+        raise HTTPException(400, "pick must be 1-60")
+    col = f"avail_{pick}"
+    rows = []
+    by_name = BOARD.set_index("player_name")
+    for a in AVAIL.itertuples():
+        avail = float(getattr(a, col))
+        if avail < 0.01:
+            continue
+        b = by_name.loc[a.player_name] if a.player_name in by_name.index else None
+        rows.append({
+            "player_name": a.player_name,
+            "slug": b.slug if b is not None else None,
+            "headshot_url": HEADSHOTS.get(a.player_name),
+            "consensus_rank": int(a.consensus_rank),
+            "actual_pick": None if pd.isna(a.actual_pick) else int(a.actual_pick),
+            "availability": round(avail, 3),
+            "ev_model": None if b is None or pd.isna(b.get("ev_model")) else round(float(b.ev_model), 2),
+            "p_star": None if b is None or pd.isna(b.get("p_STAR")) else round(float(b.p_STAR), 3),
+            "chip": chip(None if b is None or pd.isna(b.get("edge_slot")) else float(b.edge_slot)),
+        })
+    rows.sort(key=lambda r: (-(r["ev_model"] or -1), r["consensus_rank"]))
+    return {"pick": pick, "players": rows,
+            "note": "Availability from 10,000 draft simulations calibrated on consensus-vs-actual slide; no team-need modeling."}
+
+
+class TraitsIn(BaseModel):
+    slug: str
+    traits: list[dict]
+
+
+@app.post("/posterior")
+def posterior_from_traits(body: TraitsIn):
+    """Recompute a posterior from an explicit trait set (saved scout book) — no LLM, no caps."""
+    hit = BOARD[BOARD.slug == body.slug]
+    if hit.empty or hit.iloc[0].coverage != "model":
+        raise HTTPException(404, "player not model-scored")
+    r = hit.iloc[0]
+    from notes import update
+    prior = np.array([float(getattr(r, f"p_{t}")) for t in TIERS])
+    clean = {}
+    for t in body.traits[:24]:
+        try:
+            clean[str(t["trait"])] = (int(t["score"]), float(t["confidence"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+    post, tilt = update(prior, clean)
+    return {"tilt": round(tilt, 3),
+            "prior": {t: round(float(p), 4) for t, p in zip(TIERS, prior)},
+            "posterior": {t: round(float(p), 4) for t, p in zip(TIERS, post)}}
 
 
 class NoteIn(BaseModel):

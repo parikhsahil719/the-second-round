@@ -1,7 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { API, TIERS, TIER_LABELS, type SeedNote, type Tier } from "@/lib/api";
+import { useCallback, useEffect, useState } from "react";
+import { API, TIERS, type SeedNote, type Tier } from "@/lib/api";
+import {
+  combineTraits,
+  deleteNote,
+  getMyNotes,
+  saveNote,
+  supabase,
+  type SavedNote,
+} from "@/lib/supabase";
+import { useLens } from "@/lib/lens";
 import { TierBar } from "./TierBar";
 
 interface NoteResult {
@@ -16,8 +25,17 @@ function toRecord(arr: number[]): Record<Tier, number> {
   return Object.fromEntries(TIERS.map((t, i) => [t, arr[i]])) as Record<Tier, number>;
 }
 
-function PriorPosterior({ prior, posterior }: { prior: Record<Tier, number>; posterior: Record<Tier, number> }) {
-  const star = (d: Record<Tier, number>) => (d.ALL_STAR ?? 0) + (d.ELITE ?? 0);
+const star = (d: Record<Tier, number>) => (d.ALL_STAR ?? 0) + (d.ELITE ?? 0);
+
+function PriorPosterior({
+  prior,
+  posterior,
+  label = "With this note",
+}: {
+  prior: Record<Tier, number>;
+  posterior: Record<Tier, number>;
+  label?: string;
+}) {
   return (
     <div className="mt-3 space-y-2">
       <div>
@@ -28,7 +46,7 @@ function PriorPosterior({ prior, posterior }: { prior: Record<Tier, number>; pos
       </div>
       <div>
         <p className="mb-1 text-xs" style={{ color: "var(--purple)" }}>
-          With this note · P(star) {Math.round(star(posterior) * 100)}%
+          {label} · P(star) {Math.round(star(posterior) * 100)}%
         </p>
         <TierBar tiers={posterior} height={9} />
       </div>
@@ -45,7 +63,8 @@ function TraitList({ traits }: { traits: NoteResult["traits"] }) {
           className="rounded px-2 py-0.5 text-xs"
           title={`"${t.evidence}" (confidence ${Math.round(t.confidence * 100)}%)`}
           style={{
-            background: t.score > 0 ? "rgba(93,202,165,0.13)" : t.score < 0 ? "rgba(224,138,122,0.13)" : "rgba(143,138,148,0.13)",
+            background:
+              t.score > 0 ? "rgba(93,202,165,0.13)" : t.score < 0 ? "rgba(224,138,122,0.13)" : "rgba(143,138,148,0.13)",
             color: t.score > 0 ? "var(--pos)" : t.score < 0 ? "var(--neg)" : "var(--muted)",
           }}
         >
@@ -68,16 +87,46 @@ export default function NotesPanel({
   seedNotes: SeedNote[];
   tiers: Record<Tier, number>;
 }) {
+  const { lens } = useLens();
   const [note, setNote] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<NoteResult | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
+  const [saved, setSaved] = useState<SavedNote[]>([]);
+  const [myView, setMyView] = useState<Record<Tier, number> | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
+
+  const refreshBook = useCallback(async () => {
+    const notes = await getMyNotes(slug);
+    setSaved(notes);
+    const combined = combineTraits(notes);
+    if (combined.length === 0) {
+      setMyView(null);
+      return;
+    }
+    const res = await fetch(`${API}/posterior`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, traits: combined }),
+    });
+    if (res.ok) setMyView((await res.json()).posterior);
+  }, [slug]);
+
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getUser().then(({ data }) => {
+      setSignedIn(!!data.user);
+      if (data.user) refreshBook();
+    });
+  }, [refreshBook]);
 
   async function submit() {
     setBusy(true);
     setError(null);
+    setJustSaved(false);
     try {
       const res = await fetch(`${API}/notes`, {
         method: "POST",
@@ -96,14 +145,38 @@ export default function NotesPanel({
     }
   }
 
+  async function saveToBook() {
+    if (!result) return;
+    try {
+      await saveNote(slug, note, result.traits);
+      setJustSaved(true);
+      await refreshBook();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "could not save");
+    }
+  }
+
   return (
-    <section className="card mt-6 px-5 py-5">
-      <h2 className="text-sm font-semibold">Scout&apos;s desk</h2>
+    <section className="card mt-6 px-5 py-5" id="desk">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-sm font-semibold">Scout&apos;s desk</h2>
+        {lens === "scout" && !signedIn && supabase && (
+          <a href="/account" className="text-xs underline" style={{ color: "var(--purple)" }}>
+            Sign in to keep your book
+          </a>
+        )}
+      </div>
       <p className="mt-1 max-w-2xl text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
         Write what you saw on film. The system extracts it into a fixed rubric and
         Bayesian-updates the statistical prior — capped, so a note is evidence, never a
-        veto. Notes are session-only and never stored.
+        veto.{signedIn ? " Saved notes combine latest-per-trait into your view." : ""}
       </p>
+
+      {myView && (
+        <div className="mt-3 rounded-lg px-4 py-3" style={{ background: "var(--panel)" }}>
+          <PriorPosterior prior={tiers} posterior={myView} label={`Your view (${saved.length} note${saved.length === 1 ? "" : "s"})`} />
+        </div>
+      )}
 
       <textarea
         rows={3}
@@ -117,6 +190,16 @@ export default function NotesPanel({
         <button className="btn text-sm" onClick={submit} disabled={busy || note.trim().length < 20}>
           {busy ? "Reading the note…" : "Update the numbers"}
         </button>
+        {result && signedIn && !justSaved && (
+          <button className="text-xs underline" style={{ color: "var(--pos)" }} onClick={saveToBook}>
+            Save to my book
+          </button>
+        )}
+        {justSaved && (
+          <span className="text-xs" style={{ color: "var(--pos)" }}>
+            Saved
+          </span>
+        )}
         <button
           className="text-xs underline"
           style={{ color: "var(--faint)" }}
@@ -153,6 +236,32 @@ export default function NotesPanel({
         </div>
       )}
 
+      {saved.length > 0 && (
+        <div className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }}>
+          <h3 className="text-xs font-semibold tracking-wide" style={{ color: "var(--muted)" }}>
+            MY BOOK ON {playerName.toUpperCase()}
+          </h3>
+          {saved.map((n) => (
+            <div key={n.id} className="mt-3">
+              <p className="serif text-sm leading-relaxed">“{n.note_text}”</p>
+              <div className="flex items-center gap-3">
+                <TraitList traits={n.traits} />
+                <button
+                  className="text-xs underline"
+                  style={{ color: "var(--faint)" }}
+                  onClick={async () => {
+                    await deleteNote(n.id);
+                    await refreshBook();
+                  }}
+                >
+                  delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {seedNotes.length > 0 && (
         <div className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }}>
           <h3 className="text-xs font-semibold tracking-wide" style={{ color: "var(--muted)" }}>
@@ -166,9 +275,7 @@ export default function NotesPanel({
                   {s.source}
                 </a>
               </p>
-              <TraitList
-                traits={s.traits.map((t) => ({ ...t }))}
-              />
+              <TraitList traits={s.traits.map((t) => ({ ...t }))} />
               <PriorPosterior prior={toRecord(s.prior)} posterior={toRecord(s.posterior)} />
             </div>
           ))}

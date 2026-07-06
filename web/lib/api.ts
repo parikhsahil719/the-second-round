@@ -25,6 +25,7 @@ export interface BoardRow {
   slug: string;
   player_name: string;
   college: string | null;
+  headshot_url?: string | null;
   pick: number | null;
   consensus_rank: number | null;
   coverage: "model" | "insufficient_sample" | "outside_coverage";
