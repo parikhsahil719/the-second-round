@@ -1,9 +1,28 @@
 # The Second Round
 
-**A quant-style NBA Draft intelligence model.** Fair-value tier probabilities for draft
+**A quant-style NBA Draft intelligence product.** Fair-value tier probabilities for draft
 prospects, compared against the market (draft slot + consensus boards) to find who was
-overdrafted, who was underdrafted — and why. Plus a scout-notes layer: free-text scouting
-observations are extracted into a fixed rubric and Bayesian-update the statistical prior.
+overdrafted, who was underdrafted — and why. Plus a scout-notes layer (free-text notes →
+LLM extraction → capped Bayesian updates), a draft-day availability war room, and
+Fan / Front-office / Scout viewing lenses.
+
+## Headline results (2009–2021 backtest, leave-one-class-out)
+
+- **The market beats the model on average** (log loss 1.129 vs 1.266) — stated up front,
+  because pretending otherwise would poison everything downstream.
+- **At the extremes of disagreement the model wins**: its top-40 out-of-sample favorites
+  realized **+5.3 utility above their draft-slot price** (permutation p < 0.0002); its
+  top-40 fades realized −2.1 below (p < 0.0002).
+- **The market is least efficient in picks 31–45** — the only region where the model's
+  out-of-sample log loss beats the slot prior. Bane, Kyle Anderson, and Brunson country.
+- A 25/75 model-market blend beats the market alone (1.124 vs 1.129): the box score still
+  carries signal the league underweights.
+
+![OOF calibration](report/figs/calibration_oof.png)
+
+Full write-up: [report/memo.md](report/memo.md) (front-office memo + technical appendix),
+rendered in-app at `/methodology`. Every modeling decision and its rationale:
+[DECISIONS.md](DECISIONS.md).
 
 Built on the framework a quant uses for any prediction market:
 
@@ -83,6 +102,12 @@ RSCI (via Sports-Reference), Rookie Scale + NBADraft.net consensus boards.
 Raw scraped tables are **not** redistributed in this repo — the pipeline
 rebuilds them, politely rate-limited and cached.
 
+## Deploying
+
+See [DEPLOY.md](DEPLOY.md) — GitHub + Render + Vercel + Supabase, all free tiers,
+~30–45 minutes.
+
 ## License
 
-MIT. See [DECISIONS.md](DECISIONS.md) for the modeling rationale behind every choice.
+MIT. Built by Sahil Parikh — [portfolio](https://YOUR_LINK_HERE).
+See [DECISIONS.md](DECISIONS.md) for the modeling rationale behind every choice.

@@ -28,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <nav className="flex gap-4 text-xs" style={{ color: "var(--muted)" }}>
                   <Link href="/">Board</Link>
                   <Link href="/war-room">War room</Link>
+                  <Link href="/methodology">Methodology</Link>
                 </nav>
               </div>
               <div className="flex items-center gap-3">
@@ -41,10 +42,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             className="mx-auto max-w-5xl px-5 py-8 mt-8 text-xs border-t leading-relaxed"
             style={{ color: "var(--faint)", borderColor: "var(--border)" }}
           >
-            Built on free public data (Barttorvik, Basketball-Reference, nba_api). Model:
-            ordinal regression, leave-one-class-out calibrated, 2009–2021 training classes.
-            Out of sample the market beats the model on average — trust it where it
-            disagrees loudly. Probabilities are estimates with stated uncertainty.
+            Built by Sahil Parikh —{" "}
+            <a href="https://YOUR_LINK_HERE" className="underline">
+              portfolio
+            </a>
+            . Free public data (Barttorvik, Basketball-Reference, nba_api); ordinal
+            regression, leave-one-class-out calibrated, 2009–2021 training classes. Out of
+            sample the market beats the model on average — trust it where it disagrees
+            loudly. <Link href="/privacy" className="underline">Privacy</Link>
           </footer>
         </LensProvider>
       </body>
