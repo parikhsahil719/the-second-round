@@ -156,6 +156,16 @@ def public_row(r) -> dict:
     return d
 
 
+@app.get("/")
+def index():
+    return {
+        "service": "The Second Round API",
+        "endpoints": ["/board", "/player/{slug}", "/warroom/{pick}", "/notes (POST)",
+                      "/posterior (POST)", "/memo"],
+        "app": "this is the data API — the app itself runs separately (see README)",
+    }
+
+
 @app.get("/memo")
 def memo():
     from fastapi.responses import PlainTextResponse
