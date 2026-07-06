@@ -160,9 +160,9 @@ export default function NotesPanel({
     <section className="card mt-6 px-5 py-5" id="desk">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold">Scout&apos;s desk</h2>
-        {lens === "scout" && !signedIn && supabase && (
-          <a href="/account" className="text-xs underline" style={{ color: "var(--purple)" }}>
-            Sign in to keep your book
+        {!signedIn && supabase && (
+          <a href="/signup" className="text-xs underline" style={{ color: "var(--purple)" }}>
+            Create a free account to keep your book
           </a>
         )}
       </div>
@@ -194,6 +194,11 @@ export default function NotesPanel({
           <button className="text-xs underline" style={{ color: "var(--pos)" }} onClick={saveToBook}>
             Save to my book
           </button>
+        )}
+        {result && !signedIn && supabase && (
+          <a href="/signup" className="text-xs underline" style={{ color: "var(--pos)" }}>
+            Want to keep this note? Sign up free
+          </a>
         )}
         {justSaved && (
           <span className="text-xs" style={{ color: "var(--pos)" }}>
