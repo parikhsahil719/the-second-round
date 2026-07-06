@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Lens } from "@/lib/lens";
@@ -11,6 +12,7 @@ export default function AccountPage() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { lens, setLens } = useLens();
+  const router = useRouter();
 
   useEffect(() => {
     if (!supabase) return;
@@ -38,10 +40,13 @@ export default function AccountPage() {
     else setSent(true);
   }
 
-  const roles: { id: Lens; label: string; blurb: string }[] = [
-    { id: "fan", label: "Fan", blurb: "Plain-English verdicts, comps, no jargon" },
-    { id: "office", label: "Front office", blurb: "Edges, chips, and the war room first" },
-    { id: "scout", label: "Scout", blurb: "Your notes and your book, front and center" },
+  const roles: { id: Lens; label: string; blurb: string; dest: string; action: string }[] = [
+    { id: "fan", label: "Fan", blurb: "Plain-English verdicts, comps, no jargon",
+      dest: "/", action: "Take me to the board" },
+    { id: "office", label: "Front office", blurb: "Edges, buy/fade calls, and pick planning",
+      dest: "/war-room", action: "Open the war room" },
+    { id: "scout", label: "Scout", blurb: "Write notes, build your book, argue with the model",
+      dest: "/", action: "Pick a player to scout" },
   ];
 
   return (
@@ -77,23 +82,32 @@ export default function AccountPage() {
       ) : (
         <div className="card mt-4 px-5 py-5">
           <p className="text-sm">
-            Signed in as <span style={{ color: "var(--purple)" }}>{user.email}</span>
+            You&apos;re in as <span style={{ color: "var(--purple)" }}>{user.email}</span>
           </p>
-          <p className="mt-4 text-xs font-semibold tracking-wide" style={{ color: "var(--muted)" }}>
-            DEFAULT LENS
+          <p className="serif mt-4 text-lg">How do you want to see the draft?</p>
+          <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
+            This sets your view. You can switch anytime with the toggle in the header.
           </p>
-          <div className="mt-2 flex flex-col gap-2">
+          <div className="mt-3 flex flex-col gap-2">
             {roles.map((r) => (
               <button
                 key={r.id}
-                onClick={() => setLens(r.id)}
-                className="card px-4 py-3 text-left"
+                onClick={() => {
+                  setLens(r.id);
+                  router.push(r.dest);
+                }}
+                className="card card-link px-4 py-3.5 text-left"
                 style={{ borderColor: lens === r.id ? "var(--purple)" : "var(--border)" }}
               >
-                <span className="text-sm font-medium">{r.label}</span>
-                <span className="ml-2 text-xs" style={{ color: "var(--muted)" }}>
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-medium">{r.label}</span>
+                  <span className="text-xs" style={{ color: "var(--purple)" }}>
+                    {r.action} →
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs" style={{ color: "var(--muted)" }}>
                   {r.blurb}
-                </span>
+                </p>
               </button>
             ))}
           </div>
