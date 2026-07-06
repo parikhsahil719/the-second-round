@@ -86,9 +86,11 @@ Only emit traits the note actually addresses — never infer unmentioned traits.
 Quote the exact supporting phrase as evidence."""
 
 
-def extract_llm(note: str) -> list[dict]:
+def extract_llm(note: str, api_key: str | None = None) -> list[dict]:
+    """api_key overrides the environment for THIS call only (BYO-key requests must
+    never leak into process state shared with other users)."""
     import anthropic
-    client = anthropic.Anthropic()
+    client = anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
     resp = client.messages.create(
         model="claude-haiku-4-5-20251001",
         max_tokens=1500,

@@ -109,5 +109,5 @@ See [DEPLOY.md](DEPLOY.md): GitHub + Render + Vercel + Supabase, all free tiers,
 
 ## License
 
-MIT. Built by Sahil Parikh, [portfolio](https://YOUR_LINK_HERE).
+MIT. Built by Sahil Parikh, [LinkedIn](https://www.linkedin.com/in/sahilparikh719/).
 See [DECISIONS.md](DECISIONS.md) for the modeling rationale behind every choice.
