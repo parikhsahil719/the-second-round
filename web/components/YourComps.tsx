@@ -6,8 +6,10 @@ import { TIER_LABELS, type Tier } from "@/lib/api";
 import { getMyNotes, supabase } from "@/lib/supabase";
 
 /** The signed-in user's noted comps, rendered inside the historical-profiles card.
- * Listens for "book-updated" so a save or delete on the notes desk refreshes it. */
-export default function YourComps({ slug }: { slug: string }) {
+ * Names the model's own comp list already shows are excluded: the same player
+ * never appears twice on one card. Listens for "book-updated" so a save or
+ * delete on the notes desk refreshes it. */
+export default function YourComps({ slug, exclude = [] }: { slug: string; exclude?: string[] }) {
   const [comps, setComps] = useState<Comp[]>([]);
 
   const load = useCallback(async () => {
@@ -15,9 +17,11 @@ export default function YourComps({ slug }: { slug: string }) {
     const { data } = await supabase.auth.getUser();
     if (!data.user) return;
     const notes = await getMyNotes(slug);
-    const all = notes.flatMap((n) => n.comps ?? []);
+    const taken = new Set(exclude.map((n) => n.toLowerCase()));
+    const all = notes.flatMap((n) => n.comps ?? []).filter((c) => !taken.has(compName(c).toLowerCase()));
     setComps([...new Map(all.map((c) => [compName(c).toLowerCase(), c])).values()]);
-  }, [slug]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, exclude.join("|")]);
 
   useEffect(() => {
     load();
