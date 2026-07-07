@@ -11,7 +11,7 @@ export type Mode = "signin" | "signup";
 
 // Mirrors the check constraint on profiles.username; the database is the enforcer,
 // this just fails fast in the form.
-const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
+const USERNAME_RE = /^[a-zA-Z0-9._-]{2,32}$/;
 
 // Client-side gate for a stronger UX. Also set the matching server-side policy in
 // Supabase (Auth > Providers > Email > Password Requirements) so it can't be bypassed.
@@ -122,7 +122,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
 
   const signUp = () =>
     run(async () => {
-      const { error } = await supabase!.auth.signUp({
+      const { data, error } = await supabase!.auth.signUp({
         email,
         password,
         options: {
@@ -131,6 +131,13 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
         },
       });
       if (error) throw error;
+      // with email confirmation on, Supabase reports success for an already-used
+      // email (enumeration protection) but returns a user with no identities;
+      // surface it honestly instead of promising an email that never comes
+      if (data.user && (data.user.identities?.length ?? 0) === 0) {
+        throw new Error(
+          "This email already has an account. Sign in instead, or use forgot password.");
+      }
       return "Almost there. Check your email to confirm your account, then come back and sign in.";
     });
 
@@ -237,16 +244,16 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
               <input
                 type="text"
                 autoComplete="username"
-                placeholder="Username (letters, numbers, underscores)"
+                placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="mt-3 text-sm"
                 aria-label="Username"
-                maxLength={20}
+                maxLength={32}
               />
               {username.length > 0 && !usernameValid && (
                 <p className="mt-1 text-xs" style={{ color: "var(--neg)" }}>
-                  3 to 20 characters: letters, numbers, and underscores only.
+                  2 to 32 characters: letters, numbers, dots, underscores, and hyphens.
                 </p>
               )}
             </>
