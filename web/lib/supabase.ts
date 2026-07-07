@@ -24,7 +24,8 @@ export interface SavedNote {
   slug: string;
   note_text: string;
   traits: { trait: string; score: number; confidence: number; evidence: string }[];
-  comps?: string[];
+  // strings in early notes, {name, tier} objects since comps gained tiers
+  comps?: (string | { name: string; tier: string | null })[];
   updated_at: string;
 }
 
@@ -48,7 +49,7 @@ export async function saveNote(
   slug: string,
   noteText: string,
   traits: SavedNote["traits"],
-  comps: string[] = []
+  comps: NonNullable<SavedNote["comps"]> = []
 ) {
   if (!supabase) throw new Error("accounts not configured");
   const { data: u } = await supabase.auth.getUser();

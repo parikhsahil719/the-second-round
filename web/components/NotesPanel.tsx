@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { API, TIERS, type SeedNote, type Tier } from "@/lib/api";
+import { API, TIER_LABELS, TIERS, type SeedNote, type Tier } from "@/lib/api";
 import {
   combineTraits,
   deleteNote,
@@ -23,11 +23,16 @@ interface YourView {
   your_chip: string;
 }
 
+// older saved notes hold plain strings; newer ones carry the historical tier
+export type Comp = string | { name: string; tier: string | null };
+export const compName = (c: Comp) => (typeof c === "string" ? c : c.name);
+export const compTier = (c: Comp) => (typeof c === "string" ? null : c.tier);
+
 interface NoteResult {
   mode: string;
   traits: { trait: string; score: number; confidence: number; evidence: string }[];
   tilt: number;
-  comps?: string[];
+  comps?: Comp[];
   prior: Record<Tier, number>;
   posterior: Record<Tier, number>;
   view?: YourView;
@@ -52,13 +57,13 @@ function PriorPosterior({
     <div className="mt-3 space-y-2">
       <div>
         <p className="mb-1 text-xs" style={{ color: "var(--faint)" }}>
-          Stats prior · P(star) {Math.round(star(prior) * 100)}%
+          Stats prior · star chance {Math.round(star(prior) * 100)}%
         </p>
         <TierBar tiers={prior} height={9} />
       </div>
       <div>
         <p className="mb-1 text-xs" style={{ color: "var(--purple)" }}>
-          {label} · P(star) {Math.round(star(posterior) * 100)}%
+          {label} · star chance {Math.round(star(posterior) * 100)}%
         </p>
         <TierBar tiers={posterior} height={9} />
       </div>
@@ -89,18 +94,23 @@ function ViewLine({ view, lens }: { view: YourView; lens: Lens }) {
   );
 }
 
-function CompChips({ comps, label = "Comp noted:" }: { comps?: string[]; label?: string }) {
+function CompChips({ comps, label = "Comp noted:" }: { comps?: Comp[]; label?: string }) {
   if (!comps || comps.length === 0) return null;
   return (
     <ul className="mt-2 flex flex-wrap items-center gap-1.5">
       <li className="text-xs" style={{ color: "var(--faint)" }}>{label}</li>
       {comps.map((c) => (
         <li
-          key={c}
+          key={compName(c)}
           className="rounded px-2 py-0.5 text-xs"
           style={{ background: "rgba(138,123,216,0.13)", color: "var(--purple)" }}
         >
-          {c}
+          {compName(c)}
+          {compTier(c) && (
+            <span style={{ color: "var(--muted)" }}>
+              {" "}· {TIER_LABELS[compTier(c) as Tier] ?? compTier(c)}
+            </span>
+          )}
         </li>
       ))}
     </ul>
@@ -235,7 +245,10 @@ export default function NotesPanel({
       {myView && (
         <div className="mt-3 rounded-lg px-4 py-3" style={{ background: "var(--panel)" }}>
           <PriorPosterior prior={tiers} posterior={myView.tiers} label={`Your view (${saved.length} note${saved.length === 1 ? "" : "s"})`} />
-          <CompChips comps={[...new Set(saved.flatMap((n) => n.comps ?? []))]} label="Your comps:" />
+          <CompChips
+            comps={[...new Map(saved.flatMap((n) => n.comps ?? []).map((c) => [compName(c).toLowerCase(), c])).values()]}
+            label="Your comps:"
+          />
           {myView.view && <ViewLine view={myView.view} lens={lensState.lens} />}
         </div>
       )}
@@ -257,7 +270,7 @@ export default function NotesPanel({
         placeholder={`e.g. "${playerName} guards the point of attack better than the numbers suggest, but the jumper is a project…"`}
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        maxLength={2000}
+        maxLength={4000}
         disabled={!notesAllowed}
         style={!notesAllowed ? { opacity: 0.45 } : undefined}
       />

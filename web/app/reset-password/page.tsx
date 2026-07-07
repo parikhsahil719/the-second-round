@@ -26,7 +26,11 @@ export default function ResetPassword() {
     // event firing on this page (link landed here), or the flag the global handler
     // sets before routing over. A merely signed-in visitor typing this URL must
     // not get a password form that skips the current-password check.
-    let evidence = sessionStorage.getItem("tsr-recovery") === "1";
+    // The flag is ONE-SHOT: consumed on arrival, so an abandoned recovery earlier
+    // in the tab can't reopen the form on a later direct visit.
+    const evidenceAtMount = sessionStorage.getItem("tsr-recovery") === "1";
+    sessionStorage.removeItem("tsr-recovery");
+    let evidence = evidenceAtMount;
     const timer = setTimeout(async () => {
       const { data } = await supabase!.auth.getUser();
       setReady(evidence && !!data.user);
@@ -52,7 +56,6 @@ export default function ResetPassword() {
     try {
       const { error } = await supabase!.auth.updateUser({ password: pw });
       if (error) throw error;
-      sessionStorage.removeItem("tsr-recovery");
       router.push("/account");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong. Try again.");
@@ -74,8 +77,8 @@ export default function ResetPassword() {
         <div className="card mt-4 px-5 py-5 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
           This page only works from a password-reset email link, and links expire after
           one use.{" "}
-          <Link href="/signin" className="link">
-            Request a new one from the sign-in page.
+          <Link href="/forgot-password" className="link">
+            Request a new one.
           </Link>{" "}
           Already signed in and just want a different password?{" "}
           <Link href="/account" className="link">
@@ -128,9 +131,7 @@ export default function ResetPassword() {
               {busy ? "One moment…" : "Save new password"}
             </button>
           </form>
-          {error && (
-            <p className="mt-2 text-xs" style={{ color: "var(--neg)" }}>{error}</p>
-          )}
+          {error && <div className="form-error mt-3">{error}</div>}
         </div>
       )}
     </div>

@@ -181,26 +181,42 @@ def rank_chip(model_rank, pick) -> str:
     return "BUY" if gap >= threshold else ("FADE" if gap <= -threshold else "HOLD")
 
 
-# "plays like Dejounte Murray", "shades of prime Manu Ginobili", "a poor man's Draymond"
-COMP_PATTERN = re.compile(
-    r"(?i:plays like|moves like|reminds me of|shades of|similar to|comps? to|"
-    r"a (?:poor|rich) man'?s)\s+"
-    r"(?i:(?:a|an|the|young|prime|peak|vintage)\s+)*"
-    r"([A-Z][\w'-]*(?:\s+[A-Z][\w'-]*){0,2})")
+# "plays like Dejounte Murray", "shades of prime Manu", "a poor man's Hart and Smart"
+COMP_TRIGGER = re.compile(
+    r"(?i)(?:plays like|moves like|reminds me of|shades of|similar to|comps? to|"
+    r"a (?:poor|rich) man'?s)\s+")
+COMP_FILLER = re.compile(r"(?i)^(?:(?:a|an|the|young|prime|peak|vintage)\s+)+")
+COMP_NAME = re.compile(r"^[A-Z][\w'.-]*(?:\s+[A-Z][\w'.-]*){0,2}")
+
+# comp name -> historical tier where we have one (2009-2021 outcome labels)
+_labels = pd.read_parquet(PROCESSED / "labels.parquet")
+COMP_TIERS = {str(n).lower(): t for n, t in zip(_labels.player_name, _labels.tier)
+              if pd.notna(t)}
+del _labels
 
 
-def extract_comps(note: str) -> list[str]:
-    """Player comps the scout name-dropped. Annotation only: comps never touch the
-    posterior, because the note's traits already carry the evidence and a name-drop
-    would double-count it."""
+def extract_comps(note: str) -> list[dict]:
+    """Player comps the scout name-dropped, with the historical tier when the name
+    is in our labeled classes. Annotation only: comps never touch the posterior,
+    because the note's traits already carry the evidence and a name-drop would
+    double-count it."""
     # ponytail: regex on common comp phrasings; move into the LLM extraction schema
     # if scouts phrase comps too creatively for it
-    out: list[str] = []
-    for m in COMP_PATTERN.finditer(note):
-        name = m.group(1).strip().rstrip(".,;:!?")
-        if name and name.lower() not in {n.lower() for n in out}:
-            out.append(name)
-    return out[:5]
+    names: list[str] = []
+    for m in COMP_TRIGGER.finditer(note):
+        # a trigger can introduce a list: "plays like Hart and Smart, or prime Tony Allen"
+        tail = note[m.end():m.end() + 100]
+        for chunk in re.split(r"\s*(?:,|\band\b|\bor\b|&|/)\s*", tail):
+            chunk = COMP_FILLER.sub("", chunk.strip())
+            if not chunk:
+                continue  # ", or" and friends produce empty chunks between names
+            nm = COMP_NAME.match(chunk)
+            if not nm:
+                break  # the list ended; stop at the first non-name chunk
+            name = nm.group(0).rstrip(".,;:!?")
+            if name.lower() not in {n.lower() for n in names}:
+                names.append(name)
+    return [{"name": n, "tier": COMP_TIERS.get(n.lower())} for n in names[:5]]
 
 
 def your_view(r, posterior: np.ndarray) -> dict:
@@ -417,8 +433,8 @@ def _client_ip(request: Request) -> str:
 
 @app.post("/notes")
 def notes(body: NoteIn, request: Request):
-    if len(body.note) > 2000:
-        raise HTTPException(400, "note too long (2000 chars max)")
+    if len(body.note) > 4000:
+        raise HTTPException(400, "note too long (4000 chars max)")
     hit = BOARD[BOARD.slug == body.slug]
     if hit.empty or hit.iloc[0].coverage != "model":
         raise HTTPException(404, "player not model-scored")
@@ -482,17 +498,18 @@ def _resolve_email(identifier: str) -> str | None:
 
 
 # ponytail: in-memory per-IP limiter; single Render instance today, move to a
-# shared store if this ever scales horizontally
+# shared store if this ever scales horizontally. Keys are "bucket:ip" so the
+# sign-in, email, and username-check budgets don't eat each other.
 _AUTH_HITS: dict[str, list[float]] = {}
 
 
-def _auth_rate_limit(ip: str, limit: int = 10, window: int = 300):
+def _auth_rate_limit(key: str, limit: int = 10, window: int = 300):
     now = time.time()
-    hits = [t for t in _AUTH_HITS.get(ip, []) if now - t < window]
+    hits = [t for t in _AUTH_HITS.get(key, []) if now - t < window]
     if len(hits) >= limit:
         raise HTTPException(429, "Too many attempts. Wait a few minutes and try again.")
     hits.append(now)
-    _AUTH_HITS[ip] = hits
+    _AUTH_HITS[key] = hits
 
 
 class SignInBody(BaseModel):
@@ -502,7 +519,7 @@ class SignInBody(BaseModel):
 
 @app.post("/auth/signin")
 def auth_signin(body: SignInBody, request: Request):
-    _auth_rate_limit(_client_ip(request))
+    _auth_rate_limit(f"si:{_client_ip(request)}")
     url, anon, _svc = _supabase_env()
     invalid = HTTPException(401, "Invalid email/username or password.")
     email = _resolve_email(body.identifier)
@@ -537,7 +554,7 @@ class AuthEmailBody(BaseModel):
 def auth_email(body: AuthEmailBody, request: Request):
     """Reset / magic-link / resend-confirmation. The answer is the same whether an
     account exists or not; GoTrue validates redirect_to against the allowlist."""
-    _auth_rate_limit(_client_ip(request), limit=5)
+    _auth_rate_limit(f"em:{_client_ip(request)}", limit=5)
     if body.action not in EMAIL_ACTIONS:
         raise HTTPException(400, "unknown action")
     url, anon, _svc = _supabase_env()
@@ -556,3 +573,25 @@ def auth_email(body: AuthEmailBody, request: Request):
         endpoint += f"?redirect_to={quote(body.redirect_to, safe='')}"
     requests.post(endpoint, headers={"apikey": anon}, json=payload, timeout=10)
     return generic
+
+
+class UsernameCheck(BaseModel):
+    username: str
+
+
+@app.post("/auth/username-check")
+def username_check(body: UsernameCheck, request: Request):
+    """Signup-time availability so taken names are rejected up front instead of
+    silently suffixed. Disclosing that a username EXISTS is inherent to any signup
+    form; the email behind it stays server-side."""
+    _auth_rate_limit(f"chk:{_client_ip(request)}", limit=20)
+    url, _anon, svc = _supabase_env()
+    # ilike with wildcards escaped = case-insensitive equality
+    pat = body.username.strip().replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_")
+    r = requests.get(
+        f"{url}/rest/v1/profiles",
+        headers={"apikey": svc, "Authorization": f"Bearer {svc}"},
+        params={"select": "user_id", "username": f"ilike.{pat}", "limit": "1"},
+        timeout=10)
+    taken = r.ok and len(r.json()) > 0
+    return {"available": not taken}

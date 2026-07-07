@@ -7,7 +7,7 @@ create table if not exists scout_notes (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade not null,
   slug text not null,
-  note_text text not null check (char_length(note_text) <= 2000),
+  note_text text not null check (char_length(note_text) <= 4000),
   traits jsonb not null default '[]',
   comps jsonb not null default '[]',
   updated_at timestamptz not null default now()
@@ -113,3 +113,8 @@ grant execute on function public.email_for_username(text) to service_role;
 -- alter table profiles add constraint profiles_username_check
 --   check (username ~ '^[a-zA-Z0-9._-]{2,32}$');
 -- create unique index if not exists profiles_username_lower on profiles (lower(username));
+--
+-- Projects created when notes were capped at 2000 characters: run these two lines.
+-- alter table scout_notes drop constraint scout_notes_note_text_check;
+-- alter table scout_notes add constraint scout_notes_note_text_check
+--   check (char_length(note_text) <= 4000);
