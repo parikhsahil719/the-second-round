@@ -210,6 +210,7 @@ export default function NotesPanel({
       await saveNote(slug, note, result.traits, result.comps ?? []);
       setJustSaved(true);
       await refreshBook();
+      window.dispatchEvent(new Event("book-updated"));
     } catch (e) {
       setError(e instanceof Error ? e.message : "could not save");
     }
@@ -369,6 +370,7 @@ export default function NotesPanel({
           setDeleting(false);
           setDeleteTarget(null);
           await refreshBook();
+          window.dispatchEvent(new Event("book-updated"));
         }}
         onCancel={() => setDeleteTarget(null)}
       />
