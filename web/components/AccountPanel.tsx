@@ -72,9 +72,10 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
   const router = useRouter();
 
   const usernameValid = USERNAME_RE.test(username.trim());
-  const canSubmit = !busy && email.includes("@") &&
-    (mode === "signin" ? password.length >= 1
-                       : usernameValid && pwValid(password) && confirm === password);
+  const canSubmit = !busy &&
+    (mode === "signin"
+      ? email.trim().length >= 2 && password.length >= 1
+      : email.includes("@") && usernameValid && pwValid(password) && confirm === password);
 
   useEffect(() => {
     if (!supabase) return;
@@ -113,10 +114,26 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
     }
   }
 
+  // the identifier field takes an email or a username; usernames resolve to the
+  // account email through a narrow security-definer RPC (see schema.sql)
+  const resolveEmail = async (): Promise<string> => {
+    const id = email.trim();
+    if (id.includes("@")) return id;
+    const { data } = await supabase!.rpc("email_for_username", { uname: id });
+    if (!data) throw new Error("No account found for that username.");
+    return data as string;
+  };
+
   const signIn = () =>
     run(async () => {
-      const { error } = await supabase!.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      const em = await resolveEmail();
+      const { error } = await supabase!.auth.signInWithPassword({ email: em, password });
+      if (error) {
+        // keep the unconfirmed-email error visible (it drives the resend button);
+        // everything else collapses to one message
+        if (error.message.toLowerCase().includes("confirm")) throw error;
+        throw new Error("Invalid email/username or password.");
+      }
       return null;
     });
 
@@ -159,12 +176,12 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
     });
 
   // email-dependent link-buttons stay clickable (dead links confuse); without an
-  // email they explain what's missing instead of silently doing nothing
+  // identifier they explain what's missing instead of silently doing nothing
   const withEmail = (fn: () => void) => () => {
-    if (email.includes("@")) fn();
+    if (email.trim().length >= 2) fn();
     else {
       setInfo(null);
-      setError("Enter your email above first.");
+      setError("Enter your email or username above first.");
     }
   };
 
@@ -181,7 +198,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
     run(async () => {
       const { error } = await supabase!.auth.resend({
         type: "signup",
-        email,
+        email: await resolveEmail(),
         options: { emailRedirectTo: window.location.origin + "/account" },
       });
       if (error) throw error;
@@ -191,7 +208,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
   const magicLink = () =>
     run(async () => {
       const { error } = await supabase!.auth.signInWithOtp({
-        email,
+        email: await resolveEmail(),
         options: { emailRedirectTo: window.location.origin + "/account" },
       });
       if (error) throw error;
@@ -200,7 +217,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
 
   const forgot = () =>
     run(async () => {
-      const { error } = await supabase!.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase!.auth.resetPasswordForEmail(await resolveEmail(), {
         redirectTo: window.location.origin + "/reset-password",
       });
       if (error) throw error;
@@ -241,7 +258,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
             {mode === "signup"
               ? "Pick a username (it's permanent for now) and a password with an uppercase and lowercase letter, a number, and a symbol. One confirmation email, then it's just your password from there. Accounts keep your scout notes across visits."
-              : "Welcome back. Email and password, or have a one-time link emailed instead."}
+              : "Welcome back. Email or username plus your password, or have a one-time sign-in link emailed instead."}
           </p>
           <form
             onSubmit={(e) => {
@@ -269,13 +286,13 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
             </>
           )}
           <input
-            type="email"
-            autoComplete="email"
-            placeholder="you@example.com"
+            type={mode === "signup" ? "email" : "text"}
+            autoComplete={mode === "signup" ? "email" : "username"}
+            placeholder={mode === "signup" ? "you@example.com" : "Email or username"}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="mt-3 text-sm"
-            aria-label="Email address"
+            aria-label={mode === "signup" ? "Email address" : "Email or username"}
           />
           <input
             type="password"

@@ -82,6 +82,26 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
+-- Sign-in accepts a username in place of an email; this resolves one to the other
+-- (case-insensitive). Security definer because profiles are otherwise owner-only.
+-- Documented tradeoff: a correctly GUESSED username reveals its account email.
+-- Acceptable while usernames appear nowhere public in the product; if profiles ever
+-- go public, move resolution behind the API instead of exposing it to anon.
+create or replace function public.email_for_username(uname text)
+returns text
+language sql
+stable
+security definer set search_path = public
+as $$
+  select u.email
+  from auth.users u
+  join public.profiles p on p.user_id = u.id
+  where lower(p.username) = lower(uname);
+$$;
+
+revoke all on function public.email_for_username(text) from public;
+grant execute on function public.email_for_username(text) to anon, authenticated;
+
 -- Existing projects: paste everything from "create table if not exists profiles"
 -- down to here into the SQL editor once. Accounts created before this have no
 -- profile row; the app falls back to the email prefix for them.

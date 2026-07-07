@@ -72,6 +72,7 @@ takes ~30s. Acceptable for now (see DECISIONS.md D16 for the $7/mo upgrade trigg
 - [ ] Live note on any player returns traits (first hit may take ~30s if the API napped)
 - [ ] Sign up with username + password; confirm email; save a note; refresh;
       "Your view" and your comps persist
+- [ ] Sign out, then sign back in using the USERNAME (not the email) + password
 - [ ] Change password (account settings) and the forgot-password loop
       (`/reset-password`) both work
 - [ ] Privacy page linked in the footer
