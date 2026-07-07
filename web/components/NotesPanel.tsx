@@ -11,6 +11,7 @@ import {
   type SavedNote,
 } from "@/lib/supabase";
 import { canUseNotes, chipLabel, useLens, type Lens } from "@/lib/lens";
+import ConfirmDialog from "./ConfirmDialog";
 import { TierBar } from "./TierBar";
 
 interface YourView {
@@ -26,6 +27,7 @@ interface NoteResult {
   mode: string;
   traits: { trait: string; score: number; confidence: number; evidence: string }[];
   tilt: number;
+  comps?: string[];
   prior: Record<Tier, number>;
   posterior: Record<Tier, number>;
   view?: YourView;
@@ -87,6 +89,24 @@ function ViewLine({ view, lens }: { view: YourView; lens: Lens }) {
   );
 }
 
+function CompChips({ comps, label = "Comp noted:" }: { comps?: string[]; label?: string }) {
+  if (!comps || comps.length === 0) return null;
+  return (
+    <ul className="mt-2 flex flex-wrap items-center gap-1.5">
+      <li className="text-xs" style={{ color: "var(--faint)" }}>{label}</li>
+      {comps.map((c) => (
+        <li
+          key={c}
+          className="rounded px-2 py-0.5 text-xs"
+          style={{ background: "rgba(138,123,216,0.13)", color: "var(--purple)" }}
+        >
+          {c}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function TraitList({ traits }: { traits: NoteResult["traits"] }) {
   return (
     <ul className="mt-2 flex flex-wrap gap-1.5">
@@ -132,6 +152,8 @@ export default function NotesPanel({
   const [saved, setSaved] = useState<SavedNote[]>([]);
   const [myView, setMyView] = useState<{ tiers: Record<Tier, number>; view?: YourView } | null>(null);
   const [justSaved, setJustSaved] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<SavedNote | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const refreshBook = useCallback(async () => {
     const notes = await getMyNotes(slug);
@@ -185,7 +207,7 @@ export default function NotesPanel({
   async function saveToBook() {
     if (!result) return;
     try {
-      await saveNote(slug, note, result.traits);
+      await saveNote(slug, note, result.traits, result.comps ?? []);
       setJustSaved(true);
       await refreshBook();
     } catch (e) {
@@ -212,6 +234,7 @@ export default function NotesPanel({
       {myView && (
         <div className="mt-3 rounded-lg px-4 py-3" style={{ background: "var(--panel)" }}>
           <PriorPosterior prior={tiers} posterior={myView.tiers} label={`Your view (${saved.length} note${saved.length === 1 ? "" : "s"})`} />
+          <CompChips comps={[...new Set(saved.flatMap((n) => n.comps ?? []))]} label="Your comps:" />
           {myView.view && <ViewLine view={myView.view} lens={lensState.lens} />}
         </div>
       )}
@@ -244,7 +267,11 @@ export default function NotesPanel({
           {busy ? "Reading the note…" : "Update the numbers"}
         </button>
         {result && signedIn && !justSaved && (
-          <button className="text-xs underline" style={{ color: "var(--pos)" }} onClick={saveToBook}>
+          <button
+            className="btn text-sm"
+            style={{ background: "var(--pos)" }}
+            onClick={saveToBook}
+          >
             Save to my book
           </button>
         )}
@@ -252,11 +279,6 @@ export default function NotesPanel({
           <a href="/signup" className="text-xs underline" style={{ color: "var(--pos)" }}>
             Want to keep this note? Sign up free
           </a>
-        )}
-        {justSaved && (
-          <span className="text-xs" style={{ color: "var(--pos)" }}>
-            Saved
-          </span>
         )}
         <button
           className="text-xs underline"
@@ -280,6 +302,14 @@ export default function NotesPanel({
           {error}
         </p>
       )}
+      {justSaved && (
+        <div
+          className="mt-3 rounded-lg px-4 py-2.5 text-sm"
+          style={{ background: "rgba(93,202,165,0.12)", color: "var(--pos)" }}
+        >
+          ✓ Saved to your book. It now counts toward your view of this player.
+        </div>
+      )}
 
       {result && (
         <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--border)" }}>
@@ -290,6 +320,7 @@ export default function NotesPanel({
             {result.tilt.toFixed(2)}
           </p>
           <TraitList traits={result.traits} />
+          <CompChips comps={result.comps} />
           <PriorPosterior prior={result.prior} posterior={result.posterior} />
           {result.view && <ViewLine view={result.view} lens={lensState.lens} />}
         </div>
@@ -303,23 +334,44 @@ export default function NotesPanel({
           {saved.map((n) => (
             <div key={n.id} className="mt-3">
               <p className="serif text-sm leading-relaxed">“{n.note_text}”</p>
-              <div className="flex items-center gap-3">
-                <TraitList traits={n.traits} />
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <TraitList traits={n.traits} />
+                  <CompChips comps={n.comps} />
+                </div>
                 <button
-                  className="text-xs underline"
-                  style={{ color: "var(--faint)" }}
-                  onClick={async () => {
-                    await deleteNote(n.id);
-                    await refreshBook();
-                  }}
+                  className="btn-ghost mt-2 shrink-0 text-xs"
+                  style={{ color: "var(--neg)", borderColor: "rgba(224,138,122,0.4)" }}
+                  onClick={() => setDeleteTarget(n)}
                 >
-                  delete
+                  Delete
                 </button>
               </div>
             </div>
           ))}
         </div>
       )}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete this note?"
+        body={
+          deleteTarget
+            ? `"${deleteTarget.note_text.slice(0, 100)}${deleteTarget.note_text.length > 100 ? "…" : ""}" leaves your book and your view updates without it. This can't be undone.`
+            : undefined
+        }
+        confirmLabel="Delete note"
+        danger
+        busy={deleting}
+        onConfirm={async () => {
+          if (!deleteTarget) return;
+          setDeleting(true);
+          await deleteNote(deleteTarget.id);
+          setDeleting(false);
+          setDeleteTarget(null);
+          await refreshBook();
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       {seedNotes.length > 0 && (
         <div className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }}>
