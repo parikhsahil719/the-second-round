@@ -45,7 +45,18 @@ export function LensProvider({ children }: { children: React.ReactNode }) {
       }
     };
     supabase.auth.getUser().then(({ data }) => apply(data.user));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => apply(s?.user ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((e, s) => {
+      apply(s?.user ?? null);
+      // recovery links can land anywhere (Supabase falls back to the Site URL when
+      // a redirect isn't allowlisted); this provider mounts on every page, so route
+      // the user to the reset form no matter where they arrived
+      if (e === "PASSWORD_RECOVERY" && !window.location.pathname.startsWith("/reset-password")) {
+        // the flag is the reset page's proof this is a real recovery, not just
+        // any signed-in visitor typing the URL
+        sessionStorage.setItem("tsr-recovery", "1");
+        window.location.assign("/reset-password");
+      }
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 

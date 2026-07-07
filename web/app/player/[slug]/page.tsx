@@ -24,7 +24,7 @@ export default async function PlayerPage({
 
   return (
     <>
-      <Link href={back.href} className="text-xs" style={{ color: "var(--muted)" }}>
+      <Link href={back.href} className="link text-xs">
         {back.label}
       </Link>
 

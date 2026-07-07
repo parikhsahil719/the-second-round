@@ -25,10 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link href="/" className="serif text-xl">
                   The Second Round
                 </Link>
-                <nav className="flex gap-4 text-xs" style={{ color: "var(--muted)" }}>
-                  <Link href="/">Board</Link>
-                  <Link href="/war-room">War room</Link>
-                  <Link href="/methodology">How it works</Link>
+                <nav className="flex gap-4 text-xs">
+                  <Link href="/" className="nav-link">Board</Link>
+                  <Link href="/war-room" className="nav-link">War room</Link>
+                  <Link href="/methodology" className="nav-link">How it works</Link>
                 </nav>
               </div>
               <div className="flex items-center gap-3">
@@ -43,13 +43,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             style={{ color: "var(--faint)", borderColor: "var(--border)" }}
           >
             Built by Sahil Parikh (
-            <a href="https://www.linkedin.com/in/sahilparikh719/" className="underline">
+            <a href="https://www.linkedin.com/in/sahilparikh719/" className="link">
               LinkedIn
             </a>
             ). Free public data: Barttorvik, Basketball-Reference, nba_api. Tested against
             every draft from 2009 to 2021. On the average pick the market beats the model.
             Trust it where it disagrees loudly.{" "}
-            <Link href="/privacy" className="underline">Privacy</Link>
+            <Link href="/privacy" className="link">Privacy</Link>
           </footer>
         </LensProvider>
       </body>
