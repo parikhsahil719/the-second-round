@@ -10,7 +10,7 @@ import {
   supabase,
   type SavedNote,
 } from "@/lib/supabase";
-import { useLens } from "@/lib/lens";
+import { canUseNotes, useLens } from "@/lib/lens";
 import { TierBar } from "./TierBar";
 
 interface NoteResult {
@@ -87,7 +87,8 @@ export default function NotesPanel({
   seedNotes: SeedNote[];
   tiers: Record<Tier, number>;
 }) {
-  const { lens } = useLens();
+  const lensState = useLens();
+  const notesAllowed = canUseNotes(lensState);
   const [note, setNote] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
@@ -178,6 +179,17 @@ export default function NotesPanel({
         </div>
       )}
 
+      {!notesAllowed && (
+        <div className="mt-3 rounded-lg px-4 py-3 text-xs leading-relaxed"
+             style={{ background: "var(--panel)", color: "var(--muted)" }}>
+          Note-taking is a Scout and Front office tool. Fans watch the game; scouts write
+          it down.{" "}
+          <a href="/account" className="underline" style={{ color: "var(--purple)" }}>
+            Switch your role in account settings
+          </a>{" "}
+          to open the desk.
+        </div>
+      )}
       <textarea
         rows={3}
         className="mt-3 text-sm"
@@ -185,9 +197,13 @@ export default function NotesPanel({
         value={note}
         onChange={(e) => setNote(e.target.value)}
         maxLength={2000}
+        disabled={!notesAllowed}
+        style={!notesAllowed ? { opacity: 0.45 } : undefined}
       />
       <div className="mt-2 flex flex-wrap items-center gap-3">
-        <button className="btn text-sm" onClick={submit} disabled={busy || note.trim().length < 20}>
+        <button className="btn text-sm" onClick={submit}
+                disabled={!notesAllowed || busy || note.trim().length < 20}
+                style={!notesAllowed ? { opacity: 0.45 } : undefined}>
           {busy ? "Reading the note…" : "Update the numbers"}
         </button>
         {result && signedIn && !justSaved && (

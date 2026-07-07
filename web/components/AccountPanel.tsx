@@ -107,12 +107,12 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
     });
 
   const roles: { id: Lens; label: string; blurb: string; dest: string; action: string }[] = [
-    { id: "fan", label: "Fan", blurb: "Plain-English verdicts, comps, no jargon",
+    { id: "fan", label: "Fan", blurb: "The board and player pages in plain English",
       dest: "/", action: "Take me to the board" },
-    { id: "office", label: "Front office", blurb: "Edges, buy/fade calls, and pick planning",
-      dest: "/war-room", action: "Open the war room" },
-    { id: "scout", label: "Scout", blurb: "Write notes, build your book, argue with the model",
+    { id: "scout", label: "Scout", blurb: "Everything fans get, plus notes and your book",
       dest: "/", action: "Pick a player to scout" },
+    { id: "office", label: "Front office", blurb: "Everything scouts get, plus the war room and edge numbers",
+      dest: "/war-room", action: "Open the war room" },
   ];
 
   return (
@@ -252,15 +252,17 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           <p className="text-sm">
             You&apos;re in as <span style={{ color: "var(--purple)" }}>{user.email}</span>
           </p>
-          <p className="serif mt-4 text-lg">How do you want to see the draft?</p>
+          <p className="serif mt-4 text-lg">Choose your role</p>
           <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
-            This sets your view. You can switch anytime with the toggle in the header.
+            Your role shapes what you see and unlocks its tools. You can change it here
+            anytime.
           </p>
           <div className="mt-3 flex flex-col gap-2">
             {roles.map((r) => (
               <button
                 key={r.id}
-                onClick={() => {
+                onClick={async () => {
+                  await supabase!.auth.updateUser({ data: { role: r.id } });
                   setLens(r.id);
                   router.push(r.dest);
                 }}

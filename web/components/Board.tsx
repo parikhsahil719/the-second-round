@@ -22,7 +22,8 @@ function PickSquare({ row }: { row: BoardRow }) {
 }
 
 export function Row({ row }: { row: BoardRow }) {
-  const { lens } = useLens();
+  const { lens, signedIn, role } = useLens();
+  const showEv = signedIn ? role === "office" : lens !== "fan";
   return (
     <Link
       href={`/player/${row.slug}`}
@@ -61,7 +62,7 @@ export function Row({ row }: { row: BoardRow }) {
       </div>
       <div className="flex w-24 flex-col items-end gap-1">
         <Chip chip={row.chip} lens={lens} />
-        {lens !== "fan" && row.edge_slot != null && (
+        {showEv && row.edge_slot != null && (
           <span
             className="num text-sm"
             style={{ color: row.edge_slot > 0 ? "var(--pos)" : "var(--neg)" }}
