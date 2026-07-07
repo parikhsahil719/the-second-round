@@ -4,14 +4,12 @@
 requests==2.34.2
 pandas==3.0.3
 pyarrow==24.0.0
-duckdb==1.5.4
 lxml==6.1.1
 beautifulsoup4==4.15.0
 nba_api==1.11.4
 numpy==2.4.6
 scikit-learn==1.9.0
 lightgbm==4.6.0
-statsmodels==0.14.6
 matplotlib==3.11.0
 joblib==1.5.3
 mord==0.7
