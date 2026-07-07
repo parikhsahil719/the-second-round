@@ -88,3 +88,20 @@ textarea:focus { border-color: var(--purple); }
   cursor: pointer;
 }
 .btn:disabled { opacity: 0.45; cursor: default; }
+
+.locked-note {
+  border: 1px dashed rgba(245, 184, 61, 0.55);
+  background: rgba(245, 184, 61, 0.07);
+  border-radius: 8px;
+  color: #e8ce9a;
+}
+.locked-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--gold);
+  color: #1d1b22;
+}

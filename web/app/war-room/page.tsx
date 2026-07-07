@@ -49,9 +49,12 @@ export default function WarRoom() {
     return (
       <>
         <h1 className="serif text-3xl">The war room</h1>
-        <div className="card mt-6 px-6 py-10 text-center">
-          <p className="serif text-lg">This is a front office tool</p>
-          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+        <div className="locked-note mt-6 px-6 py-10 text-center">
+          <span className="locked-tag">FRONT OFFICE ONLY</span>
+          <p className="serif mt-3 text-lg" style={{ color: "var(--text)" }}>
+            This is a front office tool
+          </p>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed">
             Pick planning, availability odds from 10,000 simulated drafts, and the edge
             numbers live here. Your current role doesn&apos;t include it.
           </p>

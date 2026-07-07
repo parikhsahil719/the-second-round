@@ -31,6 +31,7 @@ export default async function PlayerPage({
         <h1 className="serif text-3xl">{p.player_name}</h1>
         <span className="text-sm" style={{ color: "var(--muted)" }}>
           {p.pick != null ? `Pick ${p.pick}` : "Undrafted"}
+          {p.model_rank != null ? ` · model's rank #${p.model_rank}` : ""}
           {p.consensus_rank != null ? ` · consensus #${p.consensus_rank}` : ""}
           {p.college ? ` · ${p.college}` : ""}
           {posLabel ? ` · ${posLabel}` : ""}

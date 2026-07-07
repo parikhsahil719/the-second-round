@@ -105,8 +105,8 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
       </div>
       <p className="mb-3 text-xs leading-relaxed" style={{ color: "var(--faint)" }}>
         {officeView
-          ? "The green or red number is the edge: the model's price minus the slot's price. BUY and FADE fire when it passes ±2."
-          : "STEAL means the model valued the player well above where he was drafted; PRICEY means below."}
+          ? "BUY means he was drafted well below where the model ranked him in this class; FADE means well above. The green or red number is the value gap versus his slot price."
+          : "STEAL means he was drafted well below where the model ranked him in this class; PRICEY means well above."}
       </p>
       <input
         type="text"

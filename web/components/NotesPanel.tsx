@@ -180,11 +180,11 @@ export default function NotesPanel({
       )}
 
       {!notesAllowed && (
-        <div className="mt-3 rounded-lg px-4 py-3 text-xs leading-relaxed"
-             style={{ background: "var(--panel)", color: "var(--muted)" }}>
+        <div className="locked-note mt-3 px-4 py-3 text-xs leading-relaxed">
+          <span className="locked-tag mr-2">LOCKED</span>
           Note-taking is a Scout and Front office tool. Fans watch the game; scouts write
           it down.{" "}
-          <a href="/account" className="underline" style={{ color: "var(--purple)" }}>
+          <a href="/account" className="underline" style={{ color: "var(--gold)" }}>
             Switch your role in account settings
           </a>{" "}
           to open the desk.
