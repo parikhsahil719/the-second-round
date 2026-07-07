@@ -29,14 +29,17 @@ create policy "own notes delete" on scout_notes
   for delete using (auth.uid() = user_id);
 
 -- Usernames: chosen at signup, immutable for now. The table (not the UI) enforces
--- the rules: unique, 3-20 chars, letters/digits/underscore. Immutability is the
--- deliberate ABSENCE of an update policy under RLS.
+-- the rules: unique regardless of case, 2-32 chars, letters/digits/dot/underscore/
+-- hyphen. Immutability is the deliberate ABSENCE of an update policy under RLS.
 create table if not exists profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   username text not null unique
-    check (username ~ '^[a-zA-Z0-9_]{3,20}$'),
+    check (username ~ '^[a-zA-Z0-9._-]{2,32}$'),
   created_at timestamptz not null default now()
 );
+
+-- "Sahil" and "sahil" are the same name
+create unique index if not exists profiles_username_lower on profiles (lower(username));
 
 alter table profiles enable row level security;
 
@@ -60,14 +63,14 @@ declare
   candidate text;
 begin
   base := coalesce(
-    nullif(regexp_replace(new.raw_user_meta_data->>'username', '[^a-zA-Z0-9_]', '', 'g'), ''),
+    nullif(regexp_replace(new.raw_user_meta_data->>'username', '[^a-zA-Z0-9._-]', '', 'g'), ''),
     'scout');
-  candidate := left(base, 20);
-  if char_length(candidate) < 3 then
+  candidate := left(base, 32);
+  if char_length(candidate) < 2 then
     candidate := candidate || '_' || left(md5(random()::text), 4);
   end if;
-  while exists (select 1 from public.profiles where username = candidate) loop
-    candidate := left(base, 14) || '_' || left(md5(random()::text), 4);
+  while exists (select 1 from public.profiles where lower(username) = lower(candidate)) loop
+    candidate := left(base, 26) || '_' || left(md5(random()::text), 4);
   end loop;
   insert into public.profiles (user_id, username) values (new.id, candidate);
   return new;
@@ -82,3 +85,11 @@ create trigger on_auth_user_created
 -- Existing projects: paste everything from "create table if not exists profiles"
 -- down to here into the SQL editor once. Accounts created before this have no
 -- profile row; the app falls back to the email prefix for them.
+--
+-- Projects that ran the FIRST profiles version (3-20 chars, underscore only,
+-- case-sensitive unique): run these three lines, then re-run the function block
+-- above to pick up the new trigger logic.
+-- alter table profiles drop constraint profiles_username_check;
+-- alter table profiles add constraint profiles_username_check
+--   check (username ~ '^[a-zA-Z0-9._-]{2,32}$');
+-- create unique index if not exists profiles_username_lower on profiles (lower(username));
