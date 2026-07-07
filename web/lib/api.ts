@@ -38,9 +38,7 @@ export interface BoardRow {
   ev_slot?: number;
   ev_consensus?: number | null;
   edge_slot?: number | null;
-  edge_consensus?: number | null;
   chip?: "BUY" | "HOLD" | "FADE" | "N/A";
-  star_flag?: boolean;
   age?: number | null;
   model_rank?: number | null;
   why_pos?: string[];
@@ -62,8 +60,6 @@ export interface SeedNote {
   prior: number[];
   posterior: number[];
   tilt: number;
-  p_star_prior: number;
-  p_star_posterior: number;
 }
 
 export interface PlayerDetail extends BoardRow {
