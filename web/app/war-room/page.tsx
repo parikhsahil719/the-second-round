@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Headshot from "@/components/Headshot";
 import { API } from "@/lib/api";
-import { canUseOffice, chipLabel, useLens } from "@/lib/lens";
+import { canUseOffice, useLens } from "@/lib/lens";
 
 interface WarRoomRow {
   player_name: string;
@@ -15,7 +15,8 @@ interface WarRoomRow {
   availability: number;
   ev_model: number | null;
   p_star: number | null;
-  chip: string;
+  surplus: number | null;
+  chip: "WORTH IT" | "FAIR" | "PASS" | "N/A";
 }
 
 export default function WarRoom() {
@@ -24,6 +25,7 @@ export default function WarRoom() {
   const officeAllowed = canUseOffice(lensState);
   const [pick, setPick] = useState(1);
   const [rows, setRows] = useState<WarRoomRow[] | null>(null);
+  const [pickPrice, setPickPrice] = useState<number | null>(null);
   const [note, setNote] = useState("");
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export default function WarRoom() {
       .then((d) => {
         if (live) {
           setRows(d.players);
+          setPickPrice(d.pick_price ?? null);
           setNote(d.note);
         }
       })
@@ -95,6 +98,13 @@ export default function WarRoom() {
           {pick}
         </span>
       </div>
+      {pickPrice != null && (
+        <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--faint)" }}>
+          Pick {pick} historically returns about {pickPrice.toFixed(1)} career-value
+          points. WORTH IT means the model values the player above that price; PASS means
+          you would be overpaying at this pick.
+        </p>
+      )}
 
       <div className="mt-4 flex flex-col gap-2">
         {rows === null ? (
@@ -130,22 +140,28 @@ export default function WarRoom() {
                   {Math.round(r.availability * 100)}%
                 </span>
               </div>
-              {lens !== "fan" && r.ev_model != null && (
-                <span className="num w-12 text-right text-xs" style={{ color: "var(--muted)" }}>
-                  EV {r.ev_model.toFixed(1)}
+              {lens !== "fan" && r.surplus != null && (
+                <span
+                  className="num w-14 text-right text-xs"
+                  title="Model valuation minus this pick's price"
+                  style={{ color: r.surplus > 0 ? "var(--pos)" : "var(--neg)" }}
+                >
+                  {r.surplus > 0 ? "+" : ""}
+                  {r.surplus.toFixed(1)}
                 </span>
               )}
-              <span className={`chip ${r.chip === "BUY" ? "chip-buy" : r.chip === "FADE" ? "chip-fade" : r.chip === "HOLD" ? "chip-hold" : "chip-na"}`}>
-                {chipLabel(r.chip, lens)}
+              <span className={`chip ${r.chip === "WORTH IT" ? "chip-buy" : r.chip === "PASS" ? "chip-fade" : r.chip === "FAIR" ? "chip-hold" : "chip-na"}`}>
+                {r.chip}
               </span>
             </Link>
           ))
         )}
       </div>
       <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--faint)" }}>
-        {note} Sorted by model EV, so the top of this list is the best realistically
-        available. Availability % is the share of simulations where the player is still
-        on the board.
+        {note} Sorted by the model&apos;s valuation, so the top of this list is the best
+        realistically available. Availability % is the share of simulations where the
+        player is still on the board when your pick arrives. Labels and numbers update
+        with your pick.
       </p>
     </>
   );
