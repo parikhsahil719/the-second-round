@@ -84,9 +84,9 @@ create trigger on_auth_user_created
 
 -- Sign-in accepts a username in place of an email; this resolves one to the other
 -- (case-insensitive). Security definer because profiles are otherwise owner-only.
--- Documented tradeoff: a correctly GUESSED username reveals its account email.
--- Acceptable while usernames appear nowhere public in the product; if profiles ever
--- go public, move resolution behind the API instead of exposing it to anon.
+-- Callable ONLY by the service role: the API does the resolution server-side, so a
+-- browser can never turn someone's username into their email (the same posture as
+-- any modern login system).
 create or replace function public.email_for_username(uname text)
 returns text
 language sql
@@ -99,8 +99,8 @@ as $$
   where lower(p.username) = lower(uname);
 $$;
 
-revoke all on function public.email_for_username(text) from public;
-grant execute on function public.email_for_username(text) to anon, authenticated;
+revoke all on function public.email_for_username(text) from public, anon, authenticated;
+grant execute on function public.email_for_username(text) to service_role;
 
 -- Existing projects: paste everything from "create table if not exists profiles"
 -- down to here into the SQL editor once. Accounts created before this have no

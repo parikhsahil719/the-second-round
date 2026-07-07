@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { API } from "@/lib/api";
 import { getMyUsername, supabase } from "@/lib/supabase";
 import type { Lens } from "@/lib/lens";
 import { useLens } from "@/lib/lens";
@@ -114,27 +115,49 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
     }
   }
 
-  // the identifier field takes an email or a username; usernames resolve to the
-  // account email through a narrow security-definer RPC (see schema.sql)
-  const resolveEmail = async (): Promise<string> => {
-    const id = email.trim();
-    if (id.includes("@")) return id;
-    const { data } = await supabase!.rpc("email_for_username", { uname: id });
-    if (!data) throw new Error("No account found for that username.");
-    return data as string;
-  };
-
+  // Modern-login posture: identifier + password travel to our API together,
+  // username resolution happens server-side, and the browser only ever learns
+  // success or failure. The API's 403 for unconfirmed emails contains "confirm",
+  // which is what surfaces the resend button below.
   const signIn = () =>
     run(async () => {
-      const em = await resolveEmail();
-      const { error } = await supabase!.auth.signInWithPassword({ email: em, password });
-      if (error) {
-        // keep the unconfirmed-email error visible (it drives the resend button);
-        // everything else collapses to one message
-        if (error.message.toLowerCase().includes("confirm")) throw error;
-        throw new Error("Invalid email/username or password.");
+      const res = await fetch(`${API}/auth/signin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: email.trim(), password }),
+      });
+      if (res.status === 503 && email.includes("@")) {
+        // proxy env not configured yet; plain email sign-in still works directly
+        const { error } = await supabase!.auth.signInWithPassword({ email: email.trim(), password });
+        if (error) throw new Error("Invalid email/username or password.");
+        return null;
       }
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.detail ?? "Invalid email/username or password.");
+      const { error } = await supabase!.auth.setSession({
+        access_token: d.access_token,
+        refresh_token: d.refresh_token,
+      });
+      if (error) throw error;
       return null;
+    });
+
+  // reset / magic link / resend-confirmation go through the API too, so the
+  // answer never reveals whether an account exists
+  const authEmail = (action: "reset" | "magic" | "confirm", redirectPath: string) =>
+    run(async () => {
+      const res = await fetch(`${API}/auth/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: email.trim(),
+          action,
+          redirect_to: window.location.origin + redirectPath,
+        }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.detail ?? "Could not send the email. Try again in a moment.");
+      return d.message ?? "If an account matches, an email is on its way.";
     });
 
   const signUp = () =>
@@ -194,35 +217,9 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
       return `Reset link sent to ${user!.email}.`;
     });
 
-  const resendConfirm = () =>
-    run(async () => {
-      const { error } = await supabase!.auth.resend({
-        type: "signup",
-        email: await resolveEmail(),
-        options: { emailRedirectTo: window.location.origin + "/account" },
-      });
-      if (error) throw error;
-      return "Confirmation email sent again. If it doesn't arrive, the shared email limit may be reached (about 2 per hour); wait a bit and retry.";
-    });
-
-  const magicLink = () =>
-    run(async () => {
-      const { error } = await supabase!.auth.signInWithOtp({
-        email: await resolveEmail(),
-        options: { emailRedirectTo: window.location.origin + "/account" },
-      });
-      if (error) throw error;
-      return "Sign-in link sent. Check your email.";
-    });
-
-  const forgot = () =>
-    run(async () => {
-      const { error } = await supabase!.auth.resetPasswordForEmail(await resolveEmail(), {
-        redirectTo: window.location.origin + "/reset-password",
-      });
-      if (error) throw error;
-      return "Password reset email sent. The link takes you to a page to choose a new one.";
-    });
+  const resendConfirm = () => authEmail("confirm", "/account");
+  const magicLink = () => authEmail("magic", "/account");
+  const forgot = () => authEmail("reset", "/reset-password");
 
   const roles: { id: Lens; label: string; blurb: string; dest: string; action: string }[] = [
     { id: "fan", label: "Fan", blurb: "The board and player pages in plain English",

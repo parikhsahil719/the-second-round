@@ -30,8 +30,13 @@ Confirm `.env` did NOT get pushed (it's gitignored; check the repo page).
 1. render.com → New → Blueprint → connect the GitHub repo. Render reads `render.yaml`.
 2. When prompted for `ANTHROPIC_API_KEY`, paste your key (this funds the capped live
    note extraction; skip it to run keyword-fallback only).
-3. Deploy. First build ~5 min. Note your URL: `https://second-round-api-XXXX.onrender.com`.
-4. Test: open `https://…onrender.com/board` — you should see JSON.
+3. Environment → add the auth-proxy vars (values from Supabase → Project Settings →
+   API): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. The
+   service-role key lives HERE ONLY — server-side, never in Vercel/web env. These
+   power username sign-in and non-enumerating recovery emails; without them,
+   password sign-in still works with an email but username sign-in returns 503.
+4. Deploy. First build ~5 min. Note your URL: `https://second-round-api-XXXX.onrender.com`.
+5. Test: open `https://…onrender.com/board` — you should see JSON.
 
 Free-tier caveat: the API sleeps after 15 idle minutes; the first request after a nap
 takes ~30s. Acceptable for now (see DECISIONS.md D16 for the $7/mo upgrade trigger).
