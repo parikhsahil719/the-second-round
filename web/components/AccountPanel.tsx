@@ -3,11 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { supabase } from "@/lib/supabase";
+import { getMyUsername, supabase } from "@/lib/supabase";
 import type { Lens } from "@/lib/lens";
 import { useLens } from "@/lib/lens";
 
 export type Mode = "signin" | "signup";
+
+// Mirrors the check constraint on profiles.username; the database is the enforcer,
+// this just fails fast in the form.
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 
 // Client-side gate for a stronger UX. Also set the matching server-side policy in
 // Supabase (Auth > Providers > Email > Password Requirements) so it can't be bypassed.
@@ -51,22 +55,29 @@ export function PasswordStrength({ pw }: { pw: string }) {
 export default function AccountPanel({ initialMode = "signin" }: { initialMode?: Mode }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newConfirm, setNewConfirm] = useState("");
+  const [curPassword, setCurPassword] = useState("");
+  const [chgPassword, setChgPassword] = useState("");
+  const [chgConfirm, setChgConfirm] = useState("");
+  const [showChange, setShowChange] = useState(false);
   const [busy, setBusy] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [recovery, setRecovery] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [myUsername, setMyUsername] = useState<string | null>(null);
   const { lens, setLens } = useLens();
   const router = useRouter();
 
+  const usernameValid = USERNAME_RE.test(username.trim());
   const canSubmit = !busy && email.includes("@") &&
     (mode === "signin" ? password.length >= 1
-                       : pwValid(password) && confirm === password);
+                       : usernameValid && pwValid(password) && confirm === password);
 
   useEffect(() => {
     if (!supabase) return;
@@ -77,6 +88,11 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
     });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (user) getMyUsername().then(setMyUsername);
+    else setMyUsername(null);
+  }, [user]);
 
   if (!supabase)
     return (
@@ -113,10 +129,39 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
       const { error } = await supabase!.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: window.location.origin + "/account" },
+        options: {
+          data: { username: username.trim() },
+          emailRedirectTo: window.location.origin + "/account",
+        },
       });
       if (error) throw error;
       return "Almost there. Check your email to confirm your account, then come back and sign in.";
+    });
+
+  const changePassword = () =>
+    run(async () => {
+      // reauthenticate first: prove the current password before accepting a new one
+      const { error: authErr } = await supabase!.auth.signInWithPassword({
+        email: user!.email!,
+        password: curPassword,
+      });
+      if (authErr) throw new Error("Current password is incorrect.");
+      const { error } = await supabase!.auth.updateUser({ password: chgPassword });
+      if (error) throw error;
+      setCurPassword("");
+      setChgPassword("");
+      setChgConfirm("");
+      setShowChange(false);
+      return "Password updated.";
+    });
+
+  const resetFromSettings = () =>
+    run(async () => {
+      const { error } = await supabase!.auth.resetPasswordForEmail(user!.email!, {
+        redirectTo: window.location.origin + "/reset-password",
+      });
+      if (error) throw error;
+      return `Reset link sent to ${user!.email}.`;
     });
 
   const resendConfirm = () =>
@@ -223,7 +268,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           </div>
           <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
             {mode === "signup"
-              ? "Pick a password with an uppercase and lowercase letter, a number, and a symbol. One confirmation email, then it's just your password from there. Accounts keep your scout notes across visits."
+              ? "Pick a username (it's permanent for now) and a password with an uppercase and lowercase letter, a number, and a symbol. One confirmation email, then it's just your password from there. Accounts keep your scout notes across visits."
               : "Welcome back. Email and password, or have a one-time link emailed instead."}
           </p>
           <form
@@ -232,6 +277,25 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
               if (canSubmit) (mode === "signin" ? signIn : signUp)();
             }}
           >
+          {mode === "signup" && (
+            <>
+              <input
+                type="text"
+                autoComplete="username"
+                placeholder="Username (letters, numbers, underscores)"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="mt-3 text-sm"
+                aria-label="Username"
+                maxLength={20}
+              />
+              {username.length > 0 && !usernameValid && (
+                <p className="mt-1 text-xs" style={{ color: "var(--neg)" }}>
+                  3 to 20 characters: letters, numbers, and underscores only.
+                </p>
+              )}
+            </>
+          )}
           <input
             type="email"
             autoComplete="email"
@@ -314,8 +378,15 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           {info && (
             <p className="mb-2 text-xs" style={{ color: "var(--pos)" }}>{info}</p>
           )}
+          {error && (
+            <p className="mb-2 text-xs" style={{ color: "var(--neg)" }}>{error}</p>
+          )}
           <p className="text-sm">
-            You&apos;re in as <span style={{ color: "var(--purple)" }}>{user.email}</span>
+            You&apos;re in as{" "}
+            <span style={{ color: "var(--purple)" }}>{myUsername ?? user.email}</span>
+            {myUsername && (
+              <span className="text-xs" style={{ color: "var(--faint)" }}> · {user.email}</span>
+            )}
           </p>
           <p className="serif mt-4 text-lg">Choose your role</p>
           <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
@@ -345,6 +416,65 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
                 </p>
               </button>
             ))}
+          </div>
+          <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border)" }}>
+            <button
+              className="text-sm underline"
+              style={{ color: "var(--muted)" }}
+              onClick={() => setShowChange(!showChange)}
+            >
+              {showChange ? "Hide change password" : "Change password"}
+            </button>
+            {showChange && (
+              <div className="mt-3">
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Current password"
+                  value={curPassword}
+                  onChange={(e) => setCurPassword(e.target.value)}
+                  className="text-sm"
+                  aria-label="Current password"
+                />
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="New password"
+                  value={chgPassword}
+                  onChange={(e) => setChgPassword(e.target.value)}
+                  className="mt-2 text-sm"
+                  aria-label="New password"
+                />
+                <PasswordStrength pw={chgPassword} />
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="Confirm new password"
+                  value={chgConfirm}
+                  onChange={(e) => setChgConfirm(e.target.value)}
+                  className="mt-2 text-sm"
+                  aria-label="Confirm new password"
+                />
+                {chgConfirm.length > 0 && chgConfirm !== chgPassword && (
+                  <p className="mt-1 text-xs" style={{ color: "var(--neg)" }}>
+                    Passwords don&apos;t match yet.
+                  </p>
+                )}
+                <button
+                  className="btn mt-3 text-sm"
+                  onClick={changePassword}
+                  disabled={busy || curPassword.length < 1 || !pwValid(chgPassword) || chgConfirm !== chgPassword}
+                >
+                  {busy ? "One moment…" : "Update password"}
+                </button>
+                <p className="mt-2 text-xs" style={{ color: "var(--faint)" }}>
+                  Signed up with a link and never set a password?{" "}
+                  <button className="underline" onClick={resetFromSettings} disabled={busy}>
+                    Email me a reset link instead
+                  </button>
+                </p>
+              </div>
+            )}
           </div>
           <button
             className="btn-ghost mt-5 text-sm"

@@ -111,8 +111,8 @@ CONTRARIAN = {
         "Ultra-efficient scorer, a college stat that historically flatters more than it projects",
         "Efficiency concerns, though history is kinder to imperfect volume scorers than the stat suggests"),
     "orb_pct": (
-        "Crashes the offensive glass, energy that historically marks a role player more than a star",
-        "Skips the offensive glass, standard for perimeter roles that translate cleanly"),
+        "Crashes the offensive glass, real value on the margins, though history reads it as a role-player trait more than a star signal",
+        "Trades the offensive glass for getting back in transition, a trade that has historically paid off for perimeter players"),
     "min_pct": (
         "Trusted with huge minutes, a workhorse profile that has historically topped out lower",
         "Didn't need big minutes to make his mark, common for young players on deep rosters"),

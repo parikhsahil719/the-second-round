@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { supabase } from "@/lib/supabase";
+import { getMyUsername, supabase } from "@/lib/supabase";
 
 export default function AccountLink() {
   const [email, setEmail] = useState<string | null>(null);
+  const [name, setName] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const menuRef = useRef<HTMLDetailsElement>(null);
@@ -23,6 +24,11 @@ export default function AccountLink() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (email) getMyUsername().then(setName);
+    else setName(null);
+  }, [email]);
+
   if (!supabase) return null;
 
   const closeMenu = () => menuRef.current?.removeAttribute("open");
@@ -31,7 +37,7 @@ export default function AccountLink() {
     return (
       <>
         <details className="menu" ref={menuRef}>
-          <summary>{email.split("@")[0]} ▾</summary>
+          <summary>{name ?? email.split("@")[0]} ▾</summary>
           <div className="menu-panel">
             <p className="px-3 pb-1 pt-2 text-xs" style={{ color: "var(--faint)" }}>
               {email}

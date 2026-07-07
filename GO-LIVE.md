@@ -93,15 +93,22 @@ Do these once the Resend domain is Verified.
 6. **Re-enable email confirmation.** Authentication -> Providers -> Email -> turn
    "Confirm email" back ON (you likely turned it OFF for local testing).
 
+7. **Run the schema migrations.** SQL editor -> run the comps line and the whole
+   profiles block (table + policies + trigger) from `supabase/schema.sql`. Comps
+   enables saved comparisons; profiles enables usernames. Accounts created before
+   the profiles migration keep working and display their email prefix instead.
+
 ---
 
 ## Phase E — Test the real workflows  [YOU]
 
 Do these on the live domain, in an incognito window, hard-refreshing after any change.
 
-1. **Signup + confirmation.** Create an account with a real address. The BRANDED
-   confirmation email should arrive (check Resend -> Emails for delivery status). Click
-   the link; it should land you back on `yourdomain.com/account`, signed in.
+1. **Signup + confirmation.** Create an account with a real address and a username
+   (3-20 characters, letters/numbers/underscores; the form blocks anything else). The
+   BRANDED confirmation email should arrive (check Resend -> Emails for delivery
+   status). Click the link; it should land you back on `yourdomain.com/account`,
+   signed in, with your username shown in the header dropdown and account page.
 2. **Resend confirmation.** Before confirming a second test signup, click "Didn't get the
    confirmation email? Resend it" and confirm a second email arrives.
 3. **Password strength + policy.** On signup, confirm the strength meter behaves and the
@@ -112,6 +119,9 @@ Do these on the live domain, in an incognito window, hard-refreshing after any c
    link to the dedicated reset page (`/reset-password`), set a new password (strength
    meter applies here too), and sign in with it. An expired or reused link should show
    the "invalid or expired" message instead of the form.
+5b. **Change password (signed in).** Account settings -> Change password. A wrong
+   current password must be rejected; the right one plus a strong new password should
+   succeed, and the new password should work on the next sign-in. No email involved.
 6. **Magic link.** "Email me a link instead," confirm the branded magic-link email
    arrives and signs you in.
 7. **Roles + entitlements.** As a Fan account, confirm the war room and scout desk show

@@ -28,6 +28,14 @@ export interface SavedNote {
   updated_at: string;
 }
 
+/** The signed-in user's username, or null (not signed in, or an account that
+ * predates usernames; callers fall back to the email prefix). */
+export async function getMyUsername(): Promise<string | null> {
+  if (!supabase) return null;
+  const { data } = await supabase.from("profiles").select("username").maybeSingle();
+  return data?.username ?? null;
+}
+
 export async function getMyNotes(slug?: string): Promise<SavedNote[]> {
   if (!supabase) return [];
   let q = supabase.from("scout_notes").select("*").order("updated_at", { ascending: false });
