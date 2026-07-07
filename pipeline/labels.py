@@ -60,9 +60,11 @@ def _aggregate(bref_id, draft_year, nba, acc) -> dict:
     mp4 = w.mp.sum()
     pk_bpm, pk_mp = _peak2(w)
     late_bpm, late_mp = _peak2(later)
+    wu = w.dropna(subset=["usg"]) if "usg" in w.columns else w.iloc[0:0]
     return {
         "g4": w.g.sum(), "mp4": mp4, "ws4": w.ws.sum(), "vorp4": w.vorp.sum(),
         "bpm4": (w.bpm * w.mp).sum() / mp4 if mp4 > 0 else None,
+        "usg4": (wu.usg * wu.mp).sum() / wu.mp.sum() if wu.mp.sum() > 0 else None,
         "peak2_bpm": pk_bpm, "peak2_mp": pk_mp,
         "later_peak_bpm": late_bpm, "later_peak_mp": late_mp,
         "all_star4": (a.honor == "all_star").any(),

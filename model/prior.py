@@ -22,9 +22,11 @@ KERNEL_SCALE = 4.0   # picks; how far a slot borrows evidence
 DIRICHLET = 3.0      # pseudo-players toward the drafted marginal
 
 
-def build(exclude_class: int | None = None) -> pd.DataFrame:
-    """Slot prior from labeled classes; exclude_class supports leave-one-class-out."""
-    labels = pd.read_parquet(PROCESSED / "labels.parquet")
+def build(exclude_class: int | None = None, labels: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Slot prior from labeled classes; exclude_class supports leave-one-class-out.
+    labels overrides the on-disk file so studies can price alternative tier definitions."""
+    if labels is None:
+        labels = pd.read_parquet(PROCESSED / "labels.parquet")
     if exclude_class is not None:
         labels = labels[labels.draft_year != exclude_class]
     drafted = labels[~labels.undrafted & labels.pick.notna()]

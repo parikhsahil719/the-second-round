@@ -119,6 +119,7 @@ def pull_bref_nba_seasons() -> pd.DataFrame:
                 "team": team_cell.get_text(strip=True) if team_cell else None,
                 "g": num("games"), "mp": num("mp"),
                 "ws": num("ws"), "bpm": num("bpm"), "vorp": num("vorp"),
+                "usg": num("usg_pct"),  # creation burden; powers role archetypes
             })
     out = pd.DataFrame(rows)
     assert out.bref_id.notna().all(), "advanced pages must carry player links"
