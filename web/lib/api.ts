@@ -42,6 +42,7 @@ export interface BoardRow {
   chip?: "BUY" | "HOLD" | "FADE" | "N/A";
   star_flag?: boolean;
   age?: number | null;
+  model_rank?: number | null;
   why_pos?: string[];
   why_neg?: string[];
 }

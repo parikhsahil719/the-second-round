@@ -104,16 +104,23 @@ def slugify(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
 
 
-def chip(edge) -> str:
-    if edge is None or (isinstance(edge, float) and np.isnan(edge)):
-        return "N/A"
-    return "BUY" if edge > 2 else ("FADE" if edge < -2 else "HOLD")
-
-
 def load_board() -> pd.DataFrame:
     b = pd.read_parquet(PROCESSED / "board_2026.parquet")
     b["slug"] = b.player_name.map(slugify)
+    # model's rank in this class (by valuation, among scored players)
+    b["model_rank"] = b.ev_model.rank(ascending=False, method="min")
     return b
+
+
+def rank_chip(model_rank, pick) -> str:
+    """A steal fell below the model's rank; a reach went above it. Nobody can be a
+    steal at pick 1 by definition. Threshold scales with pick (rank noise grows late)."""
+    if model_rank is None or (isinstance(model_rank, float) and np.isnan(model_rank)):
+        return "N/A"
+    effective_pick = 61 if pick is None else pick  # undrafted = fell past everyone
+    threshold = max(3, round(0.2 * effective_pick))
+    gap = effective_pick - model_rank
+    return "BUY" if gap >= threshold else ("FADE" if gap <= -threshold else "HOLD")
 
 
 BOARD = load_board()
@@ -147,9 +154,10 @@ def public_row(r) -> dict:
             "ev_consensus": None if pd.isna(r.ev_consensus) else round(float(r.ev_consensus), 2),
             "edge_slot": None if pd.isna(r.edge_slot) else round(float(r.edge_slot), 2),
             "edge_consensus": None if pd.isna(r.edge_consensus) else round(float(r.edge_consensus), 2),
-            "chip": chip(None if pd.isna(r.edge_slot) else float(r.edge_slot)),
+            "chip": rank_chip(r.model_rank, None if pd.isna(r.pick) else int(r.pick)),
             "star_flag": bool(r.star_flag),
             "age": None if pd.isna(r.age_at_draft) else round(float(r.age_at_draft), 1),
+            "model_rank": None if pd.isna(r.model_rank) else int(r.model_rank),
             "why_pos": [w["text"] for w in translate_why(r.why) if w["contribution"] > 0][:2],
             "why_neg": [w["text"] for w in translate_why(r.why) if w["contribution"] < 0][:2],
         })
