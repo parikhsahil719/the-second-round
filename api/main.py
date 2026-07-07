@@ -261,7 +261,8 @@ def public_row(r) -> dict:
     return d
 
 
-@app.get("/")
+# GET for humans, HEAD for uptime monitors (they ping with HEAD by default)
+@app.api_route("/", methods=["GET", "HEAD"])
 def index():
     return {
         "service": "The Second Round API",
