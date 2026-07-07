@@ -26,7 +26,7 @@ from pydantic import BaseModel
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "model"))
 sys.path.insert(0, str(ROOT / "pipeline"))
-from common import TIERS  # noqa: E402
+from common import TIERS, UTILITY  # noqa: E402
 
 PROCESSED = ROOT / "data" / "processed"
 PER_IP_DAILY = 10
@@ -198,11 +198,24 @@ def player(slug: str):
 
 @app.get("/warroom/{pick}")
 def warroom(pick: int):
-    """Standing at pick N: availability % and model view for every relevant player."""
+    """Standing at pick N: availability %, plus value measured against THIS pick's price.
+
+    The chip answers the on-the-clock question: is taking him at pick N good value?
+    surplus = model valuation - what pick N historically returns."""
     if AVAIL is None:
         raise HTTPException(503, "availability simulation not built")
     if not 1 <= pick <= 60:
         raise HTTPException(400, "pick must be 1-60")
+
+    prior = pd.read_parquet(PROCESSED / "slot_prior.parquet").set_index("pick")
+    util = np.array([UTILITY[t] for t in TIERS])
+    pick_price = float(prior.loc[pick, TIERS].to_numpy() @ util)
+
+    def value_chip(surplus):
+        if surplus is None:
+            return "N/A"
+        return "WORTH IT" if surplus > 2 else ("PASS" if surplus < -2 else "FAIR")
+
     col = f"avail_{pick}"
     rows = []
     by_name = BOARD.set_index("player_name")
@@ -211,6 +224,8 @@ def warroom(pick: int):
         if avail < 0.01:
             continue
         b = by_name.loc[a.player_name] if a.player_name in by_name.index else None
+        ev = None if b is None or pd.isna(b.get("ev_model")) else round(float(b.ev_model), 2)
+        surplus = None if ev is None else round(ev - pick_price, 1)
         rows.append({
             "player_name": a.player_name,
             "slug": b.slug if b is not None else None,
@@ -218,12 +233,13 @@ def warroom(pick: int):
             "consensus_rank": int(a.consensus_rank),
             "actual_pick": None if pd.isna(a.actual_pick) else int(a.actual_pick),
             "availability": round(avail, 3),
-            "ev_model": None if b is None or pd.isna(b.get("ev_model")) else round(float(b.ev_model), 2),
+            "ev_model": ev,
             "p_star": None if b is None or pd.isna(b.get("p_STAR")) else round(float(b.p_STAR), 3),
-            "chip": chip(None if b is None or pd.isna(b.get("edge_slot")) else float(b.edge_slot)),
+            "surplus": surplus,
+            "chip": value_chip(surplus),
         })
     rows.sort(key=lambda r: (-(r["ev_model"] or -1), r["consensus_rank"]))
-    return {"pick": pick, "players": rows,
+    return {"pick": pick, "pick_price": round(pick_price, 1), "players": rows,
             "note": "Availability from 10,000 draft simulations calibrated on consensus-vs-actual slide; no team-need modeling."}
 
 
