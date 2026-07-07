@@ -68,14 +68,17 @@ export interface PlayerDetail extends BoardRow {
   seed_notes: SeedNote[];
 }
 
+// Board data only changes when the model redeploys, so these cache server-side
+// (10 min): pages render instantly from Vercel's data cache, and when the free-tier
+// API is napping, the cached copy keeps serving instead of erroring.
 export async function getBoard(): Promise<BoardRow[]> {
-  const res = await fetch(`${API}/board`, { cache: "no-store" });
+  const res = await fetch(`${API}/board`, { next: { revalidate: 600 } });
   if (!res.ok) throw new Error("board fetch failed");
   return (await res.json()).rows;
 }
 
 export async function getPlayer(slug: string): Promise<PlayerDetail | null> {
-  const res = await fetch(`${API}/player/${slug}`, { cache: "no-store" });
+  const res = await fetch(`${API}/player/${slug}`, { next: { revalidate: 600 } });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error("player fetch failed");
   return res.json();
