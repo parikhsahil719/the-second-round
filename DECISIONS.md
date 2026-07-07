@@ -195,6 +195,29 @@ stay visible but disabled with a plain explanation and a link to change role in 
 settings, so a mis-chosen role never traps anyone. This supersedes the cosmetic-only lens
 toggle for signed-in users.
 
+## D18. Two chip systems: steal is rank displacement, value is price surplus
+
+"Steal" on the board means the player was drafted well below where the model ranked him
+in this class (threshold scales with pick depth; undrafted counts as falling past 60), so
+a No. 1 pick can never be a steal, no matter how much surplus value he carries. The war
+room answers a different question with a different chip: WORTH IT / FAIR / PASS compares
+the model's valuation to the price of the pick you're standing on. Keeping the two
+definitions separate came out of user testing: a single value-based chip called the top
+pick a "steal," which is nonsense in draft language. Displayed bullets follow the same
+honesty rule: when a fact sounds good but the model pushes down (careful ball-handling,
+big minutes shares), the sentence explains the tension instead of arguing with the arrow.
+
+## D19. Notes complete the chain; comps stay annotations
+
+A scout's saved notes don't just tilt tier bars: the posterior converts back to an EV,
+re-ranks against the class, and produces the user's own chip beside the model's ("Model
+says PRICEY, your book says STEAL"), which sets up grading scouts against the model when
+outcomes arrive. Player comps mentioned in notes ("plays like X") surface as the user's
+personal comps beside the statistical ones but never touch the probabilities: the note's
+traits already carry that evidence, and counting the name-drop would double-count it.
+All personalization is per-account and private (Supabase RLS; usernames enforced by the
+database — unique, format-checked, immutable via the absence of an update policy).
+
 ---
 
 *Log continues as phases complete.*

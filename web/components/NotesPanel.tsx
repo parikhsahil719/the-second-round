@@ -221,7 +221,7 @@ export default function NotesPanel({
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold">Scout&apos;s desk</h2>
         {!signedIn && supabase && (
-          <a href="/signup" className="text-xs underline" style={{ color: "var(--purple)" }}>
+          <a href="/signup" className="link text-xs">
             Create a free account to keep your book
           </a>
         )}
@@ -277,13 +277,12 @@ export default function NotesPanel({
           </button>
         )}
         {result && !signedIn && supabase && (
-          <a href="/signup" className="text-xs underline" style={{ color: "var(--pos)" }}>
+          <a href="/signup" className="link text-xs">
             Want to keep this note? Sign up free
           </a>
         )}
         <button
-          className="text-xs underline"
-          style={{ color: "var(--faint)" }}
+          className="link text-xs"
           onClick={() => setShowKey(!showKey)}
         >
           {showKey ? "hide" : "bring your own API key"}
@@ -383,8 +382,8 @@ export default function NotesPanel({
           {seedNotes.map((s) => (
             <div key={s.note.slice(0, 40)} className="mt-3">
               <p className="serif text-sm leading-relaxed">“{s.note}”</p>
-              <p className="mt-1 text-xs" style={{ color: "var(--faint)" }}>
-                <a href={s.source_url} target="_blank" rel="noreferrer" className="underline">
+              <p className="mt-1 text-xs">
+                <a href={s.source_url} target="_blank" rel="noreferrer" className="link">
                   {s.source}
                 </a>
               </p>

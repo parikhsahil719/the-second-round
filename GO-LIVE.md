@@ -88,7 +88,10 @@ Do these once the Resend domain is Verified.
 
 5. **Enforce the password policy server-side.** Authentication -> Providers -> Email ->
    Password Requirements: require lowercase, uppercase, digits, and symbols, min length 8.
-   This makes the client-side rule in the signup form actually unbypassable.
+   This makes the client-side rule in the signup form actually unbypassable. While
+   there, if the plan offers "Secure password change," enable it: it makes Supabase
+   itself demand a recent sign-in before accepting a password update, backing up the
+   app's own current-password check.
 
 6. **Re-enable email confirmation.** Authentication -> Providers -> Email -> turn
    "Confirm email" back ON (you likely turned it OFF for local testing).

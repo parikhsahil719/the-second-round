@@ -1,10 +1,13 @@
 # The Second Round
 
+**Live at [thesecondround.dev](https://thesecondround.dev).**
+
 **A quant-style NBA Draft intelligence product.** Fair-value tier probabilities for draft
 prospects, compared against the market (draft slot + consensus boards) to find who was
 overdrafted, who was underdrafted, and why. Plus a scout-notes layer (free-text notes →
-LLM extraction → capped Bayesian updates), a draft-day availability war room, and
-Fan / Front-office / Scout viewing lenses.
+LLM extraction → capped Bayesian updates that produce your own EV, rank, and call beside
+the model's), personal player comps, a draft-day availability war room, free accounts
+with Fan / Scout / Front-office roles, and a private scout book per user.
 
 ## Headline results (2009–2021 backtest, leave-one-class-out)
 
@@ -41,47 +44,42 @@ Built on the framework a quant uses for any prediction market:
 
 ## Status
 
-Model, board, scout-notes layer, war room, and app are built and verified locally.
-Remaining: report + public deployment.
+Live in production at [thesecondround.dev](https://thesecondround.dev): model, board,
+scout-notes layer with personal EV/rank/comps, war room, accounts with role
+entitlements, and the full report. Currently in a friends testing round ahead of the
+2027 live mode (see the roadmap in the memo).
 
-## Running locally
+## Using it
 
-Prereqs: Python 3.11+, Node 20+. All data sources are free; the only spend is
-pennies of Claude API usage for live note extraction (optional; a keyword
-fallback runs without a key).
+Go to [thesecondround.dev](https://thesecondround.dev). The product is free; an
+account (also free) keeps your scout book, your comps, and your role across visits.
+Self-hosting isn't a supported path: the hosted product is the product.
+
+## Reproducing the research
+
+The pipeline and model are fully reproducible from free public data (the raw
+scraped tables are not redistributed; the pipeline rebuilds them politely,
+rate-limited and disk-cached). Python 3.11+:
 
 ```bash
-# 1. Python environment
 python -m venv .venv
 .venv/Scripts/pip install -r requirements.txt        # (Scripts -> bin on mac/linux)
 
-# 2. Data pipeline (one-time, ~15 min: polite rate-limited scraping, disk-cached)
+# Data pipeline (one-time, ~15 min)
 .venv/Scripts/python pipeline/pull.py                # all sources -> parquet
 .venv/Scripts/python pipeline/resolve.py             # entity crosswalk (99.8%)
 .venv/Scripts/python pipeline/labels.py              # outcome tiers + spot-check
 .venv/Scripts/python pipeline/features.py            # feature matrix w/ EB shrinkage
-.venv/Scripts/python pipeline/headshots.py           # ESPN headshots (best-effort)
 
-# 3. Model
+# Model
 .venv/Scripts/python model/prior.py                  # slot-implied market prior
 .venv/Scripts/python model/train.py                  # LOCO-CV shootout + calibration
 .venv/Scripts/python model/score.py                  # 2026 board + artifacts
 .venv/Scripts/python model/simulate.py               # war-room availability sim
 .venv/Scripts/python model/notes.py                  # Bayesian layer self-test
-.venv/Scripts/python model/notes_demo.py             # seeded notes end-to-end
-
-# 4. Serve
-.venv/Scripts/python -m uvicorn api.main:app --port 8765
-cd web && npm install && npm run dev                 # http://localhost:3000
 ```
 
-Optional env:
-- `.env` at repo root: `ANTHROPIC_API_KEY=...` enables live Claude note extraction
-  (otherwise the keyword mock runs).
-- `web/.env.local`: `NEXT_PUBLIC_API_URL` (defaults to `http://127.0.0.1:8765`),
-  plus `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` to enable
-  scout accounts (create a free Supabase project, run `supabase/schema.sql` in its
-  SQL editor, enable the Email provider). Without them the app runs account-less.
+Every number in the memo falls out of those scripts deterministically.
 
 ## Repo layout
 
@@ -102,10 +100,12 @@ RSCI (via Sports-Reference), Rookie Scale + NBADraft.net consensus boards.
 Raw scraped tables are **not** redistributed in this repo. The pipeline
 rebuilds them, politely rate-limited and cached.
 
-## Deploying
+## Deployment
 
-See [DEPLOY.md](DEPLOY.md): GitHub + Render + Vercel + Supabase, all free tiers,
-~30–45 minutes.
+Production runs on Vercel (web) + Render (API) + Supabase (auth and scout books)
+behind [thesecondround.dev](https://thesecondround.dev), all free tiers.
+[DEPLOY.md](DEPLOY.md) records how it was stood up; [GO-LIVE.md](GO-LIVE.md) records
+the domain, DNS, and email (Resend SMTP) setup.
 
 ## License
 

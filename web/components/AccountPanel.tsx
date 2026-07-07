@@ -58,8 +58,6 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [newConfirm, setNewConfirm] = useState("");
   const [curPassword, setCurPassword] = useState("");
   const [chgPassword, setChgPassword] = useState("");
   const [chgConfirm, setChgConfirm] = useState("");
@@ -67,7 +65,6 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
   const [busy, setBusy] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [recovery, setRecovery] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [myUsername, setMyUsername] = useState<string | null>(null);
@@ -82,9 +79,8 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
-    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setUser(s?.user ?? null);
-      if (event === "PASSWORD_RECOVERY") setRecovery(true);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -194,15 +190,6 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
       return "Password reset email sent. The link takes you to a page to choose a new one.";
     });
 
-  const saveNewPassword = () =>
-    run(async () => {
-      const { error } = await supabase!.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      setRecovery(false);
-      setNewPassword("");
-      return "Password updated. You're signed in.";
-    });
-
   const roles: { id: Lens; label: string; blurb: string; dest: string; action: string }[] = [
     { id: "fan", label: "Fan", blurb: "The board and player pages in plain English",
       dest: "/", action: "Take me to the board" },
@@ -216,39 +203,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
     <div className="mx-auto max-w-md">
       <h1 className="serif text-2xl">Your account</h1>
 
-      {user && recovery ? (
-        <div className="card mt-4 px-5 py-5">
-          <p className="text-sm">Set a new password for {user.email}.</p>
-          <input
-            type="password"
-            autoComplete="new-password"
-            placeholder="New password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="mt-3 text-sm"
-            aria-label="New password"
-          />
-          <PasswordStrength pw={newPassword} />
-          <input
-            type="password"
-            autoComplete="new-password"
-            placeholder="Confirm new password"
-            value={newConfirm}
-            onChange={(e) => setNewConfirm(e.target.value)}
-            className="mt-2 text-sm"
-            aria-label="Confirm new password"
-          />
-          {newConfirm.length > 0 && newConfirm !== newPassword && (
-            <p className="mt-1 text-xs" style={{ color: "var(--neg)" }}>
-              Passwords don&apos;t match yet.
-            </p>
-          )}
-          <button className="btn mt-3 text-sm" onClick={saveNewPassword}
-                  disabled={busy || !pwValid(newPassword) || newConfirm !== newPassword}>
-            Save new password
-          </button>
-        </div>
-      ) : !user ? (
+      {!user ? (
         <div className="card mt-4 px-5 py-5">
           <div className="flex gap-4 text-sm">
             <button
@@ -343,11 +298,11 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
             </button>
             {mode === "signin" && (
               <>
-                <button type="button" className="text-xs underline" style={{ color: "var(--faint)" }}
+                <button type="button" className="link text-xs"
                         onClick={forgot} disabled={busy || !email.includes("@")}>
                   Forgot password?
                 </button>
-                <button type="button" className="text-xs underline" style={{ color: "var(--faint)" }}
+                <button type="button" className="link text-xs"
                         onClick={magicLink} disabled={busy || !email.includes("@")}>
                   Email me a link instead
                 </button>
@@ -364,8 +319,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           {(mode === "signup" || (error ?? "").toLowerCase().includes("confirm")) && (
             <button
               type="button"
-              className="mt-2 text-xs underline"
-              style={{ color: "var(--faint)" }}
+              className="link mt-2 text-xs"
               onClick={resendConfirm}
               disabled={busy || !email.includes("@")}
             >
@@ -419,8 +373,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           </div>
           <div className="mt-6 border-t pt-4" style={{ borderColor: "var(--border)" }}>
             <button
-              className="text-sm underline"
-              style={{ color: "var(--muted)" }}
+              className="link text-sm"
               onClick={() => setShowChange(!showChange)}
             >
               {showChange ? "Hide change password" : "Change password"}
@@ -469,7 +422,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
                 </button>
                 <p className="mt-2 text-xs" style={{ color: "var(--faint)" }}>
                   Signed up with a link and never set a password?{" "}
-                  <button className="underline" onClick={resetFromSettings} disabled={busy}>
+                  <button className="link" onClick={resetFromSettings} disabled={busy}>
                     Email me a reset link instead
                   </button>
                 </p>

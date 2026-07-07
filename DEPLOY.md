@@ -1,5 +1,9 @@
 # Deploying The Second Round (~30–45 minutes, all free tiers)
 
+Current production: **https://thesecondround.dev** (Vercel) + Render API + Supabase.
+Domain, DNS, and email (Resend SMTP) setup live in [GO-LIVE.md](GO-LIVE.md). This file
+records how the stack was stood up.
+
 Four accounts, all free: GitHub, Render (API), Vercel (web), Supabase (accounts —
 optional). Do them in this order.
 
@@ -44,12 +48,20 @@ takes ~30s. Acceptable for now (see DECISIONS.md D16 for the $7/mo upgrade trigg
 ## 4. Supabase — scout accounts (optional but recommended)
 
 1. supabase.com → New project (free tier, any region near you).
-2. SQL Editor → paste the contents of `supabase/schema.sql` → Run.
-3. Authentication → Providers → Email: ON (magic link is the default flow).
-4. Authentication → URL Configuration → Site URL: your Vercel URL.
+2. SQL Editor → paste the contents of `supabase/schema.sql` → Run. (Covers scout
+   notes with RLS, saved comps, and username profiles with the signup trigger.)
+3. Authentication → Providers → Email: ON. Password sign-in with a confirmation
+   email is the primary flow (magic link is the fallback). Set Password
+   Requirements to lowercase + uppercase + digits + symbols, min length 8, to
+   match the client-side rules.
+4. Authentication → URL Configuration → Site URL: `https://thesecondround.dev`;
+   Redirect URLs: `https://thesecondround.dev/**` plus the Vercel URL with `/**`
+   (the wildcard covers `/account` and `/reset-password` links in auth emails).
 5. Project Settings → API: copy the Project URL and the `anon` public key into
    Vercel env as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
    then redeploy the Vercel project.
+6. Email limits: the built-in sender caps at ~2 emails/hour project-wide. Custom
+   SMTP via Resend removes it — steps in [GO-LIVE.md](GO-LIVE.md), Phases C-D.
 
 ## 5. Smoke test the live site
 
@@ -58,7 +70,10 @@ takes ~30s. Acceptable for now (see DECISIONS.md D16 for the $7/mo upgrade trigg
 - [ ] War room slider works at a few picks
 - [ ] Methodology page renders the memo
 - [ ] Live note on any player returns traits (first hit may take ~30s if the API napped)
-- [ ] Sign in via magic link; save a note; refresh; "Your view" persists
+- [ ] Sign up with username + password; confirm email; save a note; refresh;
+      "Your view" and your comps persist
+- [ ] Change password (account settings) and the forgot-password loop
+      (`/reset-password`) both work
 - [ ] Privacy page linked in the footer
 
 ## Costs after this

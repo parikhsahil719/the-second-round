@@ -22,15 +22,22 @@ export default function ResetPassword() {
       setReady(false);
       return;
     }
-    // the recovery token in the URL signs the user in; give it a moment to process
+    // The form only opens on evidence of a real recovery: the PASSWORD_RECOVERY
+    // event firing on this page (link landed here), or the flag the global handler
+    // sets before routing over. A merely signed-in visitor typing this URL must
+    // not get a password form that skips the current-password check.
+    let evidence = sessionStorage.getItem("tsr-recovery") === "1";
     const timer = setTimeout(async () => {
       const { data } = await supabase!.auth.getUser();
-      setReady(!!data.user);
-    }, 1500);
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      if (s?.user) {
-        clearTimeout(timer);
-        setReady(true);
+      setReady(evidence && !!data.user);
+    }, 2500);
+    const { data: sub } = supabase.auth.onAuthStateChange((e, s) => {
+      if (e === "PASSWORD_RECOVERY") {
+        evidence = true;
+        if (s?.user) {
+          clearTimeout(timer);
+          setReady(true);
+        }
       }
     });
     return () => {
@@ -45,6 +52,7 @@ export default function ResetPassword() {
     try {
       const { error } = await supabase!.auth.updateUser({ password: pw });
       if (error) throw error;
+      sessionStorage.removeItem("tsr-recovery");
       router.push("/account");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong. Try again.");
@@ -64,10 +72,14 @@ export default function ResetPassword() {
 
       {ready === false && (
         <div className="card mt-4 px-5 py-5 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
-          This reset link is invalid or has expired. Links only work once and for a
-          limited time.{" "}
-          <Link href="/signin" className="underline" style={{ color: "var(--purple)" }}>
+          This page only works from a password-reset email link, and links expire after
+          one use.{" "}
+          <Link href="/signin" className="link">
             Request a new one from the sign-in page.
+          </Link>{" "}
+          Already signed in and just want a different password?{" "}
+          <Link href="/account" className="link">
+            Change it in account settings.
           </Link>
         </div>
       )}

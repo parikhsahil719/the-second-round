@@ -79,6 +79,24 @@ input[type="text"], input[type="email"], input[type="password"], textarea {
 input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
 textarea:focus { border-color: var(--purple); }
 
+/* Buttons don't get a pointer cursor by default; every clickable thing should. */
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+
+/* Textual links: one recognizable treatment site-wide. Purple, underlined, pointer. */
+.link {
+  color: var(--purple);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.link:hover { filter: brightness(1.25); }
+.link:disabled { opacity: 0.5; }
+
+/* Header navigation: quiet until hovered, then clearly alive. */
+.nav-link { color: var(--muted); transition: color 0.12s; }
+.nav-link:hover { color: var(--text); }
+
 .btn {
   background: var(--purple);
   color: #16141b;
