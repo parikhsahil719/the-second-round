@@ -188,10 +188,12 @@ COMP_TRIGGER = re.compile(
 COMP_FILLER = re.compile(r"(?i)^(?:(?:a|an|the|young|prime|peak|vintage)\s+)+")
 COMP_NAME = re.compile(r"^[A-Z][\w'.-]*(?:\s+[A-Z][\w'.-]*){0,2}")
 
-# comp name -> historical tier where we have one (2009-2021 outcome labels)
+# comp name -> (tier, made a real All-Star team in the window) from outcome labels.
+# The star distinguishes "produced at All-Star level" from "was actually selected".
 _labels = pd.read_parquet(PROCESSED / "labels.parquet")
-COMP_TIERS = {str(n).lower(): t for n, t in zip(_labels.player_name, _labels.tier)
-              if pd.notna(t)}
+COMP_META = {str(n).lower(): {"tier": t, "all_star": bool(a)}
+             for n, t, a in zip(_labels.player_name, _labels.tier, _labels.all_star4)
+             if pd.notna(t)}
 del _labels
 
 
@@ -216,7 +218,10 @@ def extract_comps(note: str) -> list[dict]:
             name = nm.group(0).rstrip(".,;:!?")
             if name.lower() not in {n.lower() for n in names}:
                 names.append(name)
-    return [{"name": n, "tier": COMP_TIERS.get(n.lower())} for n in names[:5]]
+    return [{"name": n,
+             "tier": COMP_META.get(n.lower(), {}).get("tier"),
+             "all_star": COMP_META.get(n.lower(), {}).get("all_star", False)}
+            for n in names[:5]]
 
 
 def your_view(r, posterior: np.ndarray) -> dict:
@@ -324,7 +329,8 @@ def player(slug: str):
             if name.lower() in seen:
                 continue
             seen.add(name.lower())
-            comps.append({"name": name, "tier": c.rsplit(" (", 1)[1].rstrip(")")})
+            comps.append({"name": name, "tier": c.rsplit(" (", 1)[1].rstrip(")"),
+                          "all_star": COMP_META.get(name.lower(), {}).get("all_star", False)})
         d["comps"] = comps
     d["seed_notes"] = [s for s in SEEDS if s["player_name"] == r.player_name]
     return d

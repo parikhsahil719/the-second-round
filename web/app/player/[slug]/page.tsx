@@ -122,7 +122,9 @@ export default async function PlayerPage({
               <p className="mt-1 text-xs" style={{ color: "var(--faint)" }}>
                 Closest college profiles at his position group, matched on
                 career-predictive stats. Their careers show the range this profile has
-                actually produced, floor to ceiling.
+                actually produced, floor to ceiling. Tiers grade production;{" "}
+                <span style={{ color: "var(--gold)" }}>★</span> marks a real All-Star
+                selection in those first four seasons.
               </p>
               <ul className="mt-3 space-y-2.5">
                 {(p.comps ?? []).map((c) => (
@@ -130,6 +132,14 @@ export default async function PlayerPage({
                     <span className="serif">{c.name}</span>
                     <span className="text-xs" style={{ color: "var(--muted)" }}>
                       {TIER_LABELS[c.tier] ?? c.tier}
+                      {c.all_star && (
+                        <span
+                          title="Selected to a real All-Star team in his first four seasons"
+                          style={{ color: "var(--gold)" }}
+                        >
+                          {" "}★
+                        </span>
+                      )}
                     </span>
                   </li>
                 ))}
