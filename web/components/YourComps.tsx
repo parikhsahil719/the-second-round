@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { compName, compTier, type Comp } from "@/components/NotesPanel";
+import { compName, compStar, compTier, type Comp } from "@/components/NotesPanel";
 import { TIER_LABELS, type Tier } from "@/lib/api";
 import { getMyNotes, supabase } from "@/lib/supabase";
 
@@ -46,6 +46,12 @@ export default function YourComps({ slug, exclude = [] }: { slug: string; exclud
             {compTier(c) && (
               <span className="text-xs" style={{ color: "var(--muted)" }}>
                 {TIER_LABELS[compTier(c) as Tier] ?? compTier(c)}
+                {compStar(c) && (
+                  <span title="Selected to a real All-Star team in his first four seasons"
+                        style={{ color: "var(--gold)" }}>
+                    {" "}★
+                  </span>
+                )}
               </span>
             )}
           </li>

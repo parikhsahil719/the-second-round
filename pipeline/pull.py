@@ -6,6 +6,7 @@ Idempotent — raw responses are disk-cached, so re-runs are free.
 
 import io
 import json
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -143,17 +144,31 @@ def pull_bref_accolades() -> pd.DataFrame:
             pid = _bref_player_id(td)
             if pid:
                 rows.append({"season_end": end_yr, "bref_id": pid, "honor": "all_nba"})
-    # All-Star rosters: one page per year
+    # All-Star rosters: one page per year. From 2025 the game is a mini-tournament
+    # and the main page carries only the final's two squads; semifinal rosters live
+    # on per-game pages linked from it. The Rising Stars squad plays in the
+    # tournament without being All-Stars, so its tables are excluded by name.
+    NOT_ALL_STARS = ("candace", "rising")
     for end_yr in range(2010, 2027):
         html = get(f"https://www.basketball-reference.com/allstar/NBA_{end_yr}.html",
                    f"bref/allstar_{end_yr}.html")
-        soup = BeautifulSoup(uncomment(html), "lxml")
+        pages = [html]
+        # pin game links to this season (pages elsewhere in the nav link other years')
+        for path in sorted(set(re.findall(rf'href="(/allstar/{end_yr}\d+NBA\.html)"', html))):
+            pages.append(get(f"https://www.basketball-reference.com{path}",
+                             f"bref/{path.rsplit('/', 1)[-1]}"))
         seen = set()
-        for a in soup.select("table a[href*='/players/']"):
-            pid = a["href"].split("/")[-1].removesuffix(".html")
-            if pid not in seen:
-                seen.add(pid)
-                rows.append({"season_end": end_yr, "bref_id": pid, "honor": "all_star"})
+        for page in pages:
+            soup = BeautifulSoup(uncomment(page), "lxml")
+            for table in soup.find_all("table"):
+                tid = (table.get("id") or "").lower()
+                if any(k in tid for k in NOT_ALL_STARS):
+                    continue
+                for a in table.select("a[href*='/players/']"):
+                    pid = a["href"].split("/")[-1].removesuffix(".html")
+                    if pid not in seen:
+                        seen.add(pid)
+                        rows.append({"season_end": end_yr, "bref_id": pid, "honor": "all_star"})
     out = pd.DataFrame(rows).drop_duplicates()
     out.to_parquet(PROCESSED / "accolades.parquet")
     return out

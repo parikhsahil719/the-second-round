@@ -23,10 +23,12 @@ interface YourView {
   your_chip: string;
 }
 
-// older saved notes hold plain strings; newer ones carry the historical tier
-export type Comp = string | { name: string; tier: string | null };
+// older saved notes hold plain strings; newer ones carry the historical tier and
+// whether the player made a real All-Star team in his first four seasons
+export type Comp = string | { name: string; tier: string | null; all_star?: boolean };
 export const compName = (c: Comp) => (typeof c === "string" ? c : c.name);
 export const compTier = (c: Comp) => (typeof c === "string" ? null : c.tier);
+export const compStar = (c: Comp) => (typeof c === "string" ? false : c.all_star ?? false);
 
 interface NoteResult {
   mode: string;
@@ -109,6 +111,12 @@ function CompChips({ comps, label = "Comp noted:" }: { comps?: Comp[]; label?: s
           {compTier(c) && (
             <span style={{ color: "var(--muted)" }}>
               {" "}· {TIER_LABELS[compTier(c) as Tier] ?? compTier(c)}
+            </span>
+          )}
+          {compStar(c) && (
+            <span title="Selected to a real All-Star team in his first four seasons"
+                  style={{ color: "var(--gold)" }}>
+              {" "}★
             </span>
           )}
         </li>
