@@ -56,9 +56,9 @@ export default async function PlayerPage({
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="text-sm font-semibold">Fair-value distribution</h2>
               <span className="num text-sm" style={{ color: "var(--purple)" }}>
-                P(star) {Math.round(p.p_star! * 100)}%{" "}
+                Star chance {Math.round(p.p_star! * 100)}%{" "}
                 <span style={{ color: "var(--faint)" }}>
-                  [{Math.round(p.p_star_lo! * 100)}–{Math.round(p.p_star_hi! * 100)}% bootstrap]
+                  (likely {Math.round(p.p_star_lo! * 100)}–{Math.round(p.p_star_hi! * 100)}%)
                 </span>
               </span>
             </div>
@@ -91,6 +91,12 @@ export default async function PlayerPage({
                 <p className="text-xs" style={{ color: "var(--muted)" }}>consensus-implied EV</p>
               </div>
             </div>
+            <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--faint)" }}>
+              EV is expected career value on a 0-to-40 scale: 1 is a fringe player, 3 a
+              rotation piece, 8 a starter, 20 an All-Star, 40 an all-time great. The
+              model&apos;s number is his fair price; the other two are what his draft
+              slot and consensus rank usually buy.
+            </p>
           </section>
 
           <section className="mt-6 grid gap-6 md:grid-cols-2">
@@ -114,7 +120,9 @@ export default async function PlayerPage({
             <div className="card px-5 py-5">
               <h2 className="text-sm font-semibold">Closest historical profiles</h2>
               <p className="mt-1 text-xs" style={{ color: "var(--faint)" }}>
-                Same position group, matched on career-predictive stats
+                Closest college profiles at his position group, matched on
+                career-predictive stats. Their careers show the range this profile has
+                actually produced, floor to ceiling.
               </p>
               <ul className="mt-3 space-y-2.5">
                 {(p.comps ?? []).map((c) => (
