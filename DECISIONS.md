@@ -184,6 +184,17 @@ Accounts store emails + private notes → privacy policy and delete-my-data path
 public launch. BYO-key passthrough is demo-only; a real paid extraction tier replaces it
 before any scale.
 
+## D17. Roles are entitlements for accounts, demo stays open for visitors
+
+Signed-out visitors can try everything (session-only notes, war room); that keeps the
+portfolio instantly demoable. Signing up assigns a role stored on the account (Supabase
+user metadata) that shapes and gates the product: nested Fan < Scout (adds notes and the
+persistent book) < Front office (adds the war room and edge numbers). Signed-in users lose
+the free lens toggle (the header shows "Viewing as X" linking to settings); locked surfaces
+stay visible but disabled with a plain explanation and a link to change role in account
+settings, so a mis-chosen role never traps anyone. This supersedes the cosmetic-only lens
+toggle for signed-in users.
+
 ---
 
 *Log continues as phases complete.*

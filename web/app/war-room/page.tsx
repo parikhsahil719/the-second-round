@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Headshot from "@/components/Headshot";
 import { API } from "@/lib/api";
-import { chipLabel, useLens } from "@/lib/lens";
+import { canUseOffice, chipLabel, useLens } from "@/lib/lens";
 
 interface WarRoomRow {
   player_name: string;
@@ -19,7 +19,9 @@ interface WarRoomRow {
 }
 
 export default function WarRoom() {
-  const { lens } = useLens();
+  const lensState = useLens();
+  const { lens } = lensState;
+  const officeAllowed = canUseOffice(lensState);
   const [pick, setPick] = useState(1);
   const [rows, setRows] = useState<WarRoomRow[] | null>(null);
   const [note, setNote] = useState("");
@@ -39,6 +41,32 @@ export default function WarRoom() {
       live = false;
     };
   }, [pick]);
+
+  if (!officeAllowed) {
+    return (
+      <>
+        <h1 className="serif text-3xl">The war room</h1>
+        <div className="card mt-6 px-6 py-10 text-center">
+          <p className="serif text-lg">This is a front office tool</p>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+            Pick planning, availability odds from 10,000 simulated drafts, and the edge
+            numbers live here. Your current role doesn&apos;t include it.
+          </p>
+          <Link href="/account" className="btn mt-5 inline-block text-sm">
+            Switch role in account settings
+          </Link>
+        </div>
+        <div className="mt-4 flex flex-col gap-2" aria-hidden="true" style={{ opacity: 0.35, pointerEvents: "none", filter: "blur(2px)" }}>
+          {(rows ?? []).slice(0, 4).map((r) => (
+            <div key={r.player_name} className="card flex items-center gap-3 px-3.5 py-2.5">
+              <Headshot url={r.headshot_url} name={r.player_name} size={36} />
+              <span className="serif text-sm">{r.player_name}</span>
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
