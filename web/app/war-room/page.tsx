@@ -105,7 +105,7 @@ export default function WarRoom() {
           rows.slice(0, 20).map((r) => (
             <Link
               key={r.player_name}
-              href={r.slug ? `/player/${r.slug}` : "#"}
+              href={r.slug ? `/player/${r.slug}?from=war-room` : "#"}
               className="card card-link flex items-center gap-3 px-3.5 py-2.5"
             >
               <Headshot url={r.headshot_url} name={r.player_name} size={36} />

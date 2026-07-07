@@ -4,17 +4,27 @@ import NotesPanel from "@/components/NotesPanel";
 import { TierBar, TierLegend } from "@/components/TierBar";
 import { getPlayer, TIERS, TIER_LABELS } from "@/lib/api";
 
-export default async function PlayerPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function PlayerPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ from?: string }>;
+}) {
   const { slug } = await params;
+  const { from } = await searchParams;
   const p = await getPlayer(slug);
   if (!p) notFound();
 
+  const back = from === "war-room"
+    ? { href: "/war-room", label: "← Back to the war room" }
+    : { href: "/", label: "← Back to the board" };
   const posLabel = p.pos === "G" ? "Guard" : p.pos === "W" ? "Wing" : p.pos === "B" ? "Big" : null;
 
   return (
     <>
-      <Link href="/" className="text-xs" style={{ color: "var(--muted)" }}>
-        ← Back to the board
+      <Link href={back.href} className="text-xs" style={{ color: "var(--muted)" }}>
+        {back.label}
       </Link>
 
       <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
