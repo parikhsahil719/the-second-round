@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Headshot from "@/components/Headshot";
 import NotesPanel from "@/components/NotesPanel";
 import { TierBar, TierLegend } from "@/components/TierBar";
 import YourComps from "@/components/YourComps";
@@ -28,9 +29,12 @@ export default async function PlayerPage({
         {back.label}
       </Link>
 
-      <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="serif text-3xl">{p.player_name}</h1>
-        <span className="text-sm" style={{ color: "var(--muted)" }}>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Headshot url={p.headshot_url} name={p.player_name} size={84} />
+          <h1 className="serif text-3xl">{p.player_name}</h1>
+        </div>
+        <span className="max-w-sm text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
           {p.pick != null ? `Pick ${p.pick}` : "Undrafted"}
           {p.model_rank != null ? ` · model's rank #${p.model_rank}` : ""}
           {p.consensus_rank != null ? ` · consensus #${p.consensus_rank}` : ""}
