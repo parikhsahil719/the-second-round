@@ -85,10 +85,58 @@ TRANSLATE = {
 }
 
 
+# Is MORE of this stat a good-sounding thing? +1 yes, -1 no. Features whose phrasing
+# is neutral (role/style descriptions) are simply absent. Used to catch bullets whose
+# tone fights their arrow.
+VALENCE = {
+    "porpag": 1, "bpm_c": 1, "obpm_c": 1, "dbpm_c": 1, "career_bpm": 1, "d_bpm": 1,
+    "ts": 1, "efg": 1, "ft_pct_shr": 1, "three_pct_shr": 1, "two_pct_shr": 1,
+    "rim_pct_shr": 1, "ast_pct": 1, "ast_tov": 1, "ast_x_guard": 1, "stl_pct": 1,
+    "blk_pct": 1, "blk_x_big": 1, "orb_pct": 1, "drb_pct": 1, "height_in": 1,
+    "wingspan": 1, "wingspan_minus_height": 1, "min_pct": 1, "adjoe": 1, "dporpag": 1,
+    "mp_total": 1, "gp": 1, "rec_score": 1, "d_usg": 1, "max_vertical_leap": 1,
+    "standing_reach": 1,
+    "tov_pct": -1, "age_at_draft": -1, "adrtg": -1, "lane_agility_time": -1,
+    "three_quarter_sprint": -1, "rec_missing": -1, "combine_missing": -1,
+}
+
+# Replacement phrasing for bullets where the fact sounds good but the model pushes
+# down (or the reverse). Same (hi, lo) shape as TRANSLATE, keyed by z-sign; only used
+# when tone and push disagree, so the sentence explains its own arrow.
+CONTRARIAN = {
+    "tov_pct": (
+        "Turnover-prone, but that's the tax on heavy creation, and history forgives it",
+        "Takes care of the ball, maybe too well: ultra-safe play historically reads conservative, not creative"),
+    "ts": (
+        "Ultra-efficient scorer, a college stat that historically flatters more than it projects",
+        "Efficiency concerns, though history is kinder to imperfect volume scorers than the stat suggests"),
+    "orb_pct": (
+        "Crashes the offensive glass, energy that historically marks a role player more than a star",
+        "Skips the offensive glass, standard for perimeter roles that translate cleanly"),
+    "min_pct": (
+        "Trusted with huge minutes, a workhorse profile that has historically topped out lower",
+        "Didn't need big minutes to make his mark, common for young players on deep rosters"),
+    "rec_score": (
+        "Blue-chip pedigree, though history says hype without matching production disappoints",
+        "Unheralded recruit who produced anyway, the classic profile the market misses"),
+    "d_bpm": (
+        "Big year-over-year leap, though history trusts players who arrived good over late climbers",
+        "Production arrived early and held, which history likes more than a late climb"),
+    "ast_pct": (
+        "Big assist volume, mostly already credited through his decision-making numbers",
+        "Assist numbers light for the role, which matters less once decision-making is counted"),
+    "ast_x_guard": (
+        "Lead-guard assist volume, mostly already credited through his playmaking numbers",
+        "Assist rate light for a lead guard, softened by the rest of his playmaking profile"),
+}
+
+
 def translate_why(why_json: str) -> list[dict]:
     """Phrase describes what's TRUE (value z-sign); contribution says which way it pushes.
     They differ on negative-coefficient features: an unranked recruit reads 'Unheralded
-    recruit' with a positive push, because that profile historically overdelivers."""
+    recruit' with a positive push, because that profile historically overdelivers.
+    When the phrase's tone and the push disagree (a good-sounding fact with a down
+    arrow), swap in CONTRARIAN wording that carries the tension itself."""
     out = []
     for item in json.loads(why_json or "[]"):
         feat, contrib, z = (item + [None])[:3] if len(item) < 3 else item
@@ -96,6 +144,14 @@ def translate_why(why_json: str) -> list[dict]:
         hi, lo = TRANSLATE.get(feat, (None, None))
         phrase = (hi if sign > 0 else lo) or \
             f"{'High' if sign > 0 else 'Low'} {feat.replace('_', ' ')}"
+        tone = VALENCE.get(feat, 0) * (1 if sign > 0 else -1)
+        push = 1 if contrib > 0 else -1
+        if tone and tone != push:
+            chi, clo = CONTRARIAN.get(feat, (None, None))
+            swapped = chi if sign > 0 else clo
+            phrase = swapped or phrase + (
+                ", yet that profile has historically overdelivered" if push > 0
+                else ", yet that profile has historically underdelivered")
         out.append({"text": phrase, "feature": feat, "contribution": contrib})
     return out
 
