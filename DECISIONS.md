@@ -218,6 +218,24 @@ traits already carry that evidence, and counting the name-drop would double-coun
 All personalization is per-account and private (Supabase RLS; usernames enforced by the
 database — unique, format-checked, immutable via the absence of an update policy).
 
+## D20. Labels stress-tested; role becomes a second axis, never a second currency
+
+User testing surfaced the right challenge: Otto Porter grades "All-Star level" without ever
+being an All-Star, so shouldn't stars require star roles? We answered by experiment
+(model/robustness.py): four full relabelings of the same careers, market prior and model
+refit leave-one-class-out under each. Every production-based definition preserves all three
+headline claims; defining stars by accolades collapses the extremes edge (+5.4 to +1.5,
+p 0.08), because selections follow the narrative information the model deliberately cannot
+see. The market prices status; the edge lives in measuring production. Side findings made
+the argument concrete: usage-gating stars demotes prime Draymond Green to ROTATION, and
+accolade labels rank Drummond above Bridges, an ordering the user himself rejected.
+
+So value stays the only currency (tiers, EV, chips unchanged), and role becomes a display
+axis: each comp shows a gold star for a real in-window All-Star selection, a role archetype
+from peak-stretch usage (Engine 24%+, Co-star 20%+, Connector below; designer cutoffs,
+documented), and a late-bloom flag for careers that climbed after the window (Brunson:
+Rotation, later Elite). Basketball truth on the surface, honest economics underneath.
+
 ---
 
 *Log continues as phases complete.*

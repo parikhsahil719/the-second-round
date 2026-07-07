@@ -35,17 +35,21 @@ ELITE_VORP_PCT = 0.98
 ELITE_BPM, ALLSTAR_BPM, PEAK_MIN_MP = 3.5, 2.2, 2500
 
 
-def _peak2(seasons: pd.DataFrame) -> tuple[float | None, float]:
-    """Best MP-weighted BPM over 2 adjacent played seasons (or the lone season)."""
+def _peak2(seasons: pd.DataFrame) -> tuple[float | None, float, float | None]:
+    """Best MP-weighted BPM over 2 adjacent played seasons (or the lone season),
+    plus the MP-weighted usage of that same stretch (the role-archetype input:
+    what burden did he carry when he was at his best)."""
     rows = list(seasons.sort_values("season_end").itertuples())
     stretches = [rows[i:i + 2] for i in range(len(rows) - 1)] if len(rows) > 1 else [rows]
-    best = (None, 0.0)
+    best = (None, 0.0, None)
     for s in stretches:
         mp = sum(r.mp for r in s)
         if mp > 0:
-            cand = (sum(r.bpm * r.mp for r in s) / mp, mp)
-            if best[0] is None or cand[0] > best[0]:
-                best = cand
+            bpm = sum(r.bpm * r.mp for r in s) / mp
+            if best[0] is None or bpm > best[0]:
+                u = [r for r in s if pd.notna(getattr(r, "usg", None))]
+                usg = sum(r.usg * r.mp for r in u) / sum(r.mp for r in u) if u else None
+                best = (bpm, mp, usg)
     return best
 
 
@@ -58,14 +62,14 @@ def _aggregate(bref_id, draft_year, nba, acc) -> dict:
     a = acc[(acc.bref_id == bref_id)
             & (acc.season_end >= draft_year + 1) & (acc.season_end <= draft_year + 4)]
     mp4 = w.mp.sum()
-    pk_bpm, pk_mp = _peak2(w)
-    late_bpm, late_mp = _peak2(later)
+    pk_bpm, pk_mp, pk_usg = _peak2(w)
+    late_bpm, late_mp, _ = _peak2(later)
     wu = w.dropna(subset=["usg"]) if "usg" in w.columns else w.iloc[0:0]
     return {
         "g4": w.g.sum(), "mp4": mp4, "ws4": w.ws.sum(), "vorp4": w.vorp.sum(),
         "bpm4": (w.bpm * w.mp).sum() / mp4 if mp4 > 0 else None,
         "usg4": (wu.usg * wu.mp).sum() / wu.mp.sum() if wu.mp.sum() > 0 else None,
-        "peak2_bpm": pk_bpm, "peak2_mp": pk_mp,
+        "peak2_bpm": pk_bpm, "peak2_mp": pk_mp, "peak2_usg": pk_usg,
         "later_peak_bpm": late_bpm, "later_peak_mp": late_mp,
         "all_star4": (a.honor == "all_star").any(),
         "all_nba4": (a.honor == "all_nba").any(),

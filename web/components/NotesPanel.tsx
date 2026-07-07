@@ -23,12 +23,18 @@ interface YourView {
   your_chip: string;
 }
 
-// older saved notes hold plain strings; newer ones carry the historical tier and
-// whether the player made a real All-Star team in his first four seasons
-export type Comp = string | { name: string; tier: string | null; all_star?: boolean };
+// older saved notes hold plain strings; newer ones carry the historical tier,
+// whether the player made a real All-Star team in his first four seasons, his
+// role archetype (Engine / Co-star / Connector), and any post-window late bloom
+export type Comp =
+  | string
+  | { name: string; tier: string | null; all_star?: boolean;
+      archetype?: string | null; late_bloom?: string | null };
 export const compName = (c: Comp) => (typeof c === "string" ? c : c.name);
 export const compTier = (c: Comp) => (typeof c === "string" ? null : c.tier);
 export const compStar = (c: Comp) => (typeof c === "string" ? false : c.all_star ?? false);
+export const compArch = (c: Comp) => (typeof c === "string" ? null : c.archetype ?? null);
+export const compLater = (c: Comp) => (typeof c === "string" ? null : c.late_bloom ?? null);
 
 interface NoteResult {
   mode: string;

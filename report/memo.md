@@ -151,12 +151,30 @@ calibrated): the top 40 favorites returned +5.33 utility above market price (per
 p < 0.0002), the top 40 fades 2.07 below (p < 0.0002). Calibration curves are tight for
 the four large tiers and honest but wide for STAR (n = 45).
 
+**Labeling robustness.** The tier definition is a choice, so we tested it. Four full
+relabelings of the same 847 careers (current peak-two bands; four-year average bands with
+count-matched cutoffs; usage-gated stars requiring at least league-average creation
+burden; accolade-defined stars), each with the market prior and model refit
+leave-one-class-out under that definition. Every variant reaches the same verdicts: the
+market wins on average, and picks 31 to 45 stay its inefficient region. The edge at the
+extremes survives all production-based definitions (+4.0 to +5.4 utility, p < 0.001) but
+collapses under accolade labels (+1.5, p = 0.08). That collapse is the point: the model
+finds players who produce value the market missed, not future vote-getters, and
+selections follow the narrative information the model is built to ignore. The variants
+also show what gating stars on usage costs: it demotes prime Draymond Green to a rotation
+label, and accolade labels rank Andre Drummond above Mikal Bridges. Full table:
+report/robustness.md.
+
 **Attribution and comps.** Per-player contributions are exact (coefficient times
 standardized value), phrased by value sign with push direction shown separately. An
 unranked recruit reads "Unheralded recruit" with a positive push, because the model
 learned that profile overdelivers. Comps are the five nearest neighbors, position-gated,
 with distance weighted by coefficient magnitude (career-relevant similarity), and are
-display-only.
+display-only. Each comp carries three annotations that keep value and role honestly
+separate: a star for a real All-Star selection inside the window, a role archetype from
+peak-stretch usage (Engine at 24%+, Co-star at 20%+, Connector below, shown for
+starter-or-better outcomes), and a late-bloom flag for careers that kept climbing after
+the window (Jalen Brunson reads Rotation, later Elite).
 
 **Scout notes.** A 12-trait rubric with scores from -2 to +2, scaled by extraction
 confidence. Per-trait log-tilt strengths run 0.08 to 0.15 (subjective traits lowest),

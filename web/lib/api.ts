@@ -64,7 +64,13 @@ export interface SeedNote {
 
 export interface PlayerDetail extends BoardRow {
   why?: WhyItem[];
-  comps?: { name: string; tier: Tier; all_star?: boolean }[];
+  comps?: {
+    name: string;
+    tier: Tier;
+    all_star?: boolean;
+    archetype?: string | null;
+    late_bloom?: Tier | null;
+  }[];
   seed_notes: SeedNote[];
 }
 

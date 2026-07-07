@@ -124,13 +124,16 @@ export default async function PlayerPage({
                 career-predictive stats. Their careers show the range this profile has
                 actually produced, floor to ceiling. Tiers grade production;{" "}
                 <span style={{ color: "var(--gold)" }}>★</span> marks a real All-Star
-                selection in those first four seasons.
+                selection in those first four seasons. The role word says how he
+                produced it: an Engine carries the offense, a Connector wins without
+                the ball. &quot;Later&quot; flags careers that kept climbing after the
+                four-year window.
               </p>
               <ul className="mt-3 space-y-2.5">
                 {(p.comps ?? []).map((c) => (
-                  <li key={c.name} className="flex items-baseline justify-between text-sm">
+                  <li key={c.name} className="flex items-baseline justify-between gap-2 text-sm">
                     <span className="serif">{c.name}</span>
-                    <span className="text-xs" style={{ color: "var(--muted)" }}>
+                    <span className="text-right text-xs" style={{ color: "var(--muted)" }}>
                       {TIER_LABELS[c.tier] ?? c.tier}
                       {c.all_star && (
                         <span
@@ -138,6 +141,12 @@ export default async function PlayerPage({
                           style={{ color: "var(--gold)" }}
                         >
                           {" "}★
+                        </span>
+                      )}
+                      {c.archetype && <span> · {c.archetype}</span>}
+                      {c.late_bloom && (
+                        <span style={{ color: "var(--pos)" }}>
+                          , later {TIER_LABELS[c.late_bloom] ?? c.late_bloom}
                         </span>
                       )}
                     </span>
