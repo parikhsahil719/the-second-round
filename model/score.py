@@ -181,7 +181,19 @@ if __name__ == "__main__":
         same_pos = (tinfo.pos == scored.pos.iloc[i]).to_numpy()
         d = np.linalg.norm((Zh - Z26[i]) * w, axis=1)
         d[~same_pos] = np.inf
-        near = np.argsort(d)[:5]
+        # players who entered the draft pool twice have two season-rows; a comp
+        # list must be five DIFFERENT players, not the same guy's two seasons
+        near, seen = [], set()
+        for j in np.argsort(d):
+            if not np.isfinite(d[j]):
+                break
+            name = str(tinfo.player_name[j]).lower()
+            if name in seen:
+                continue
+            seen.add(name)
+            near.append(j)
+            if len(near) == 5:
+                break
         comps.append(" | ".join(f"{tinfo.player_name[j]} ({tinfo.tier[j]})" for j in near))
     scored["comps"] = comps
 

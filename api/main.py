@@ -314,8 +314,18 @@ def player(slug: str):
     d = public_row(r)
     if r.coverage == "model":
         d["why"] = translate_why(r.why)
-        d["comps"] = [{"name": c.rsplit(" (", 1)[0], "tier": c.rsplit(" (", 1)[1].rstrip(")")}
-                      for c in (r.comps or "").split(" | ") if "(" in c]
+        # defensive dedupe: a comp list is five DIFFERENT players even if a stale
+        # artifact slips a repeated season-row through
+        comps, seen = [], set()
+        for c in (r.comps or "").split(" | "):
+            if "(" not in c:
+                continue
+            name = c.rsplit(" (", 1)[0]
+            if name.lower() in seen:
+                continue
+            seen.add(name.lower())
+            comps.append({"name": name, "tier": c.rsplit(" (", 1)[1].rstrip(")")})
+        d["comps"] = comps
     d["seed_notes"] = [s for s in SEEDS if s["player_name"] == r.player_name]
     return d
 

@@ -134,7 +134,7 @@ export default async function PlayerPage({
                   </li>
                 ))}
               </ul>
-              <YourComps slug={p.slug} />
+              <YourComps slug={p.slug} exclude={(p.comps ?? []).map((c) => c.name)} />
             </div>
           </section>
 
