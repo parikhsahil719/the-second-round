@@ -24,6 +24,7 @@ export interface SavedNote {
   slug: string;
   note_text: string;
   traits: { trait: string; score: number; confidence: number; evidence: string }[];
+  comps?: string[];
   updated_at: string;
 }
 
@@ -35,13 +36,24 @@ export async function getMyNotes(slug?: string): Promise<SavedNote[]> {
   return (data as SavedNote[]) ?? [];
 }
 
-export async function saveNote(slug: string, noteText: string, traits: SavedNote["traits"]) {
+export async function saveNote(
+  slug: string,
+  noteText: string,
+  traits: SavedNote["traits"],
+  comps: string[] = []
+) {
   if (!supabase) throw new Error("accounts not configured");
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error("sign in to save notes");
-  const { error } = await supabase.from("scout_notes").insert({
-    user_id: u.user.id, slug, note_text: noteText, traits,
+  let { error } = await supabase.from("scout_notes").insert({
+    user_id: u.user.id, slug, note_text: noteText, traits, comps,
   });
+  if (error && /comps/i.test(error.message)) {
+    // schema not migrated yet; keep the note rather than lose it
+    ({ error } = await supabase.from("scout_notes").insert({
+      user_id: u.user.id, slug, note_text: noteText, traits,
+    }));
+  }
   if (error) throw new Error(error.message);
 }
 

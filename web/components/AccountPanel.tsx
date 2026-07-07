@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { supabase } from "@/lib/supabase";
 import type { Lens } from "@/lib/lens";
 import { useLens } from "@/lib/lens";
@@ -10,16 +11,16 @@ export type Mode = "signin" | "signup";
 
 // Client-side gate for a stronger UX. Also set the matching server-side policy in
 // Supabase (Auth > Providers > Email > Password Requirements) so it can't be bypassed.
-const PW_RULES: { label: string; test: (p: string) => boolean }[] = [
+export const PW_RULES: { label: string; test: (p: string) => boolean }[] = [
   { label: "8+ characters", test: (p) => p.length >= 8 },
   { label: "an uppercase letter", test: (p) => /[A-Z]/.test(p) },
   { label: "a lowercase letter", test: (p) => /[a-z]/.test(p) },
   { label: "a number", test: (p) => /[0-9]/.test(p) },
   { label: "a symbol", test: (p) => /[^A-Za-z0-9]/.test(p) },
 ];
-const pwValid = (p: string) => PW_RULES.every((r) => r.test(p));
+export const pwValid = (p: string) => PW_RULES.every((r) => r.test(p));
 
-function PasswordStrength({ pw }: { pw: string }) {
+export function PasswordStrength({ pw }: { pw: string }) {
   if (!pw) return null;
   const passed = PW_RULES.filter((r) => r.test(pw));
   const n = passed.length;
@@ -58,6 +59,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
   const [info, setInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [recovery, setRecovery] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const { lens, setLens } = useLens();
   const router = useRouter();
@@ -141,10 +143,10 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
   const forgot = () =>
     run(async () => {
       const { error } = await supabase!.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/account",
+        redirectTo: window.location.origin + "/reset-password",
       });
       if (error) throw error;
-      return "Password reset email sent. The link brings you back here to set a new one.";
+      return "Password reset email sent. The link takes you to a page to choose a new one.";
     });
 
   const saveNewPassword = () =>
@@ -345,12 +347,22 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
             ))}
           </div>
           <button
-            className="mt-5 text-xs underline"
-            style={{ color: "var(--faint)" }}
-            onClick={() => supabase!.auth.signOut()}
+            className="btn-ghost mt-5 text-sm"
+            onClick={() => setConfirmSignOut(true)}
           >
             Sign out
           </button>
+          <ConfirmDialog
+            open={confirmSignOut}
+            title="Sign out?"
+            body="Your saved notes stay in your book. You can sign back in anytime."
+            confirmLabel="Sign out"
+            onConfirm={async () => {
+              await supabase!.auth.signOut();
+              setConfirmSignOut(false);
+            }}
+            onCancel={() => setConfirmSignOut(false)}
+          />
         </div>
       )}
     </div>

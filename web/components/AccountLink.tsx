@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { supabase } from "@/lib/supabase";
 
 export default function AccountLink() {
   const [email, setEmail] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const menuRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
     if (!supabase) return;
@@ -22,11 +25,43 @@ export default function AccountLink() {
 
   if (!supabase) return null;
 
+  const closeMenu = () => menuRef.current?.removeAttribute("open");
+
   if (email)
     return (
-      <Link href="/account" className="text-xs underline" style={{ color: "var(--muted)" }}>
-        {email.split("@")[0]}
-      </Link>
+      <>
+        <details className="menu" ref={menuRef}>
+          <summary>{email.split("@")[0]} ▾</summary>
+          <div className="menu-panel">
+            <p className="px-3 pb-1 pt-2 text-xs" style={{ color: "var(--faint)" }}>
+              {email}
+            </p>
+            <Link href="/account" className="menu-item" onClick={closeMenu}>
+              Account settings
+            </Link>
+            <button
+              className="menu-item danger"
+              onClick={() => {
+                closeMenu();
+                setConfirmSignOut(true);
+              }}
+            >
+              Sign out
+            </button>
+          </div>
+        </details>
+        <ConfirmDialog
+          open={confirmSignOut}
+          title="Sign out?"
+          body="Your saved notes stay in your book. You can sign back in anytime."
+          confirmLabel="Sign out"
+          onConfirm={async () => {
+            await supabase!.auth.signOut();
+            setConfirmSignOut(false);
+          }}
+          onCancel={() => setConfirmSignOut(false)}
+        />
+      </>
     );
 
   return (

@@ -9,8 +9,12 @@ create table if not exists scout_notes (
   slug text not null,
   note_text text not null check (char_length(note_text) <= 2000),
   traits jsonb not null default '[]',
+  comps jsonb not null default '[]',
   updated_at timestamptz not null default now()
 );
+
+-- Existing projects (added after initial deploy): run this one line to add comps.
+-- alter table scout_notes add column if not exists comps jsonb not null default '[]';
 
 create index if not exists scout_notes_user_slug on scout_notes (user_id, slug);
 

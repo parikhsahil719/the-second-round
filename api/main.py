@@ -123,6 +123,28 @@ def rank_chip(model_rank, pick) -> str:
     return "BUY" if gap >= threshold else ("FADE" if gap <= -threshold else "HOLD")
 
 
+# "plays like Dejounte Murray", "shades of prime Manu Ginobili", "a poor man's Draymond"
+COMP_PATTERN = re.compile(
+    r"(?i:plays like|moves like|reminds me of|shades of|similar to|comps? to|"
+    r"a (?:poor|rich) man'?s)\s+"
+    r"(?i:(?:a|an|the|young|prime|peak|vintage)\s+)*"
+    r"([A-Z][\w'-]*(?:\s+[A-Z][\w'-]*){0,2})")
+
+
+def extract_comps(note: str) -> list[str]:
+    """Player comps the scout name-dropped. Annotation only: comps never touch the
+    posterior, because the note's traits already carry the evidence and a name-drop
+    would double-count it."""
+    # ponytail: regex on common comp phrasings; move into the LLM extraction schema
+    # if scouts phrase comps too creatively for it
+    out: list[str] = []
+    for m in COMP_PATTERN.finditer(note):
+        name = m.group(1).strip().rstrip(".,;:!?")
+        if name and name.lower() not in {n.lower() for n in out}:
+            out.append(name)
+    return out[:5]
+
+
 def your_view(r, posterior: np.ndarray) -> dict:
     """The scout-vs-model comparison: turn a posterior into the user's EV, where that
     EV would rank in this class (against everyone else's model EV), and the chip that
@@ -359,6 +381,7 @@ def notes(body: NoteIn, request: Request):
     posterior, tilt = update(prior, {t["trait"]: (t["score"], t["confidence"])
                                      for t in traits})
     return {"mode": mode, "traits": traits, "tilt": round(tilt, 3),
+            "comps": extract_comps(body.note),
             "prior": {t: round(float(p), 4) for t, p in zip(TIERS, prior)},
             "posterior": {t: round(float(p), 4) for t, p in zip(TIERS, posterior)},
             "view": your_view(r, posterior)}
