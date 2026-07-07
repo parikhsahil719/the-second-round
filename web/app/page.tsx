@@ -9,11 +9,16 @@ function Callout({ row, side }: { row: BoardRow; side: "buy" | "fade" }) {
       className="card card-link block px-4 py-3.5"
       style={{ borderColor: side === "buy" ? "rgba(93,202,165,0.35)" : "rgba(224,138,122,0.35)" }}
     >
-      <div className="flex items-baseline justify-between gap-2">
+      <div className="flex items-start justify-between gap-2">
         <span className="serif text-[15px]">{row.player_name}</span>
-        <span className="num text-sm" style={{ color: side === "buy" ? "var(--pos)" : "var(--neg)" }}>
-          {row.edge_slot! > 0 ? "+" : ""}
-          {row.edge_slot!.toFixed(1)}
+        <span className="text-right">
+          <span className="num block text-base leading-tight" style={{ color: side === "buy" ? "var(--pos)" : "var(--neg)" }}>
+            {row.edge_slot! > 0 ? "+" : ""}
+            {row.edge_slot!.toFixed(1)}
+          </span>
+          <span className="block text-[10px] tracking-wide" style={{ color: "var(--faint)" }}>
+            VS SLOT PRICE
+          </span>
         </span>
       </div>
       <p className="mt-0.5 text-xs" style={{ color: "var(--muted)" }}>
@@ -46,7 +51,13 @@ export default async function Home() {
         </p>
       </section>
 
-      <section className="mt-8 grid gap-6 md:grid-cols-2">
+      <p className="mt-6 text-xs leading-relaxed" style={{ color: "var(--faint)" }}>
+        The number on each card is the gap between what the model thinks the player is
+        worth and what his draft slot historically returns, in career-value points.
+        Bigger number, louder disagreement.
+      </p>
+
+      <section className="mt-3 grid gap-6 md:grid-cols-2">
         <div>
           <h2 className="mb-2 text-xs font-semibold tracking-wider" style={{ color: "var(--pos)" }}>
             THE MODEL WANTED MORE

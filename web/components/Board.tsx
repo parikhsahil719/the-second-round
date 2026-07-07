@@ -76,8 +76,12 @@ export function Row({ row }: { row: BoardRow }) {
   );
 }
 
+const PREVIEW_COUNT = 25;
+
 export default function Board({ rows }: { rows: BoardRow[] }) {
+  const { lens, signedIn, role } = useLens();
   const [q, setQ] = useState("");
+  const [showAll, setShowAll] = useState(false);
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     if (!needle) return rows;
@@ -88,14 +92,22 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
     );
   }, [rows, q]);
 
+  const officeView = signedIn ? role === "office" : lens !== "fan";
+  const visible = q || showAll ? filtered : filtered.slice(0, PREVIEW_COUNT);
+
   return (
     <section id="board" className="mt-10">
-      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+      <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="serif text-lg">The full board</h2>
         <span className="text-xs" style={{ color: "var(--muted)" }}>
-          edge = model EV − slot EV · BUY &gt; +2 · FADE &lt; −2
+          Sorted by the model&apos;s valuation, best first
         </span>
       </div>
+      <p className="mb-3 text-xs leading-relaxed" style={{ color: "var(--faint)" }}>
+        {officeView
+          ? "The green or red number is the edge: the model's price minus the slot's price. BUY and FADE fire when it passes ±2."
+          : "STEAL means the model valued the player well above where he was drafted; PRICEY means below."}
+      </p>
       <input
         type="text"
         placeholder="Search a player or school…"
@@ -108,7 +120,7 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
         <TierLegend />
       </div>
       <div className="flex flex-col gap-2">
-        {filtered.map((r) => (
+        {visible.map((r) => (
           <Row key={r.slug} row={r} />
         ))}
         {filtered.length === 0 && (
@@ -117,6 +129,15 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
           </p>
         )}
       </div>
+      {!q && !showAll && filtered.length > PREVIEW_COUNT && (
+        <button
+          className="card card-link mt-2 w-full py-3 text-center text-sm"
+          style={{ color: "var(--purple)" }}
+          onClick={() => setShowAll(true)}
+        >
+          Show the whole board ({filtered.length} players)
+        </button>
+      )}
     </section>
   );
 }
