@@ -16,9 +16,11 @@ import re
 import sys
 import time
 from pathlib import Path
+from urllib.parse import quote
 
 import numpy as np
 import pandas as pd
+import requests
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -406,6 +408,13 @@ def _check_caps(ip: str, byo: bool):
     USAGE_FILE.write_text(json.dumps(u))
 
 
+def _client_ip(request: Request) -> str:
+    """Behind Render's proxy every request shares the proxy IP; the real client is
+    the first hop in X-Forwarded-For."""
+    fwd = request.headers.get("x-forwarded-for", "")
+    return fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else "?")
+
+
 @app.post("/notes")
 def notes(body: NoteIn, request: Request):
     if len(body.note) > 2000:
@@ -415,11 +424,7 @@ def notes(body: NoteIn, request: Request):
         raise HTTPException(404, "player not model-scored")
     r = hit.iloc[0]
 
-    # behind Render's proxy every request shares the proxy IP; the real client is
-    # the first hop in X-Forwarded-For
-    fwd = request.headers.get("x-forwarded-for", "")
-    ip = fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else "?")
-    _check_caps(ip, bool(body.api_key))
+    _check_caps(_client_ip(request), bool(body.api_key))
 
     import os
     from extract import extract_llm, extract_mock, _load_env
@@ -442,3 +447,112 @@ def notes(body: NoteIn, request: Request):
             "prior": {t: round(float(p), 4) for t, p in zip(TIERS, prior)},
             "posterior": {t: round(float(p), 4) for t, p in zip(TIERS, posterior)},
             "view": your_view(r, posterior)}
+
+
+# ---- Auth proxy -------------------------------------------------------------
+# Modern-login posture: the browser sends identifier + password HERE, resolution
+# of username -> email happens server-side (service-role RPC), and the browser
+# only ever learns success or failure. Email actions answer identically whether
+# or not an account exists, so nothing can be enumerated.
+
+def _supabase_env() -> tuple[str, str, str]:
+    import os
+    from extract import _load_env
+    _load_env()
+    url = os.environ.get("SUPABASE_URL")
+    anon = os.environ.get("SUPABASE_ANON_KEY")
+    svc = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    if not (url and anon and svc):
+        raise HTTPException(503, "auth proxy not configured")
+    return url.rstrip("/"), anon, svc
+
+
+def _resolve_email(identifier: str) -> str | None:
+    identifier = identifier.strip()
+    if "@" in identifier:
+        return identifier
+    url, _anon, svc = _supabase_env()
+    r = requests.post(
+        f"{url}/rest/v1/rpc/email_for_username",
+        headers={"apikey": svc, "Authorization": f"Bearer {svc}"},
+        json={"uname": identifier}, timeout=10)
+    if r.ok and r.json():
+        return r.json()
+    return None
+
+
+# ponytail: in-memory per-IP limiter; single Render instance today, move to a
+# shared store if this ever scales horizontally
+_AUTH_HITS: dict[str, list[float]] = {}
+
+
+def _auth_rate_limit(ip: str, limit: int = 10, window: int = 300):
+    now = time.time()
+    hits = [t for t in _AUTH_HITS.get(ip, []) if now - t < window]
+    if len(hits) >= limit:
+        raise HTTPException(429, "Too many attempts. Wait a few minutes and try again.")
+    hits.append(now)
+    _AUTH_HITS[ip] = hits
+
+
+class SignInBody(BaseModel):
+    identifier: str
+    password: str
+
+
+@app.post("/auth/signin")
+def auth_signin(body: SignInBody, request: Request):
+    _auth_rate_limit(_client_ip(request))
+    url, anon, _svc = _supabase_env()
+    invalid = HTTPException(401, "Invalid email/username or password.")
+    email = _resolve_email(body.identifier)
+    if not email:
+        raise invalid
+    r = requests.post(
+        f"{url}/auth/v1/token?grant_type=password",
+        headers={"apikey": anon},
+        json={"email": email, "password": body.password}, timeout=10)
+    if r.status_code != 200:
+        try:
+            msg = r.json().get("error_description") or r.json().get("msg") or ""
+        except ValueError:
+            msg = ""
+        if "confirm" in msg.lower():
+            raise HTTPException(403, "Email not confirmed yet. Check your inbox, or resend the confirmation below.")
+        raise invalid
+    s = r.json()
+    return {"access_token": s["access_token"], "refresh_token": s["refresh_token"]}
+
+
+EMAIL_ACTIONS = {"reset": "/auth/v1/recover", "magic": "/auth/v1/otp", "confirm": "/auth/v1/resend"}
+
+
+class AuthEmailBody(BaseModel):
+    identifier: str
+    action: str
+    redirect_to: str | None = None
+
+
+@app.post("/auth/email")
+def auth_email(body: AuthEmailBody, request: Request):
+    """Reset / magic-link / resend-confirmation. The answer is the same whether an
+    account exists or not; GoTrue validates redirect_to against the allowlist."""
+    _auth_rate_limit(_client_ip(request), limit=5)
+    if body.action not in EMAIL_ACTIONS:
+        raise HTTPException(400, "unknown action")
+    url, anon, _svc = _supabase_env()
+    generic = {"ok": True,
+               "message": "If an account matches, an email is on its way. Check your inbox."}
+    email = _resolve_email(body.identifier)
+    if not email:
+        return generic
+    payload: dict = {"email": email}
+    if body.action == "confirm":
+        payload["type"] = "signup"
+    if body.action == "magic":
+        payload["create_user"] = False  # magic links sign in existing users; signup is the form's job
+    endpoint = f"{url}{EMAIL_ACTIONS[body.action]}"
+    if body.redirect_to:
+        endpoint += f"?redirect_to={quote(body.redirect_to, safe='')}"
+    requests.post(endpoint, headers={"apikey": anon}, json=payload, timeout=10)
+    return generic
