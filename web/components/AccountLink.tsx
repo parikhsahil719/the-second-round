@@ -72,7 +72,7 @@ export default function AccountLink() {
 
   return (
     <span className="flex items-center gap-2.5" style={{ visibility: loaded ? "visible" : "hidden" }}>
-      <Link href="/signin" className="nav-link text-xs">
+      <Link href="/signin" className="nav-link text-sm">
         Sign in
       </Link>
       <Link

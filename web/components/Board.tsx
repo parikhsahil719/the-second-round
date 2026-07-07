@@ -44,7 +44,7 @@ export function Row({ row }: { row: BoardRow }) {
             <div className="flex-1">
               <TierBar tiers={row.tiers} height={7} />
             </div>
-            <span className="num w-24 text-right text-xs" style={{ color: "var(--muted)" }}>
+            <span className="num w-28 whitespace-nowrap text-right text-xs" style={{ color: "var(--muted)" }}>
               STAR {Math.round((row.p_star ?? 0) * 100)}%
               <span style={{ color: "var(--faint)" }}>
                 {" "}

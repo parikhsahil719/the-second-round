@@ -6,9 +6,9 @@
   --card: #2a2733;
   --card-hover: #322e3c;
   --border: #38343e;
-  --text: #f2eee6;
-  --muted: #a49fab;
-  --faint: #857f8e;
+  --text: #f5f2ec;
+  --muted: #b3adba;
+  --faint: #958e9d;
   --pos: #5dcaa5;
   --neg: #e08a7a;
   --purple: #8a7bd8;
@@ -20,6 +20,10 @@
   --t-allstar: #74b7c9;
   --t-elite: #5dcaa5;
 }
+
+/* Everything in the app is rem-based (Tailwind), so raising the root size scales
+ * type, spacing, and the content column together: bigger text, fuller page. */
+html { font-size: 17px; }
 
 body {
   background: var(--bg);
@@ -90,8 +94,8 @@ button:disabled { cursor: default; }
   text-underline-offset: 2px;
   cursor: pointer;
 }
-.link:hover { filter: brightness(1.25); }
-.link:disabled { opacity: 0.5; }
+.link:hover:not(:disabled) { filter: brightness(1.25); }
+.link:disabled { opacity: 0.5; cursor: default; }
 
 /* Header navigation: quiet until hovered, then clearly alive. */
 .nav-link { color: var(--muted); transition: color 0.12s; }
