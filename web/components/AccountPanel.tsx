@@ -158,6 +158,16 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
       return "Password updated.";
     });
 
+  // email-dependent link-buttons stay clickable (dead links confuse); without an
+  // email they explain what's missing instead of silently doing nothing
+  const withEmail = (fn: () => void) => () => {
+    if (email.includes("@")) fn();
+    else {
+      setInfo(null);
+      setError("Enter your email above first.");
+    }
+  };
+
   const resetFromSettings = () =>
     run(async () => {
       const { error } = await supabase!.auth.resetPasswordForEmail(user!.email!, {
@@ -208,7 +218,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
 
   return (
     <div className="mx-auto max-w-md">
-      <h1 className="serif text-2xl">Your account</h1>
+      <h1 className="serif text-3xl">Your account</h1>
 
       {!user ? (
         <div className="card mt-4 px-5 py-5">
@@ -306,11 +316,11 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
             {mode === "signin" && (
               <>
                 <button type="button" className="link text-xs"
-                        onClick={forgot} disabled={busy || !email.includes("@")}>
+                        onClick={withEmail(forgot)} disabled={busy}>
                   Forgot password?
                 </button>
                 <button type="button" className="link text-xs"
-                        onClick={magicLink} disabled={busy || !email.includes("@")}>
+                        onClick={withEmail(magicLink)} disabled={busy}>
                   Email me a link instead
                 </button>
               </>
@@ -327,8 +337,8 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
             <button
               type="button"
               className="link mt-2 text-xs"
-              onClick={resendConfirm}
-              disabled={busy || !email.includes("@")}
+              onClick={withEmail(resendConfirm)}
+              disabled={busy}
             >
               Didn&apos;t get the confirmation email? Resend it
             </button>
