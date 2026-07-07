@@ -8,6 +8,45 @@ import { useLens } from "@/lib/lens";
 
 export type Mode = "signin" | "signup";
 
+// Client-side gate for a stronger UX. Also set the matching server-side policy in
+// Supabase (Auth > Providers > Email > Password Requirements) so it can't be bypassed.
+const PW_RULES: { label: string; test: (p: string) => boolean }[] = [
+  { label: "8+ characters", test: (p) => p.length >= 8 },
+  { label: "an uppercase letter", test: (p) => /[A-Z]/.test(p) },
+  { label: "a lowercase letter", test: (p) => /[a-z]/.test(p) },
+  { label: "a number", test: (p) => /[0-9]/.test(p) },
+  { label: "a symbol", test: (p) => /[^A-Za-z0-9]/.test(p) },
+];
+const pwValid = (p: string) => PW_RULES.every((r) => r.test(p));
+
+function PasswordStrength({ pw }: { pw: string }) {
+  if (!pw) return null;
+  const passed = PW_RULES.filter((r) => r.test(pw));
+  const n = passed.length;
+  const unmet = PW_RULES.filter((r) => !r.test(pw)).map((r) => r.label);
+  const color = n <= 2 ? "var(--neg)" : n < PW_RULES.length ? "var(--gold)" : "var(--pos)";
+  const label = n <= 2 ? "Weak" : n < PW_RULES.length ? "Getting there" : "Strong";
+  return (
+    <div className="mt-2">
+      <div className="flex gap-1" aria-hidden="true">
+        {PW_RULES.map((_, i) => (
+          <div
+            key={i}
+            className="h-1 flex-1 rounded-full"
+            style={{ background: i < n ? color : "var(--panel)" }}
+          />
+        ))}
+      </div>
+      <p className="mt-1 text-xs" style={{ color }}>
+        {label}
+        {unmet.length > 0 && (
+          <span style={{ color: "var(--faint)" }}> · still needs {unmet.join(", ")}</span>
+        )}
+      </p>
+    </div>
+  );
+}
+
 export default function AccountPanel({ initialMode = "signin" }: { initialMode?: Mode }) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
@@ -25,7 +64,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
 
   const canSubmit = !busy && email.includes("@") &&
     (mode === "signin" ? password.length >= 1
-                       : password.length >= 8 && confirm === password);
+                       : pwValid(password) && confirm === password);
 
   useEffect(() => {
     if (!supabase) return;
@@ -78,6 +117,17 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
       return "Almost there. Check your email to confirm your account, then come back and sign in.";
     });
 
+  const resendConfirm = () =>
+    run(async () => {
+      const { error } = await supabase!.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: window.location.origin + "/account" },
+      });
+      if (error) throw error;
+      return "Confirmation email sent again. If it doesn't arrive, the shared email limit may be reached (about 2 per hour); wait a bit and retry.";
+    });
+
   const magicLink = () =>
     run(async () => {
       const { error } = await supabase!.auth.signInWithOtp({
@@ -125,12 +175,13 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           <input
             type="password"
             autoComplete="new-password"
-            placeholder="New password (8+ characters)"
+            placeholder="New password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="mt-3 text-sm"
             aria-label="New password"
           />
+          <PasswordStrength pw={newPassword} />
           <input
             type="password"
             autoComplete="new-password"
@@ -146,7 +197,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
             </p>
           )}
           <button className="btn mt-3 text-sm" onClick={saveNewPassword}
-                  disabled={busy || newPassword.length < 8 || newConfirm !== newPassword}>
+                  disabled={busy || !pwValid(newPassword) || newConfirm !== newPassword}>
             Save new password
           </button>
         </div>
@@ -170,7 +221,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           </div>
           <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
             {mode === "signup"
-              ? "One confirmation email, then it's just your password from there. Accounts keep your scout notes across visits."
+              ? "Pick a password with an uppercase and lowercase letter, a number, and a symbol. One confirmation email, then it's just your password from there. Accounts keep your scout notes across visits."
               : "Welcome back. Email and password, or have a one-time link emailed instead."}
           </p>
           <form
@@ -191,7 +242,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           <input
             type="password"
             autoComplete={mode === "signup" ? "new-password" : "current-password"}
-            placeholder={mode === "signup" ? "Choose a password (8+ characters)" : "Password"}
+            placeholder={mode === "signup" ? "Choose a strong password" : "Password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="mt-2 text-sm"
@@ -199,6 +250,7 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           />
           {mode === "signup" && (
             <>
+              <PasswordStrength pw={password} />
               <input
                 type="password"
                 autoComplete="new-password"
@@ -242,6 +294,17 @@ export default function AccountPanel({ initialMode = "signin" }: { initialMode?:
           )}
           {error && (
             <p className="mt-2 text-xs" style={{ color: "var(--neg)" }}>{error}</p>
+          )}
+          {(mode === "signup" || (error ?? "").toLowerCase().includes("confirm")) && (
+            <button
+              type="button"
+              className="mt-2 text-xs underline"
+              style={{ color: "var(--faint)" }}
+              onClick={resendConfirm}
+              disabled={busy || !email.includes("@")}
+            >
+              Didn&apos;t get the confirmation email? Resend it
+            </button>
           )}
         </div>
       ) : (
