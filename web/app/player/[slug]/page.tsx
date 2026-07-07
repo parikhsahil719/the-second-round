@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import NotesPanel from "@/components/NotesPanel";
 import { TierBar, TierLegend } from "@/components/TierBar";
+import YourComps from "@/components/YourComps";
 import { getPlayer, TIERS, TIER_LABELS } from "@/lib/api";
 
 export default async function PlayerPage({
@@ -121,6 +122,7 @@ export default async function PlayerPage({
                   </li>
                 ))}
               </ul>
+              <YourComps slug={p.slug} />
             </div>
           </section>
 
