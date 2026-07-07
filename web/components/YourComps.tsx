@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { compName, compStar, compTier, type Comp } from "@/components/NotesPanel";
+import { compArch, compLater, compName, compStar, compTier, type Comp } from "@/components/NotesPanel";
 import { TIER_LABELS, type Tier } from "@/lib/api";
 import { getMyNotes, supabase } from "@/lib/supabase";
 
@@ -44,12 +44,18 @@ export default function YourComps({ slug, exclude = [] }: { slug: string; exclud
           <li key={compName(c)} className="flex items-baseline justify-between text-sm">
             <span className="serif">{compName(c)}</span>
             {compTier(c) && (
-              <span className="text-xs" style={{ color: "var(--muted)" }}>
+              <span className="text-right text-xs" style={{ color: "var(--muted)" }}>
                 {TIER_LABELS[compTier(c) as Tier] ?? compTier(c)}
                 {compStar(c) && (
                   <span title="Selected to a real All-Star team in his first four seasons"
                         style={{ color: "var(--gold)" }}>
                     {" "}★
+                  </span>
+                )}
+                {compArch(c) && <span> · {compArch(c)}</span>}
+                {compLater(c) && (
+                  <span style={{ color: "var(--pos)" }}>
+                    , later {TIER_LABELS[compLater(c) as Tier] ?? compLater(c)}
                   </span>
                 )}
               </span>

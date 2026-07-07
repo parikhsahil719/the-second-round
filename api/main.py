@@ -188,11 +188,25 @@ COMP_TRIGGER = re.compile(
 COMP_FILLER = re.compile(r"(?i)^(?:(?:a|an|the|young|prime|peak|vintage)\s+)+")
 COMP_NAME = re.compile(r"^[A-Z][\w'.-]*(?:\s+[A-Z][\w'.-]*){0,2}")
 
-# comp name -> (tier, made a real All-Star team in the window) from outcome labels.
-# The star distinguishes "produced at All-Star level" from "was actually selected".
+# comp name -> outcome metadata. The star distinguishes "produced at All-Star level"
+# from "was actually selected"; the archetype says HOW he produced it (creation
+# burden in his peak stretch, designer cutoffs per DECISIONS D20); late_bloom flags
+# careers that kept climbing after the four-year window (the Brunson tag).
+
+
+def _archetype(tier, usg) -> str | None:
+    if tier not in ("STARTER", "ALL_STAR", "ELITE") or pd.isna(usg):
+        return None
+    return "Engine" if usg >= 24 else ("Co-star" if usg >= 20 else "Connector")
+
+
 _labels = pd.read_parquet(PROCESSED / "labels.parquet")
-COMP_META = {str(n).lower(): {"tier": t, "all_star": bool(a)}
-             for n, t, a in zip(_labels.player_name, _labels.tier, _labels.all_star4)
+COMP_META = {str(n).lower(): {"tier": t, "all_star": bool(a),
+                              "archetype": _archetype(t, u),
+                              "late_bloom": None if pd.isna(lb) else lb}
+             for n, t, a, u, lb in zip(_labels.player_name, _labels.tier,
+                                       _labels.all_star4, _labels.peak2_usg,
+                                       _labels.late_bloom)
              if pd.notna(t)}
 del _labels
 
@@ -218,10 +232,14 @@ def extract_comps(note: str) -> list[dict]:
             name = nm.group(0).rstrip(".,;:!?")
             if name.lower() not in {n.lower() for n in names}:
                 names.append(name)
-    return [{"name": n,
-             "tier": COMP_META.get(n.lower(), {}).get("tier"),
-             "all_star": COMP_META.get(n.lower(), {}).get("all_star", False)}
-            for n in names[:5]]
+    out = []
+    for n in names[:5]:
+        meta = COMP_META.get(n.lower(), {})
+        out.append({"name": n, "tier": meta.get("tier"),
+                    "all_star": meta.get("all_star", False),
+                    "archetype": meta.get("archetype"),
+                    "late_bloom": meta.get("late_bloom")})
+    return out
 
 
 def your_view(r, posterior: np.ndarray) -> dict:
@@ -329,8 +347,11 @@ def player(slug: str):
             if name.lower() in seen:
                 continue
             seen.add(name.lower())
+            meta = COMP_META.get(name.lower(), {})
             comps.append({"name": name, "tier": c.rsplit(" (", 1)[1].rstrip(")"),
-                          "all_star": COMP_META.get(name.lower(), {}).get("all_star", False)})
+                          "all_star": meta.get("all_star", False),
+                          "archetype": meta.get("archetype"),
+                          "late_bloom": meta.get("late_bloom")})
         d["comps"] = comps
     d["seed_notes"] = [s for s in SEEDS if s["player_name"] == r.player_name]
     return d
