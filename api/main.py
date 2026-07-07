@@ -43,10 +43,10 @@ TRANSLATE = {
     "bpm_c": ("Big overall college impact", "Overall college impact underwhelms"),
     "obpm_c": ("Strong offensive impact numbers", "Offensive impact numbers lag"),
     "dbpm_c": ("Real defensive impact on tape... and in the data", "Defensive impact doesn't show up"),
-    "age_at_draft": ("Old for the class — production gets an age discount", "Young for the class — time is on his side"),
-    "class_ord": ("Upperclassman — seniors must dominate to project", "Produced as an underclassman"),
-    "rec_score": ("Blue-chip pedigree backs the profile", "Unheralded recruit — pedigree doesn't vouch for him"),
-    "ts": ("Efficient scorer", "Efficiency concerns — points come expensively"),
+    "age_at_draft": ("Old for the class, so production gets an age discount", "Young for the class, and time is on his side"),
+    "class_ord": ("Upperclassman, and seniors must dominate to project", "Produced as an underclassman"),
+    "rec_score": ("Blue-chip pedigree backs the profile", "Unheralded recruit, so pedigree doesn't vouch for him"),
+    "ts": ("Efficient scorer", "Efficiency concerns: points come expensively"),
     "efg": ("Strong shot-making efficiency", "Shot-making efficiency below par"),
     "usg": ("Carried a heavy offensive load", "Modest offensive role"),
     "min_pct": ("Trusted with big minutes", "Couldn't stay on the floor"),
@@ -61,7 +61,7 @@ TRANSLATE = {
     "ast_x_guard": ("Runs an offense like a lead guard should", "Assist rate light for a lead guard"),
     "tov_pct": ("Turnover-prone", "Takes care of the ball"),
     "ast_tov": ("Clean decision-making in the numbers", "Decision-making numbers are messy"),
-    "stl_pct": ("Ball-hawk instincts — steals travel to the NBA", "Doesn't create defensive events"),
+    "stl_pct": ("Ball-hawk instincts, and steals travel to the NBA", "Doesn't create defensive events"),
     "blk_pct": ("Shot-blocking presence", "No rim deterrence"),
     "blk_x_big": ("Protects the rim like a big should", "A big who doesn't protect the rim"),
     "orb_pct": ("Attacks the offensive glass", "Absent on the offensive glass"),
@@ -79,7 +79,7 @@ TRANSLATE = {
     "three_quarter_sprint": ("Slow in the open floor", "Real speed in the open floor"),
     "rec_missing": ("No recruiting pedigree on record", "Carried a recruiting ranking"),
     "combine_missing": ("Skipped combine measurement", "Measured at the combine"),
-    "gp": ("Full season of games", "Short season — small sample"),
+    "gp": ("Full season of games", "Short season, small sample"),
     "n_seasons": ("Multi-year college résumé", "One college season to judge"),
     "dporpag": ("Defensive value stacks up", "Defensive value is minimal"),
 }
@@ -162,7 +162,7 @@ def index():
         "service": "The Second Round API",
         "endpoints": ["/board", "/player/{slug}", "/warroom/{pick}", "/notes (POST)",
                       "/posterior (POST)", "/memo"],
-        "app": "this is the data API — the app itself runs separately (see README)",
+        "app": "this is the data API; the app itself runs separately (see README)",
     }
 
 
@@ -234,7 +234,7 @@ class TraitsIn(BaseModel):
 
 @app.post("/posterior")
 def posterior_from_traits(body: TraitsIn):
-    """Recompute a posterior from an explicit trait set (saved scout book) — no LLM, no caps."""
+    """Recompute a posterior from an explicit trait set (saved scout book); no LLM, no caps."""
     hit = BOARD[BOARD.slug == body.slug]
     if hit.empty or hit.iloc[0].coverage != "model":
         raise HTTPException(404, "player not model-scored")
@@ -275,9 +275,9 @@ def _check_caps(ip: str, byo: bool):
     if u.get("day") != day:
         u["day"], u["ips"] = day, {}
     if u["month_count"] >= GLOBAL_MONTHLY:
-        raise HTTPException(429, "demo capacity reached this month — bring your own API key")
+        raise HTTPException(429, "demo capacity reached this month; bring your own API key")
     if u["ips"].get(ip, 0) >= PER_IP_DAILY:
-        raise HTTPException(429, "daily demo limit reached — bring your own API key")
+        raise HTTPException(429, "daily demo limit reached; bring your own API key")
     u["month_count"] += 1
     u["ips"][ip] = u["ips"].get(ip, 0) + 1
     USAGE_FILE.write_text(json.dumps(u))
