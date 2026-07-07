@@ -10,8 +10,17 @@ import {
   supabase,
   type SavedNote,
 } from "@/lib/supabase";
-import { canUseNotes, useLens } from "@/lib/lens";
+import { canUseNotes, chipLabel, useLens, type Lens } from "@/lib/lens";
 import { TierBar } from "./TierBar";
+
+interface YourView {
+  ev_model: number;
+  ev_user: number;
+  model_rank: number | null;
+  your_rank: number;
+  model_chip: string;
+  your_chip: string;
+}
 
 interface NoteResult {
   mode: string;
@@ -19,6 +28,7 @@ interface NoteResult {
   tilt: number;
   prior: Record<Tier, number>;
   posterior: Record<Tier, number>;
+  view?: YourView;
 }
 
 function toRecord(arr: number[]): Record<Tier, number> {
@@ -50,6 +60,29 @@ function PriorPosterior({
         </p>
         <TierBar tiers={posterior} height={9} />
       </div>
+    </div>
+  );
+}
+
+function chipCls(chip: string) {
+  return chip === "BUY" ? "chip-buy" : chip === "FADE" ? "chip-fade" : chip === "HOLD" ? "chip-hold" : "chip-na";
+}
+
+function ViewLine({ view, lens }: { view: YourView; lens: Lens }) {
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3 text-xs" style={{ borderColor: "var(--border)", color: "var(--muted)" }}>
+      <span>
+        Model says <span className={`chip ${chipCls(view.model_chip)}`}>{chipLabel(view.model_chip, lens)}</span>
+        {view.model_rank != null ? <span className="num"> (rank #{view.model_rank})</span> : null}
+      </span>
+      <span>·</span>
+      <span>
+        your book says <span className={`chip ${chipCls(view.your_chip)}`}>{chipLabel(view.your_chip, lens)}</span>
+        <span className="num"> (rank #{view.your_rank})</span>
+      </span>
+      <span className="num" style={{ color: "var(--faint)" }}>
+        value {view.ev_model.toFixed(1)} → {view.ev_user.toFixed(1)}
+      </span>
     </div>
   );
 }
@@ -97,7 +130,7 @@ export default function NotesPanel({
   const [result, setResult] = useState<NoteResult | null>(null);
   const [signedIn, setSignedIn] = useState(false);
   const [saved, setSaved] = useState<SavedNote[]>([]);
-  const [myView, setMyView] = useState<Record<Tier, number> | null>(null);
+  const [myView, setMyView] = useState<{ tiers: Record<Tier, number>; view?: YourView } | null>(null);
   const [justSaved, setJustSaved] = useState(false);
 
   const refreshBook = useCallback(async () => {
@@ -113,7 +146,10 @@ export default function NotesPanel({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ slug, traits: combined }),
     });
-    if (res.ok) setMyView((await res.json()).posterior);
+    if (res.ok) {
+      const d = await res.json();
+      setMyView({ tiers: d.posterior, view: d.view });
+    }
   }, [slug]);
 
   useEffect(() => {
@@ -175,7 +211,8 @@ export default function NotesPanel({
 
       {myView && (
         <div className="mt-3 rounded-lg px-4 py-3" style={{ background: "var(--panel)" }}>
-          <PriorPosterior prior={tiers} posterior={myView} label={`Your view (${saved.length} note${saved.length === 1 ? "" : "s"})`} />
+          <PriorPosterior prior={tiers} posterior={myView.tiers} label={`Your view (${saved.length} note${saved.length === 1 ? "" : "s"})`} />
+          {myView.view && <ViewLine view={myView.view} lens={lensState.lens} />}
         </div>
       )}
 
@@ -254,6 +291,7 @@ export default function NotesPanel({
           </p>
           <TraitList traits={result.traits} />
           <PriorPosterior prior={result.prior} posterior={result.posterior} />
+          {result.view && <ViewLine view={result.view} lens={lensState.lens} />}
         </div>
       )}
 

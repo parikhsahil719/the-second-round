@@ -123,6 +123,25 @@ def rank_chip(model_rank, pick) -> str:
     return "BUY" if gap >= threshold else ("FADE" if gap <= -threshold else "HOLD")
 
 
+def your_view(r, posterior: np.ndarray) -> dict:
+    """The scout-vs-model comparison: turn a posterior into the user's EV, where that
+    EV would rank in this class (against everyone else's model EV), and the chip that
+    rank implies. The model's numbers ride along so the UI can show both sides."""
+    util = np.array([UTILITY[t] for t in TIERS])
+    ev_user = float(posterior @ util)
+    others = BOARD.loc[BOARD.slug != r.slug, "ev_model"].dropna()
+    your_rank = int((others > ev_user).sum()) + 1
+    pick = None if pd.isna(r.pick) else int(r.pick)
+    return {
+        "ev_model": round(float(r.ev_model), 2),
+        "ev_user": round(ev_user, 2),
+        "model_rank": None if pd.isna(r.model_rank) else int(r.model_rank),
+        "your_rank": your_rank,
+        "model_chip": rank_chip(r.model_rank, pick),
+        "your_chip": rank_chip(your_rank, pick),
+    }
+
+
 BOARD = load_board()
 SEEDS = json.loads((PROCESSED / "seed_note_results.json").read_text(encoding="utf-8")) \
     if (PROCESSED / "seed_note_results.json").exists() else []
@@ -274,7 +293,8 @@ def posterior_from_traits(body: TraitsIn):
     post, tilt = update(prior, clean)
     return {"tilt": round(tilt, 3),
             "prior": {t: round(float(p), 4) for t, p in zip(TIERS, prior)},
-            "posterior": {t: round(float(p), 4) for t, p in zip(TIERS, post)}}
+            "posterior": {t: round(float(p), 4) for t, p in zip(TIERS, post)},
+            "view": your_view(r, post)}
 
 
 class NoteIn(BaseModel):
@@ -340,4 +360,5 @@ def notes(body: NoteIn, request: Request):
                                      for t in traits})
     return {"mode": mode, "traits": traits, "tilt": round(tilt, 3),
             "prior": {t: round(float(p), 4) for t, p in zip(TIERS, prior)},
-            "posterior": {t: round(float(p), 4) for t, p in zip(TIERS, posterior)}}
+            "posterior": {t: round(float(p), 4) for t, p in zip(TIERS, posterior)},
+            "view": your_view(r, posterior)}
