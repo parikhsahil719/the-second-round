@@ -21,6 +21,19 @@ export const TIER_COLORS: Record<Tier, string> = {
   ELITE: "var(--t-elite)",
 };
 
+// Plain-language versions of the production bands in pipeline/labels.py. Tiers are
+// earned by what a player did on an NBA court (minutes, then role, then two-year
+// peak impact), never by All-Star votes; a real All-Star selection shows up
+// separately as a ★ on comps, not as this label.
+export const TIER_DEFINITIONS: Record<Tier, string> = {
+  OOL: "Never carved out a real NBA role.",
+  FRINGE: "Stuck on a roster, but barely: spot minutes, not a rotation spot.",
+  ROTATION: "A real rotation piece, logging regular minutes in the game plan.",
+  STARTER: "A full-time starter's workload, night in and night out.",
+  ALL_STAR: "Produced at an All-Star level of impact, whether or not he actually made an All-Star team.",
+  ELITE: "A tier above All-Star level: the rare, true franchise-cornerstone production peak.",
+};
+
 export interface BoardRow {
   slug: string;
   player_name: string;
@@ -38,7 +51,7 @@ export interface BoardRow {
   ev_slot?: number;
   ev_consensus?: number | null;
   edge_slot?: number | null;
-  chip?: "BUY" | "HOLD" | "FADE" | "N/A";
+  chip?: "STEAL" | "FAIR" | "REACH" | "N/A";
   age?: number | null;
   model_rank?: number | null;
   why_pos?: string[];

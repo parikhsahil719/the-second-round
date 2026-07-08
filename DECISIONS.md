@@ -200,12 +200,20 @@ toggle for signed-in users.
 "Steal" on the board means the player was drafted well below where the model ranked him
 in this class (threshold scales with pick depth; undrafted counts as falling past 60), so
 a No. 1 pick can never be a steal, no matter how much surplus value he carries. The war
-room answers a different question with a different chip: WORTH IT / FAIR / PASS compares
-the model's valuation to the price of the pick you're standing on. Keeping the two
-definitions separate came out of user testing: a single value-based chip called the top
-pick a "steal," which is nonsense in draft language. Displayed bullets follow the same
-honesty rule: when a fact sounds good but the model pushes down (careful ball-handling,
-big minutes shares), the sentence explains the tension instead of arguing with the arrow.
+room answers a different question with the same-looking chip: STEAL / FAIR / REACH there
+compares the model's valuation to the price of the specific pick you're standing on, not
+his rank in the whole class. Keeping the two *definitions* separate came out of user
+testing: a single value-based chip called the top pick a "steal," which is nonsense in
+draft language. A second round of friends testing (2026-07) found the *words* were the
+next problem — BUY/FADE/HOLD on the board and WORTH IT/FAIR/PASS in the war room read as
+stock-market jargon and, worse, as two unrelated signals when they diverged for the same
+player (a rank-based "fade" next to a positive dollar-value edge looked like a bug). Fix:
+one vocabulary (STEAL/FAIR/REACH) in both places, plus copy next to the board chip stating
+explicitly that it and the adjacent value number can point in different directions on
+purpose. The computations stayed exactly as designed; only the labels and the explanation
+around them changed. Displayed bullets follow the same honesty rule: when a fact sounds
+good but the model pushes down (careful ball-handling, big minutes shares), the sentence
+explains the tension instead of arguing with the arrow.
 
 ## D19. Notes complete the chain; comps stay annotations
 

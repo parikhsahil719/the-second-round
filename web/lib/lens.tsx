@@ -125,13 +125,6 @@ export function LensToggle() {
   );
 }
 
-export function chipLabel(chip: string | undefined, lens: Lens): string {
-  if (!chip || chip === "N/A") return "N/A";
-  if (lens === "fan")
-    return chip === "BUY" ? "STEAL" : chip === "FADE" ? "PRICEY" : "FAIR";
-  return chip;
-}
-
 /** Gate: may this user use front-office tools (war room, edge numbers)?
  * Visitors get full demo access; gating applies to accounts by role. */
 export function canUseOffice(state: Pick<LensState, "signedIn" | "role">): boolean {
@@ -140,5 +133,11 @@ export function canUseOffice(state: Pick<LensState, "signedIn" | "role">): boole
 
 /** Gate: may this user write and keep notes? (Visitors may try session-only notes.) */
 export function canUseNotes(state: Pick<LensState, "signedIn" | "role">): boolean {
+  return state.signedIn ? state.role === "scout" || state.role === "office" : true;
+}
+
+/** Gate: may this user open the war room? Scouts and front office; visitors get the demo.
+ * (The edge/surplus numbers inside it stay front-office-only, gated separately.) */
+export function canUseWarRoom(state: Pick<LensState, "signedIn" | "role">): boolean {
   return state.signedIn ? state.role === "scout" || state.role === "office" : true;
 }

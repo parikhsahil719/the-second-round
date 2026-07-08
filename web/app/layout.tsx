@@ -49,6 +49,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             ). Free public data: Barttorvik, Basketball-Reference, nba_api. Tested against
             every draft from 2009 to 2021. On the average pick the market beats the model.
             Trust it where it disagrees loudly.{" "}
+            <Link href="/glossary" className="link">Glossary</Link>
+            {" · "}
             <Link href="/privacy" className="link">Privacy</Link>
           </footer>
         </LensProvider>
