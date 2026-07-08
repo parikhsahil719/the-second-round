@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { API, TIER_LABELS, TIERS, type SeedNote, type Tier } from "@/lib/api";
+import Term from "./Term";
 import {
   combineTraits,
   deleteNote,
@@ -10,7 +11,7 @@ import {
   supabase,
   type SavedNote,
 } from "@/lib/supabase";
-import { canUseNotes, chipLabel, useLens, type Lens } from "@/lib/lens";
+import { canUseNotes, useLens } from "@/lib/lens";
 import ConfirmDialog from "./ConfirmDialog";
 import { TierBar } from "./TierBar";
 
@@ -80,19 +81,19 @@ function PriorPosterior({
 }
 
 function chipCls(chip: string) {
-  return chip === "BUY" ? "chip-buy" : chip === "FADE" ? "chip-fade" : chip === "HOLD" ? "chip-hold" : "chip-na";
+  return chip === "STEAL" ? "chip-buy" : chip === "REACH" ? "chip-fade" : chip === "FAIR" ? "chip-hold" : "chip-na";
 }
 
-function ViewLine({ view, lens }: { view: YourView; lens: Lens }) {
+function ViewLine({ view }: { view: YourView }) {
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3 text-xs" style={{ borderColor: "var(--border)", color: "var(--muted)" }}>
       <span>
-        Model says <span className={`chip ${chipCls(view.model_chip)}`}>{chipLabel(view.model_chip, lens)}</span>
+        Model says <span className={`chip ${chipCls(view.model_chip)}`}>{view.model_chip}</span>
         {view.model_rank != null ? <span className="num"> (rank #{view.model_rank})</span> : null}
       </span>
       <span>·</span>
       <span>
-        your book says <span className={`chip ${chipCls(view.your_chip)}`}>{chipLabel(view.your_chip, lens)}</span>
+        your book says <span className={`chip ${chipCls(view.your_chip)}`}>{view.your_chip}</span>
         <span className="num"> (rank #{view.your_rank})</span>
       </span>
       <span className="num" style={{ color: "var(--faint)" }}>
@@ -243,17 +244,19 @@ export default function NotesPanel({
   return (
     <section className="card mt-6 px-5 py-5" id="desk">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold">Scout&apos;s desk</h2>
+        <h2 className="serif text-xl" style={{ color: "var(--purple-bright)" }}>Scout&apos;s desk</h2>
         {!signedIn && supabase && (
           <a href="/signup" className="link text-xs">
             Create a free account to keep your book
           </a>
         )}
       </div>
-      <p className="mt-1 max-w-2xl text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
-        Write what you saw on film. The system reads it against a fixed checklist of
-        skills and nudges the numbers. The update is capped, so a note is evidence, never
-        a veto.{signedIn ? " Saved notes combine into your view, newest word per skill." : ""}
+      <p className="mt-1 max-w-prose text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+        Write what you saw on film. The system reads your <Term id="scout_note">note</Term>{" "}
+        against a fixed checklist of skills and nudges the numbers, capped so a note is
+        evidence, never a veto. The bars below compare the model&apos;s{" "}
+        <Term id="prior">prior</Term> with the <Term id="posterior">posterior</Term> after your
+        note.{signedIn ? " Saved notes combine into your view, newest word per skill." : ""}
       </p>
 
       {myView && (
@@ -263,7 +266,7 @@ export default function NotesPanel({
             comps={[...new Map(saved.flatMap((n) => n.comps ?? []).map((c) => [compName(c).toLowerCase(), c])).values()]}
             label="Your comps:"
           />
-          {myView.view && <ViewLine view={myView.view} lens={lensState.lens} />}
+          {myView.view && <ViewLine view={myView.view} />}
         </div>
       )}
 
@@ -349,7 +352,7 @@ export default function NotesPanel({
           <TraitList traits={result.traits} />
           <CompChips comps={result.comps} />
           <PriorPosterior prior={result.prior} posterior={result.posterior} />
-          {result.view && <ViewLine view={result.view} lens={lensState.lens} />}
+          {result.view && <ViewLine view={result.view} />}
         </div>
       )}
 

@@ -7,15 +7,16 @@
   --card-hover: #322e3c;
   --border: #38343e;
   --text: #f5f2ec;
-  --muted: #b3adba;
-  --faint: #958e9d;
+  --muted: #e8e4ee;
+  --faint: #cbc5d6;
   --pos: #5dcaa5;
   --neg: #e08a7a;
   --purple: #8a7bd8;
+  --purple-bright: #a99bec;
   --gold: #f5b83d;
-  --t-ool: #3a3642;
-  --t-fringe: #4b4656;
-  --t-rotation: #665e7a;
+  --t-ool: #504b5c;
+  --t-fringe: #665f76;
+  --t-rotation: #837b96;
   --t-starter: #8a7bd8;
   --t-allstar: #74b7c9;
   --t-elite: #5dcaa5;
@@ -23,7 +24,7 @@
 
 /* Everything in the app is rem-based (Tailwind), so raising the root size scales
  * type, spacing, and the content column together: bigger text, fuller page. */
-html { font-size: 17px; }
+html { font-size: 18px; }
 
 body {
   background: var(--bg);
@@ -43,9 +44,9 @@ body {
   white-space: nowrap;
 }
 .chip-buy { background: rgba(93, 202, 165, 0.15); color: var(--pos); }
-.chip-hold { background: rgba(143, 138, 148, 0.15); color: var(--muted); }
+.chip-hold { background: rgba(179, 173, 186, 0.15); color: var(--muted); }
 .chip-fade { background: rgba(224, 138, 122, 0.15); color: var(--neg); }
-.chip-na { background: rgba(107, 102, 114, 0.15); color: var(--faint); }
+.chip-na { background: rgba(149, 142, 157, 0.15); color: var(--faint); }
 
 .card {
   background: var(--card);
@@ -170,7 +171,7 @@ dialog.confirm::backdrop { background: rgba(0, 0, 0, 0.55); }
   width: 100%;
   text-align: left;
   padding: 9px 12px;
-  border-radius: 7px;
+  border-radius: 8px;
   font-size: 13px;
   color: var(--text);
   cursor: pointer;
@@ -214,4 +215,67 @@ main { animation: pagefade 0.3s ease-out; }
   border-radius: 4px;
   background: var(--gold);
   color: #1d1b22;
+}
+
+/* Inline defined terms: a dotted-underlined word whose definition opens in a popover.
+ * The trigger looks like inline text; the panel reuses the floating-panel vocabulary
+ * (card surface + the one allowed shadow) and lives in the top layer, so a card never
+ * clips it. */
+.term {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+.term:hover {
+  text-decoration-color: currentColor;
+}
+.term:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
+  text-decoration-color: currentColor;
+}
+
+.term-pop {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  max-width: 280px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  padding: 11px 13px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 180ms ease-out,
+    transform 180ms ease-out,
+    overlay 180ms allow-discrete,
+    display 180ms allow-discrete;
+}
+.term-pop:popover-open {
+  display: block;
+}
+.term-pop .link {
+  white-space: nowrap;
+}
+@starting-style {
+  .term-pop:popover-open {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .term-pop {
+    transition: none;
+  }
 }

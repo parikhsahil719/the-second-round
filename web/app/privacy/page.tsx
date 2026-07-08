@@ -2,7 +2,7 @@ export const metadata = { title: "Privacy | The Second Round" };
 
 export default function Privacy() {
   return (
-    <article className="mx-auto max-w-2xl text-sm leading-relaxed" style={{ color: "var(--text)" }}>
+    <article className="mx-auto max-w-prose text-sm leading-relaxed" style={{ color: "var(--text)" }}>
       <h1 className="serif text-2xl">Privacy</h1>
       <p className="mt-4" style={{ color: "var(--muted)" }}>
         The Second Round is a free, independent research project. Here is everything it

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Board from "@/components/Board";
+import Term from "@/components/Term";
 import { getBoard, type BoardRow } from "@/lib/api";
 
 function Callout({ row, side }: { row: BoardRow; side: "buy" | "fade" }) {
@@ -42,8 +43,8 @@ export default async function Home() {
   return (
     <>
       <section>
-        <h1 className="serif text-3xl leading-snug">What the market missed in 2026</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+        <h1 className="serif text-4xl leading-snug">What the market missed in 2026</h1>
+        <p className="mt-2 max-w-prose text-base leading-relaxed" style={{ color: "var(--muted)" }}>
           A fair-value model priced every college prospect using only what was knowable
           before draft night. No draft slots, no mock drafts. Then we compared its numbers
           to where players actually went. On average the market wins. At the extremes of
@@ -51,16 +52,17 @@ export default async function Home() {
         </p>
       </section>
 
-      <p className="mt-6 text-xs leading-relaxed" style={{ color: "var(--faint)" }}>
-        The number on each card is the gap between what the model thinks the player is
-        worth and what his draft slot historically returns, in career-value points.
+      <p className="mt-6 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+        The number on each card is the <Term id="value_gap">gap</Term> between what the model
+        thinks the player is worth and what his{" "}
+        <Term id="slot_price">draft slot historically returns</Term>, in career-value points.
         Bigger number, louder disagreement.
       </p>
 
       <section className="mt-3 grid gap-6 md:grid-cols-2">
         <div>
-          <h2 className="mb-2 text-xs font-semibold tracking-wider" style={{ color: "var(--pos)" }}>
-            THE MODEL WANTED MORE
+          <h2 className="mb-2 text-sm font-semibold" style={{ color: "var(--pos)" }}>
+            The model wanted more
           </h2>
           <div className="flex flex-col gap-2">
             {buys.map((r) => (
@@ -69,8 +71,8 @@ export default async function Home() {
           </div>
         </div>
         <div>
-          <h2 className="mb-2 text-xs font-semibold tracking-wider" style={{ color: "var(--neg)" }}>
-            THE MODEL WOULD HAVE PASSED
+          <h2 className="mb-2 text-sm font-semibold" style={{ color: "var(--neg)" }}>
+            The model would have passed
           </h2>
           <div className="flex flex-col gap-2">
             {fades.map((r) => (

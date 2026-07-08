@@ -125,13 +125,6 @@ export function LensToggle() {
   );
 }
 
-export function chipLabel(chip: string | undefined, lens: Lens): string {
-  if (!chip || chip === "N/A") return "N/A";
-  if (lens === "fan")
-    return chip === "BUY" ? "STEAL" : chip === "FADE" ? "PRICEY" : "FAIR";
-  return chip;
-}
-
 /** Gate: may this user use front-office tools (war room, edge numbers)?
  * Visitors get full demo access; gating applies to accounts by role. */
 export function canUseOffice(state: Pick<LensState, "signedIn" | "role">): boolean {
