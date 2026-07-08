@@ -33,8 +33,9 @@ export default function WarRoom() {
   const lensState = useLens();
   const { lens, signedIn, role } = lensState;
   const allowed = canUseWarRoom(lensState);
-  // Edge/surplus numbers stay front-office-only even though scouts can open the room.
-  const officeView = signedIn ? role === "office" : lens !== "fan";
+  // Surplus/value numbers stay Front-office-only even though scouts can open the room.
+  // For visitors that means the Front-office lens; Fan and Scout see availability only.
+  const officeView = signedIn ? role === "office" : lens === "office";
 
   const [pick, setPick] = useState(1);
   const [rows, setRows] = useState<WarRoomRow[] | null>(null);
@@ -131,7 +132,7 @@ export default function WarRoom() {
     <>
       <h1 className="serif text-4xl">The war room</h1>
       <p className="mt-2 max-w-prose text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
-        {lens === "fan" ? (
+        {!officeView ? (
           <>
             Every team picks in order on draft night; being{" "}
             <Term id="on_the_clock">on the clock</Term>{" "}means it&apos;s your turn. Slide or type

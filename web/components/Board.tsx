@@ -24,7 +24,9 @@ function PickSquare({ row }: { row: BoardRow }) {
 
 export function Row({ row }: { row: BoardRow }) {
   const { lens, signedIn, role } = useLens();
-  const showEv = signedIn ? role === "office" : lens !== "fan";
+  // Value/edge numbers are a Front-office thing. For visitors the Front-office
+  // lens shows them; Fan and Scout keep the clean board (Scout's layer is notes).
+  const showEv = signedIn ? role === "office" : lens === "office";
   return (
     <Link
       href={`/player/${row.slug}`}
@@ -105,13 +107,13 @@ function nullsLast(a: number | null | undefined, b: number | null | undefined, d
 
 export default function Board({ rows }: { rows: BoardRow[] }) {
   const { lens, signedIn, role } = useLens();
-  const officeView = signedIn ? role === "office" : lens !== "fan";
+  const officeView = signedIn ? role === "office" : lens === "office";
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortKey>("model");
   const [view, setView] = useState<ViewKey>("all");
   const [page, setPage] = useState(0);
 
-  // "Value gap" is an office/scout concept (the edge number is hidden from fans), so if the
+  // "Value gap" is a Front-office concept (the edge number only shows there), so if the
   // lens leaves office while it is selected, fall back to the model order.
   const activeSort: SortKey = sort === "edge" && !officeView ? "model" : sort;
 
