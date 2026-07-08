@@ -53,7 +53,7 @@ export default async function Home() {
       </section>
 
       <p className="mt-6 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
-        The number on each card is the <Term id="value_gap">gap</Term> between what the model
+        The number on each card is the <Term id="value_gap">gap</Term>{" "}between what the model
         thinks the player is worth and what his{" "}
         <Term id="slot_price">draft slot historically returns</Term>, in career-value points.
         Bigger number, louder disagreement.

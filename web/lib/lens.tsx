@@ -135,3 +135,9 @@ export function canUseOffice(state: Pick<LensState, "signedIn" | "role">): boole
 export function canUseNotes(state: Pick<LensState, "signedIn" | "role">): boolean {
   return state.signedIn ? state.role === "scout" || state.role === "office" : true;
 }
+
+/** Gate: may this user open the war room? Scouts and front office; visitors get the demo.
+ * (The edge/surplus numbers inside it stay front-office-only, gated separately.) */
+export function canUseWarRoom(state: Pick<LensState, "signedIn" | "role">): boolean {
+  return state.signedIn ? state.role === "scout" || state.role === "office" : true;
+}
