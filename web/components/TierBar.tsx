@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { TIERS, TIER_COLORS, TIER_LABELS, type Tier } from "@/lib/api";
+import Term from "./Term";
 
 export function TierBar({ tiers, height = 8 }: { tiers: Record<Tier, number>; height?: number }) {
   return (
@@ -10,7 +12,7 @@ export function TierBar({ tiers, height = 8 }: { tiers: Record<Tier, number>; he
       {TIERS.map((t) => (
         <span
           key={t}
-          style={{ width: `${tiers[t] * 100}%`, background: TIER_COLORS[t] }}
+          style={{ width: `${tiers[t] * 100}%`, background: TIER_COLORS[t], boxShadow: "inset -1px 0 0 var(--bg)" }}
         />
       ))}
     </div>
@@ -19,19 +21,22 @@ export function TierBar({ tiers, height = 8 }: { tiers: Record<Tier, number>; he
 
 export function TierLegend() {
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: "var(--muted)" }}>
-      {TIERS.map((t) => (
-        <span key={t} className="flex items-center gap-1.5">
-          <span
-            className="inline-block h-2.5 w-2.5 rounded-sm"
-            style={{ background: TIER_COLORS[t] }}
-          />
-          {TIER_LABELS[t]}
-        </span>
-      ))}
-      <span style={{ color: "var(--faint)" }}>
-        Each bar is the model&apos;s chance the player&apos;s first 4 NBA seasons land in that tier.
-      </span>
+    <div className="text-sm" style={{ color: "var(--muted)" }}>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        {TIERS.map((t) => (
+          <span key={t} className="flex items-center gap-1.5">
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-sm"
+              style={{ background: TIER_COLORS[t], boxShadow: "0 0 0 1px var(--border)" }}
+            />
+            <Term id={t.toLowerCase()}>{TIER_LABELS[t]}</Term>
+          </span>
+        ))}
+      </div>
+      <p className="mt-1.5" style={{ color: "var(--muted)" }}>
+        Each bar is the model&apos;s chance the player&apos;s first 4 NBA seasons land in that
+        tier. <Link href="/glossary" className="link">Full glossary →</Link>
+      </p>
     </div>
   );
 }

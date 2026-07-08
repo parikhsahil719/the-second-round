@@ -3,8 +3,8 @@ export const metadata = { title: "How it works | The Second Round" };
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-8">
-      <h2 className="serif text-xl">{title}</h2>
-      <div className="mt-2 space-y-3 text-[15px] leading-relaxed" style={{ color: "var(--muted)" }}>
+      <h2 className="serif text-3xl" style={{ color: "var(--purple-bright)" }}>{title}</h2>
+      <div className="mt-2 space-y-3 text-base leading-relaxed" style={{ color: "var(--muted)" }}>
         {children}
       </div>
     </section>
@@ -13,43 +13,42 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function HowItWorks() {
   return (
-    <article className="mx-auto max-w-2xl">
-      <h1 className="serif text-3xl">How it works</h1>
-      <p className="mt-3 text-[15px] leading-relaxed" style={{ color: "var(--muted)" }}>
-        No math degree required. Here is what this thing does, in the same language you
-        would use in a film room.
+    <article className="mx-auto max-w-prose">
+      <h1 className="serif text-4xl">How it works</h1>
+      <p className="mt-3 text-base leading-relaxed" style={{ color: "var(--muted)" }}>
+        A second opinion on the draft, and an honest one. It knows two things well: what
+        players actually did in college, and what history says players who did the same
+        things became.
       </p>
 
       <Section title="What is this?">
         <p>
-          It is a second opinion on the draft. We taught a model to study every college
-          prospect since 2009: how they scored, passed, defended, and rebounded, how young
-          they were, how big they were, and who they did it against. Then we watched what
-          those players actually became in the NBA. Stars, starters, role players, or guys
-          who washed out.
+          We taught a model to study every college prospect since 2009: how they scored,
+          passed, defended, and rebounded, how young they were, how big they were, and who
+          they did it against. Then we watched what those players actually became in the
+          NBA: stars, starters, role players, or guys who washed out.
         </p>
         <p>
           When a new prospect comes along, the model finds what history says about players
-          with his profile. It never gives one answer. It gives chances: maybe 60% chance
-          he becomes a starter, 12% chance he becomes a star, 5% chance he never sticks.
-          That is honest. Nobody knows for sure, so the model does not pretend to.
+          with his profile. It never gives one answer. It gives chances: maybe 60% he
+          becomes a starter, 12% he becomes a star, 5% he never sticks. Nobody knows for
+          sure which one happens. The model doesn&apos;t pretend to either.
         </p>
       </Section>
 
       <Section title="Why should anyone trust it?">
         <p>
-          Because we tested it the hard way. For every draft from 2009 to 2021, we hid
-          that class from the model, asked it to grade those players using only what was
-          knowable before draft night, and then checked its answers against real careers.
+          We tested it the hard way. For every draft from 2009 to 2021, we hid that class
+          from the model, asked it to grade those players using only what was knowable
+          before draft night, then checked its answers against real careers.
         </p>
         <p>
-          Here is the honest result: on the average pick, NBA teams beat the model. They
-          should. They have workouts, medicals, interviews, and intel we do not. But when
-          the model disagreed loudly with where a player was drafted, the model was right
-          far more often than chance. Its favorite overlooked players outplayed their
-          draft slots badly, and its biggest fades underplayed theirs. The lesson is
-          simple: do not use this to re-rank the whole board. Use it to find the players
-          worth a second look.
+          On the average pick, NBA teams beat the model. They should. They have
+          workouts, medicals, interviews, and intel we don&apos;t. But when the model
+          disagreed loudly with where a player was drafted, it was right far more often
+          than chance. Its favorite overlooked players outplayed their draft slots badly,
+          and the players it liked least underplayed theirs. The lesson: don&apos;t use
+          this to re-rank the whole board. Use it to find the players worth a second look.
         </p>
       </Section>
 
@@ -59,8 +58,9 @@ export default function HowItWorks() {
           actually predicted careers. Age matters a lot: a 19-year-old and a 23-year-old
           putting up the same numbers are not the same prospect. Free-throw shooting says
           more about a future NBA jumper than college three-point percentage does. Steals
-          tell you who sticks in the league. Blocks tell you which big men become special.
-          And production against real competition beats production against nobody.
+          separate the ones who stick in the league from the ones who don&apos;t. Blocks
+          separate ordinary big men from special ones. And production against real
+          competition beats production against nobody.
         </p>
         <p>
           Just as important is what it ignores: where the player was drafted, mock drafts,
@@ -99,12 +99,13 @@ export default function HowItWorks() {
 
       <Section title="What the war room does">
         <p>
-          Pick a draft slot and see who was realistically still on the board. We ran the
-          draft ten thousand times, letting players rise and slide the way they actually
-          do on draft night, including the occasional big fall. Standing at pick 9, you
-          can see which of the model&apos;s favorite players had a real chance of being
-          there. That is the conversation a front office wants to have before draft week,
-          not during it.
+          Every NBA team gets a pick, in order, on draft night. Picking 9th means 8
+          players are already gone by the time it&apos;s your turn. The war room lets you
+          stand at any pick, 1 through 60, and see who realistically survives that long.
+          We ran the draft ten thousand times, letting players rise and slide the way they
+          actually do on draft night, including the occasional big fall, and used that to
+          estimate the odds each player is still there when your pick comes up. That is
+          the conversation a front office wants to have before draft week, not during it.
         </p>
       </Section>
 

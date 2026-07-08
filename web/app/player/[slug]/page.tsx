@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Headshot from "@/components/Headshot";
 import NotesPanel from "@/components/NotesPanel";
+import Term from "@/components/Term";
 import { TierBar, TierLegend } from "@/components/TierBar";
 import YourComps from "@/components/YourComps";
 import { getPlayer, TIERS, TIER_LABELS } from "@/lib/api";
@@ -32,12 +33,22 @@ export default async function PlayerPage({
       <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Headshot url={p.headshot_url} name={p.player_name} size={84} />
-          <h1 className="serif text-3xl">{p.player_name}</h1>
+          <h1 className="serif text-4xl">{p.player_name}</h1>
         </div>
         <span className="max-w-sm text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
           {p.pick != null ? `Pick ${p.pick}` : "Undrafted"}
-          {p.model_rank != null ? ` · model's rank #${p.model_rank}` : ""}
-          {p.consensus_rank != null ? ` · consensus #${p.consensus_rank}` : ""}
+          {p.model_rank != null && (
+            <>
+              {" · "}
+              <Term id="model_rank">model&apos;s rank</Term> #{p.model_rank}
+            </>
+          )}
+          {p.consensus_rank != null && (
+            <>
+              {" · "}
+              <Term id="consensus_rank">consensus</Term> #{p.consensus_rank}
+            </>
+          )}
           {p.college ? ` · ${p.college}` : ""}
           {posLabel ? ` · ${posLabel}` : ""}
           {p.age != null ? ` · ${p.age} on draft night` : ""}
@@ -54,9 +65,9 @@ export default async function PlayerPage({
         <>
           <section className="card mt-6 px-5 py-5">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-sm font-semibold">Fair-value distribution</h2>
+              <h2 className="serif text-xl" style={{ color: "var(--purple-bright)" }}>Fair-value distribution</h2>
               <span className="num text-sm" style={{ color: "var(--purple)" }}>
-                Star chance {Math.round(p.p_star! * 100)}%{" "}
+                <Term id="star_pct">Star chance</Term> {Math.round(p.p_star! * 100)}%{" "}
                 <span style={{ color: "var(--faint)" }}>
                   (likely {Math.round(p.p_star_lo! * 100)}–{Math.round(p.p_star_hi! * 100)}%)
                 </span>
@@ -78,30 +89,33 @@ export default async function PlayerPage({
             <div className="mt-4 grid grid-cols-3 gap-3 border-t pt-4 text-center" style={{ borderColor: "var(--border)" }}>
               <div>
                 <p className="num text-lg">{p.ev_model?.toFixed(1)}</p>
-                <p className="text-xs" style={{ color: "var(--muted)" }}>model EV</p>
+                <p className="text-xs" style={{ color: "var(--muted)" }}>
+                  <Term id="model_value">model EV</Term>
+                </p>
               </div>
               <div>
                 <p className="num text-lg">{p.ev_slot?.toFixed(1)}</p>
                 <p className="text-xs" style={{ color: "var(--muted)" }}>
-                  slot-implied EV{p.pick != null ? ` (pick ${p.pick})` : " (undrafted)"}
+                  <Term id="slot_price">slot-implied EV</Term>
+                  {p.pick != null ? ` (pick ${p.pick})` : " (undrafted)"}
                 </p>
               </div>
               <div>
                 <p className="num text-lg">{p.ev_consensus != null ? p.ev_consensus.toFixed(1) : "—"}</p>
-                <p className="text-xs" style={{ color: "var(--muted)" }}>consensus-implied EV</p>
+                <p className="text-xs" style={{ color: "var(--muted)" }}>
+                  <Term id="consensus_ev">consensus-implied EV</Term>
+                </p>
               </div>
             </div>
-            <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--faint)" }}>
-              EV is expected career value on a 0-to-40 scale: 1 is a fringe player, 3 a
-              rotation piece, 8 a starter, 20 an All-Star, 40 an all-time great. The
-              model&apos;s number is his fair price; the other two are what his draft
-              slot and consensus rank usually buy.
+            <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+              The model&apos;s number is his fair price; the other two are what his draft slot
+              and consensus rank usually buy. Hover any underlined term for its meaning.
             </p>
           </section>
 
           <section className="mt-6 grid gap-6 md:grid-cols-2">
             <div className="card px-5 py-5">
-              <h2 className="text-sm font-semibold">Why the model prices him here</h2>
+              <h2 className="serif text-xl" style={{ color: "var(--purple-bright)" }}>Why the model prices him here</h2>
               <ul className="mt-3 space-y-2.5">
                 {(p.why ?? []).map((w) => (
                   <li key={w.feature} className="text-sm leading-snug">
@@ -118,16 +132,17 @@ export default async function PlayerPage({
               </ul>
             </div>
             <div className="card px-5 py-5">
-              <h2 className="text-sm font-semibold">Closest historical profiles</h2>
-              <p className="mt-1 text-xs" style={{ color: "var(--faint)" }}>
-                Closest college profiles at his position group, matched on
-                career-predictive stats. Their careers show the range this profile has
-                actually produced, floor to ceiling. Tiers grade production;{" "}
-                <span style={{ color: "var(--gold)" }}>★</span> marks a real All-Star
-                selection in those first four seasons. The role word says how he
-                produced it: an Engine carries the offense, a Connector wins without
-                the ball. &quot;Later&quot; flags careers that kept climbing after the
-                four-year window.
+              <h2 className="serif text-xl" style={{ color: "var(--purple-bright)" }}>
+                <Term id="comps">Closest historical profiles</Term>
+              </h2>
+              <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+                The closest college profiles at his position, showing the range this profile has
+                produced, floor to ceiling. A <span style={{ color: "var(--gold)" }}>★</span> is an{" "}
+                <Term id="allstar_mark">All-Star selection</Term>; the role word
+                (<Term id="archetype_engine">Engine</Term>,{" "}
+                <Term id="archetype_connector">Connector</Term>,{" "}
+                <Term id="archetype_costar">Co-star</Term>) says how he produced it;{" "}
+                <Term id="late_bloom">&quot;later&quot;</Term> flags a career that kept climbing.
               </p>
               <ul className="mt-3 space-y-2.5">
                 {(p.comps ?? []).map((c) => (

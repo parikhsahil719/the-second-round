@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Headshot from "@/components/Headshot";
+import Term from "@/components/Term";
 import { API } from "@/lib/api";
 import { canUseOffice, useLens } from "@/lib/lens";
 
@@ -16,7 +17,7 @@ interface WarRoomRow {
   ev_model: number | null;
   p_star: number | null;
   surplus: number | null;
-  chip: "WORTH IT" | "FAIR" | "PASS" | "N/A";
+  chip: "STEAL" | "FAIR" | "REACH" | "N/A";
 }
 
 export default function WarRoom() {
@@ -77,10 +78,21 @@ export default function WarRoom() {
   return (
     <>
       <h1 className="serif text-3xl">The war room</h1>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
-        {lens === "fan"
-          ? "Pretend your team is on the clock. Slide to your pick and see who was realistically still on the board, and who the numbers loved."
-          : "You hold a pick. We simulated the draft 10,000 times, calibrated on how far players actually slid from consensus in 2026. Here is who is likely to be there when you're on the clock."}
+      <p className="mt-2 max-w-prose text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+        {lens === "fan" ? (
+          <>
+            Every team picks in order on draft night; being{" "}
+            <Term id="on_the_clock">on the clock</Term> means it&apos;s your turn. Slide to a pick,
+            1 through 60, and see which players were realistically still available that late, and
+            which ones the model liked best.
+          </>
+        ) : (
+          <>
+            You hold a pick. We simulated the draft 10,000 times, calibrated on how far players
+            actually slid from consensus in 2026. Here is who is likely to be there when
+            you&apos;re <Term id="on_the_clock">on the clock</Term>.
+          </>
+        )}
       </p>
 
       <div className="card mt-6 flex flex-wrap items-center gap-4 px-5 py-4">
@@ -102,10 +114,16 @@ export default function WarRoom() {
         </span>
       </div>
       {pickPrice != null && (
-        <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--faint)" }}>
-          Pick {pick} historically returns about {pickPrice.toFixed(1)} career-value
-          points. WORTH IT means the model values the player above that price; PASS means
-          you would be overpaying at this pick.
+        <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+          This pick&apos;s <Term id="pick_price">price</Term> is about {pickPrice.toFixed(1)}{" "}
+          career-value points. A <Term id="steal">STEAL</Term> is worth more than that; a{" "}
+          <Term id="reach">REACH</Term> less.
+          {lens !== "fan" && (
+            <>
+              {" "}
+              The number on each row is that gap, his <Term id="surplus">surplus</Term>.
+            </>
+          )}
         </p>
       )}
 
@@ -153,18 +171,19 @@ export default function WarRoom() {
                   {r.surplus.toFixed(1)}
                 </span>
               )}
-              <span className={`chip ${r.chip === "WORTH IT" ? "chip-buy" : r.chip === "PASS" ? "chip-fade" : r.chip === "FAIR" ? "chip-hold" : "chip-na"}`}>
+              <span className={`chip ${r.chip === "STEAL" ? "chip-buy" : r.chip === "REACH" ? "chip-fade" : r.chip === "FAIR" ? "chip-hold" : "chip-na"}`}>
                 {r.chip}
               </span>
             </Link>
           ))
         )}
       </div>
-      <p className="mt-4 text-xs leading-relaxed" style={{ color: "var(--faint)" }}>
+      <p className="mt-4 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
         {note} Sorted by the model&apos;s valuation, so the top of this list is the best
-        realistically available. Availability % is the share of simulations where the
-        player is still on the board when your pick arrives. Labels and numbers update
-        with your pick.
+        realistically available. <Term id="availability">Availability %</Term> is the share of
+        simulations where the player is still on the board when your pick arrives; each row also
+        shows his <Term id="consensus_rank">consensus rank</Term> and where he actually went.
+        Labels and numbers update with your pick.
       </p>
     </>
   );
