@@ -404,7 +404,9 @@ export default function NotesPanel({
         onCancel={() => setDeleteTarget(null)}
       />
 
-      {seedNotes.length > 0 && (
+      {/* The pre-generated scouting file is a demo reference for signed-out visitors.
+          A signed-in scout's book is their own eyes only, so it never shows here. */}
+      {!signedIn && seedNotes.length > 0 && (
         <div className="mt-5 border-t pt-4" style={{ borderColor: "var(--border)" }}>
           <h3 className="text-xs font-semibold tracking-wide" style={{ color: "var(--muted)" }}>
             FROM THE SCOUTING FILE

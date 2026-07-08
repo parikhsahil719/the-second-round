@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useId, useRef, useState } from "react";
 import { supabase } from "./supabase";
 
 export type Lens = "fan" | "office" | "scout";
@@ -74,7 +74,125 @@ export function LensProvider({ children }: { children: React.ReactNode }) {
 
 export const useLens = () => useContext(LensContext);
 
-const LABELS: Record<Lens, string> = { fan: "Fan", office: "Front office", scout: "Scout" };
+// One source of truth for what each lens is and what it shows. The label feeds
+// the toggle + the signed-in role chip; the blurb feeds the "?" explainer.
+// Order is the ascending-complexity ladder the explainer teaches.
+export const LENS_INFO: Record<Lens, { label: string; blurb: string }> = {
+  fan: {
+    label: "Fan",
+    blurb:
+      "The clean read: career-tier odds, star chance, and the model's STEAL / FAIR / REACH call on every prospect.",
+  },
+  scout: {
+    label: "Scout",
+    blurb:
+      "Everything a fan sees, plus a desk to log what you saw on film. Your notes update the model to your own view of a player.",
+  },
+  office: {
+    label: "Front office",
+    blurb:
+      "Everything a scout sees, plus value-vs-price numbers on the board and the war-room draft simulator.",
+  },
+};
+const LENS_ORDER: Lens[] = ["fan", "scout", "office"];
+
+/** The "?" next to the toggle: opens one popover explaining all three lenses.
+ * Click-to-toggle (no hover machinery); JS-positioned below the button and
+ * viewport-clamped, mirroring the glossary Term popover. */
+function LensInfoButton() {
+  const panelId = useId();
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    const panel = panelRef.current;
+    const btn = btnRef.current;
+    if (!panel || !btn) return;
+
+    const place = () => {
+      const r = btn.getBoundingClientRect();
+      const pr = panel.getBoundingClientRect();
+      const pw = pr.width || 320;
+      const ph = pr.height || 0;
+      // Right-align the panel to the button, then clamp to the viewport.
+      let left = Math.min(r.right - pw, window.innerWidth - pw - 8);
+      left = Math.max(8, left);
+      const top = Math.min(r.bottom + 6, window.innerHeight - ph - 8);
+      panel.style.left = `${left}px`;
+      panel.style.top = `${Math.max(8, top)}px`;
+    };
+
+    const onToggle = (e: Event) => {
+      const open = (e as Event & { newState?: string }).newState === "open";
+      setExpanded(open);
+      if (open) {
+        place();
+        window.addEventListener("scroll", place, true);
+        window.addEventListener("resize", place);
+      } else {
+        window.removeEventListener("scroll", place, true);
+        window.removeEventListener("resize", place);
+      }
+    };
+
+    panel.addEventListener("beforetoggle", onToggle);
+    panel.addEventListener("toggle", onToggle);
+    return () => {
+      panel.removeEventListener("beforetoggle", onToggle);
+      panel.removeEventListener("toggle", onToggle);
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", place);
+    };
+  }, []);
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        aria-label="What each view shows"
+        aria-expanded={expanded}
+        aria-details={panelId}
+        onClick={() => {
+          const p = panelRef.current;
+          if (!p) return;
+          p.matches(":popover-open") ? p.hidePopover() : p.showPopover();
+        }}
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs"
+        style={{ borderColor: "var(--border)", color: "var(--muted)" }}
+      >
+        ?
+      </button>
+      <div ref={panelRef} id={panelId} popover="auto" className="term-pop lens-pop">
+        <p className="font-semibold" style={{ color: "var(--text)" }}>
+          Pick your view
+        </p>
+        <dl className="mt-2 space-y-2">
+          {LENS_ORDER.map((id) => (
+            <div key={id}>
+              <dt className="font-semibold" style={{ color: "var(--text)" }}>
+                {LENS_INFO[id].label}
+                {id === "fan" && (
+                  <span style={{ color: "var(--purple-bright)", fontWeight: 400 }}> · start here</span>
+                )}
+              </dt>
+              <dd className="mt-0.5" style={{ color: "var(--muted)" }}>
+                {LENS_INFO[id].blurb}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <p
+          className="mt-3 border-t pt-2 text-xs"
+          style={{ borderColor: "var(--border)", color: "var(--faint)" }}
+        >
+          Signing up locks a role and saves your book across visits.
+        </p>
+      </div>
+    </>
+  );
+}
 
 export function LensToggle() {
   const { lens, setLens, signedIn, role } = useLens();
@@ -88,39 +206,40 @@ export function LensToggle() {
         style={{ borderColor: "var(--border)", color: "var(--muted)" }}
         title="Change your role in account settings"
       >
-        {role ? `Viewing as ${LABELS[role]}` : "Choose your role"}
+        {role ? `Viewing as ${LENS_INFO[role].label}` : "Choose your role"}
       </Link>
     );
   }
 
-  const opts: { id: Lens; label: string }[] = [
-    { id: "fan", label: "Fan" },
-    { id: "office", label: "Front office" },
-    { id: "scout", label: "Scout" },
-  ];
   return (
-    <div
-      className="flex overflow-hidden rounded-lg border text-xs"
-      style={{ borderColor: "var(--border)" }}
-      role="tablist"
-      aria-label="Viewing lens"
-    >
-      {opts.map((o) => (
-        <button
-          key={o.id}
-          role="tab"
-          aria-selected={lens === o.id}
-          onClick={() => setLens(o.id)}
-          className="px-2.5 py-1.5"
-          style={{
-            background: lens === o.id ? "var(--purple)" : "transparent",
-            color: lens === o.id ? "#16141b" : "var(--muted)",
-            fontWeight: lens === o.id ? 600 : 400,
-          }}
-        >
-          {o.label}
-        </button>
-      ))}
+    <div className="flex items-center gap-2">
+      <span className="hidden text-xs sm:inline" style={{ color: "var(--faint)" }}>
+        Viewing as
+      </span>
+      <div
+        className="flex overflow-hidden rounded-lg border text-xs"
+        style={{ borderColor: "var(--border)" }}
+        role="tablist"
+        aria-label="Viewing lens"
+      >
+        {LENS_ORDER.map((id) => (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={lens === id}
+            onClick={() => setLens(id)}
+            className="px-2.5 py-1.5"
+            style={{
+              background: lens === id ? "var(--purple)" : "transparent",
+              color: lens === id ? "#16141b" : "var(--muted)",
+              fontWeight: lens === id ? 600 : 400,
+            }}
+          >
+            {LENS_INFO[id].label}
+          </button>
+        ))}
+      </div>
+      <LensInfoButton />
     </div>
   );
 }
