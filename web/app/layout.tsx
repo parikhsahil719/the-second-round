@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
+import { Analytics } from "@vercel/analytics/next";
 import { LensProvider, LensToggle } from "@/lib/lens";
 import AccountLink from "@/components/AccountLink";
 import "./globals.css";
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/privacy" className="link">Privacy</Link>
           </footer>
         </LensProvider>
+        <Analytics />
       </body>
     </html>
   );

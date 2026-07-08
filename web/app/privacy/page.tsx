@@ -26,8 +26,9 @@ export default function Privacy() {
         <li>
           <span style={{ color: "var(--text)" }}>Third parties:</span> live note extraction
           sends your note text (nothing else) to Anthropic&apos;s API. Accounts and saved
-          notes are hosted on Supabase. Player photos load from ESPN&apos;s CDN. No
-          advertising or analytics trackers.
+          notes are hosted on Supabase. Player photos load from ESPN&apos;s CDN. Page views
+          are counted with Vercel Web Analytics, which uses no cookies and collects no
+          personal data. No advertising trackers.
         </li>
         <li>
           <span style={{ color: "var(--text)" }}>Delete everything:</span> delete individual
