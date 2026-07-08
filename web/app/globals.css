@@ -266,6 +266,12 @@ main { animation: pagefade 0.3s ease-out; }
   display: block;
 }
 
+/* The lens explainer reuses the term-pop surface + motion, just wider. */
+.lens-pop {
+  max-width: 320px;
+  font-size: 13px;
+}
+
 /* War-room pick: a compact gold number you can drag to (slider) or type into.
  * `input.pick-input` outranks the global `input[type="text"]` full-width rule. */
 input.pick-input {
