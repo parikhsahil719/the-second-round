@@ -21,3 +21,8 @@ api/usage.json
 
 # local agent/tooling config
 .claude/
+
+# private working notes: handoffs, session artifacts, internal scratch.
+# Never pushed; local memory only.
+.private/
+HANDOFF*.md
