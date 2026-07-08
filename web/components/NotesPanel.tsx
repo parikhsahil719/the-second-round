@@ -255,7 +255,7 @@ export default function NotesPanel({
         Write what you saw on film. The system reads your <Term id="scout_note">note</Term>{" "}
         against a fixed checklist of skills and nudges the numbers, capped so a note is
         evidence, never a veto. The bars below compare the model&apos;s{" "}
-        <Term id="prior">prior</Term> with the <Term id="posterior">posterior</Term> after your
+        <Term id="prior">prior</Term> with the <Term id="posterior">posterior</Term>{" "}after your
         note.{signedIn ? " Saved notes combine into your view, newest word per skill." : ""}
       </p>
 

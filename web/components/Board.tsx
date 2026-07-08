@@ -168,11 +168,11 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
         </summary>
         <p className="mt-1.5 leading-relaxed">
           The colored bar is the model&apos;s odds across six career tiers;{" "}
-          <Term id="star_pct">STAR %</Term> is his chance at All-Star level or better. The chip is
+          <Term id="star_pct">STAR %</Term>{" "}is his chance at All-Star level or better. The chip is
           the model&apos;s call: <Term id="steal">STEAL</Term>, <Term id="fair">FAIR</Term>, or{" "}
           <Term id="reach">REACH</Term>. A player{" "}
           <Term id="coverage_outside">outside model coverage</Term> or with an{" "}
-          <Term id="coverage_insufficient">insufficient sample</Term> shows market prices only.
+          <Term id="coverage_insufficient">insufficient sample</Term>{" "}shows market prices only.
           Hover or tap any underlined word for its meaning.
           {officeView && (
             <>
@@ -195,45 +195,53 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
           style={{ width: "auto", minWidth: "11rem" }}
           aria-label="Search players"
         />
-        <select
-          value={activeSort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
-          aria-label="Sort the board"
-          style={{
-            background: "var(--panel)",
-            border: "1px solid var(--border)",
-            borderRadius: 8,
-            color: "var(--text)",
-            padding: "10px 12px",
-            cursor: "pointer",
-          }}
-        >
-          {sortKeys.map((k) => (
-            <option key={k} value={k}>{`Sort: ${SORT_LABELS[k]}`}</option>
-          ))}
-        </select>
-        <div
-          className="flex overflow-hidden rounded-lg border text-xs"
-          style={{ borderColor: "var(--border)" }}
-          role="tablist"
-          aria-label="Filter the board"
-        >
-          {views.map((o) => (
-            <button
-              key={o.id}
-              role="tab"
-              aria-selected={view === o.id}
-              onClick={() => setView(o.id)}
-              className="px-3 py-2"
-              style={{
-                background: view === o.id ? "var(--purple)" : "transparent",
-                color: view === o.id ? "#16141b" : "var(--muted)",
-                fontWeight: view === o.id ? 600 : 400,
-              }}
-            >
-              {o.label}
-            </button>
-          ))}
+        <label className="flex items-center gap-2 text-sm" style={{ color: "var(--muted)" }}>
+          Sort:
+          <select
+            value={activeSort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            aria-label="Sort the board"
+            style={{
+              background: "var(--panel)",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              color: "var(--text)",
+              padding: "10px 12px",
+              cursor: "pointer",
+            }}
+          >
+            {sortKeys.map((k) => (
+              <option key={k} value={k}>
+                {SORT_LABELS[k]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--muted)" }}>
+          Filter:
+          <div
+            className="flex overflow-hidden rounded-lg border text-xs"
+            style={{ borderColor: "var(--border)" }}
+            role="tablist"
+            aria-label="Filter the board"
+          >
+            {views.map((o) => (
+              <button
+                key={o.id}
+                role="tab"
+                aria-selected={view === o.id}
+                onClick={() => setView(o.id)}
+                className="px-3 py-2"
+                style={{
+                  background: view === o.id ? "var(--purple)" : "transparent",
+                  color: view === o.id ? "#16141b" : "var(--muted)",
+                  fontWeight: view === o.id ? 600 : 400,
+                }}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
