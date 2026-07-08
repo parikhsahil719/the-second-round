@@ -178,7 +178,7 @@ def rank_chip(model_rank, pick) -> str:
     effective_pick = 61 if pick is None else pick  # undrafted = fell past everyone
     threshold = max(3, round(0.2 * effective_pick))
     gap = effective_pick - model_rank
-    return "BUY" if gap >= threshold else ("FADE" if gap <= -threshold else "HOLD")
+    return "STEAL" if gap >= threshold else ("REACH" if gap <= -threshold else "FAIR")
 
 
 # "plays like Dejounte Murray", "shades of prime Manu", "a poor man's Hart and Smart"
@@ -375,7 +375,7 @@ def warroom(pick: int):
     def value_chip(surplus):
         if surplus is None:
             return "N/A"
-        return "WORTH IT" if surplus > 2 else ("PASS" if surplus < -2 else "FAIR")
+        return "STEAL" if surplus > 2 else ("REACH" if surplus < -2 else "FAIR")
 
     col = f"avail_{pick}"
     rows = []

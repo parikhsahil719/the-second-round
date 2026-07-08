@@ -1,16 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { type BoardRow } from "@/lib/api";
-import { chipLabel, useLens, type Lens } from "@/lib/lens";
+import { useLens } from "@/lib/lens";
 import Headshot from "./Headshot";
 import { TierBar, TierLegend } from "./TierBar";
+import Term from "./Term";
 
-function Chip({ chip, lens }: { chip?: string; lens: Lens }) {
+function Chip({ chip }: { chip?: string }) {
   const cls =
-    chip === "BUY" ? "chip-buy" : chip === "FADE" ? "chip-fade" : chip === "HOLD" ? "chip-hold" : "chip-na";
-  return <span className={`chip ${cls}`}>{chipLabel(chip, lens)}</span>;
+    chip === "STEAL" ? "chip-buy" : chip === "REACH" ? "chip-fade" : chip === "FAIR" ? "chip-hold" : "chip-na";
+  return <span className={`chip ${cls}`}>{chip ?? "N/A"}</span>;
 }
 
 function PickSquare({ row }: { row: BoardRow }) {
@@ -44,7 +45,11 @@ export function Row({ row }: { row: BoardRow }) {
             <div className="flex-1">
               <TierBar tiers={row.tiers} height={7} />
             </div>
-            <span className="num w-28 whitespace-nowrap text-right text-xs" style={{ color: "var(--muted)" }}>
+            <span
+              className="num w-28 whitespace-nowrap text-right text-xs"
+              style={{ color: "var(--muted)" }}
+              title="Chance he reaches All-Star level or better. The range in brackets is the model's uncertainty."
+            >
               STAR {Math.round((row.p_star ?? 0) * 100)}%
               <span style={{ color: "var(--faint)" }}>
                 {" "}
@@ -61,11 +66,12 @@ export function Row({ row }: { row: BoardRow }) {
         )}
       </div>
       <div className="flex w-24 flex-col items-end gap-1">
-        <Chip chip={row.chip} lens={lens} />
+        <Chip chip={row.chip} />
         {showEv && row.edge_slot != null && (
           <span
             className="num text-sm"
             style={{ color: row.edge_slot > 0 ? "var(--pos)" : "var(--neg)" }}
+            title="Value versus this pick's slot price. The chip grades draft rank, this grades value, so the two can point different ways."
           >
             {row.edge_slot > 0 ? "+" : ""}
             {row.edge_slot.toFixed(1)}
@@ -76,46 +82,169 @@ export function Row({ row }: { row: BoardRow }) {
   );
 }
 
-const PREVIEW_COUNT = 25;
+type SortKey = "model" | "drafted" | "consensus" | "edge" | "age";
+type ViewKey = "all" | "steals" | "reaches";
+
+const PER_PAGE = 20;
+
+const SORT_LABELS: Record<SortKey, string> = {
+  model: "Model value",
+  drafted: "As drafted",
+  consensus: "Consensus board",
+  age: "Age (youngest)",
+  edge: "Value gap",
+};
+
+// Sort helper: ascending when dir=1, descending when dir=-1, missing values always last.
+function nullsLast(a: number | null | undefined, b: number | null | undefined, dir: number) {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  return (a - b) * dir;
+}
 
 export default function Board({ rows }: { rows: BoardRow[] }) {
   const { lens, signedIn, role } = useLens();
+  const officeView = signedIn ? role === "office" : lens !== "fan";
   const [q, setQ] = useState("");
-  const [showAll, setShowAll] = useState(false);
+  const [sort, setSort] = useState<SortKey>("model");
+  const [view, setView] = useState<ViewKey>("all");
+  const [page, setPage] = useState(0);
+
+  // "Value gap" is an office/scout concept (the edge number is hidden from fans), so if the
+  // lens leaves office while it is selected, fall back to the model order.
+  const activeSort: SortKey = sort === "edge" && !officeView ? "model" : sort;
+
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    if (!needle) return rows;
-    return rows.filter(
-      (r) =>
-        r.player_name.toLowerCase().includes(needle) ||
-        (r.college ?? "").toLowerCase().includes(needle)
-    );
-  }, [rows, q]);
+    const list = rows.filter((r) => {
+      if (
+        needle &&
+        !(
+          r.player_name.toLowerCase().includes(needle) ||
+          (r.college ?? "").toLowerCase().includes(needle)
+        )
+      )
+        return false;
+      if (view === "steals") return r.chip === "STEAL";
+      if (view === "reaches") return r.chip === "REACH";
+      return true;
+    });
+    if (activeSort === "model") return list; // incoming order is already the model's valuation
+    const sorted = [...list];
+    if (activeSort === "drafted") sorted.sort((a, b) => nullsLast(a.pick, b.pick, 1));
+    else if (activeSort === "consensus") sorted.sort((a, b) => nullsLast(a.consensus_rank, b.consensus_rank, 1));
+    else if (activeSort === "edge") sorted.sort((a, b) => nullsLast(a.edge_slot, b.edge_slot, -1));
+    else if (activeSort === "age") sorted.sort((a, b) => nullsLast(a.age, b.age, 1));
+    return sorted;
+  }, [rows, q, activeSort, view]);
 
-  const officeView = signedIn ? role === "office" : lens !== "fan";
-  const visible = q || showAll ? filtered : filtered.slice(0, PREVIEW_COUNT);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  // Any change to the result set collapses back to the first page.
+  useEffect(() => setPage(0), [q, activeSort, view]);
+  const current = Math.min(page, pageCount - 1);
+  const visible = filtered.slice(current * PER_PAGE, current * PER_PAGE + PER_PAGE);
+
+  const sortKeys: SortKey[] = officeView
+    ? ["model", "drafted", "consensus", "age", "edge"]
+    : ["model", "drafted", "consensus", "age"];
+  const views: { id: ViewKey; label: string }[] = [
+    { id: "all", label: "All" },
+    { id: "steals", label: "Steals" },
+    { id: "reaches", label: "Reaches" },
+  ];
 
   return (
     <section id="board" className="mt-10">
-      <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="serif text-lg">The full board</h2>
-        <span className="text-xs" style={{ color: "var(--muted)" }}>
-          Sorted by the model&apos;s valuation, best first
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="serif text-3xl" style={{ color: "var(--purple-bright)" }}>The full board</h2>
+        <span className="text-sm" style={{ color: "var(--muted)" }}>
+          {filtered.length} {filtered.length === 1 ? "player" : "players"}
         </span>
       </div>
-      <p className="mb-3 text-xs leading-relaxed" style={{ color: "var(--faint)" }}>
-        {officeView
-          ? "BUY means he was drafted well below where the model ranked him in this class; FADE means well above. The green or red number is the value gap versus his slot price."
-          : "STEAL means he was drafted well below where the model ranked him in this class; PRICEY means well above."}
-      </p>
-      <input
-        type="text"
-        placeholder="Search a player or school…"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        className="mb-3"
-        aria-label="Search players"
-      />
+      <details className="mb-3 mt-1 text-sm" style={{ color: "var(--muted)" }}>
+        <summary className="cursor-pointer select-none font-medium" style={{ color: "var(--text)" }}>
+          New here? How to read a row
+        </summary>
+        <p className="mt-1.5 leading-relaxed">
+          The colored bar is the model&apos;s odds across six career tiers;{" "}
+          <Term id="star_pct">STAR %</Term>{" "}is his chance at All-Star level or better. The chip is
+          the model&apos;s call: <Term id="steal">STEAL</Term>, <Term id="fair">FAIR</Term>, or{" "}
+          <Term id="reach">REACH</Term>. A player{" "}
+          <Term id="coverage_outside">outside model coverage</Term> or with an{" "}
+          <Term id="coverage_insufficient">insufficient sample</Term>{" "}shows market prices only.
+          Hover or tap any underlined word for its meaning.
+          {officeView && (
+            <>
+              {" "}
+              The green or red number is his <Term id="value_gap">value gap</Term> versus his{" "}
+              <Term id="slot_price">slot price</Term>, which can point a different way from the
+              chip, and that is not a bug.
+            </>
+          )}
+        </p>
+      </details>
+
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <input
+          type="text"
+          placeholder="Search a player or school…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="flex-1"
+          style={{ width: "auto", minWidth: "11rem" }}
+          aria-label="Search players"
+        />
+        <label className="flex items-center gap-2 text-sm" style={{ color: "var(--muted)" }}>
+          Sort:
+          <select
+            value={activeSort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            aria-label="Sort the board"
+            style={{
+              background: "var(--panel)",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              color: "var(--text)",
+              padding: "10px 12px",
+              cursor: "pointer",
+            }}
+          >
+            {sortKeys.map((k) => (
+              <option key={k} value={k}>
+                {SORT_LABELS[k]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--muted)" }}>
+          Filter:
+          <div
+            className="flex overflow-hidden rounded-lg border text-xs"
+            style={{ borderColor: "var(--border)" }}
+            role="tablist"
+            aria-label="Filter the board"
+          >
+            {views.map((o) => (
+              <button
+                key={o.id}
+                role="tab"
+                aria-selected={view === o.id}
+                onClick={() => setView(o.id)}
+                className="px-3 py-2"
+                style={{
+                  background: view === o.id ? "var(--purple)" : "transparent",
+                  color: view === o.id ? "#16141b" : "var(--muted)",
+                  fontWeight: view === o.id ? 600 : 400,
+                }}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="mb-4">
         <TierLegend />
       </div>
@@ -125,18 +254,53 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
         ))}
         {filtered.length === 0 && (
           <p className="py-8 text-center text-sm" style={{ color: "var(--muted)" }}>
-            No players match “{q}”
+            {view === "steals"
+              ? "No steals on the board right now."
+              : view === "reaches"
+                ? "No reaches on the board right now."
+                : `No players match “${q}”`}
           </p>
         )}
       </div>
-      {!q && !showAll && filtered.length > PREVIEW_COUNT && (
-        <button
-          className="card card-link mt-2 w-full py-3 text-center text-sm"
-          style={{ color: "var(--purple)" }}
-          onClick={() => setShowAll(true)}
-        >
-          Show the whole board ({filtered.length} players)
-        </button>
+      {pageCount > 1 && (
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 text-xs">
+          <button
+            className="btn-ghost"
+            style={{ padding: "6px 12px", opacity: current === 0 ? 0.4 : 1 }}
+            onClick={() => setPage(current - 1)}
+            disabled={current === 0}
+          >
+            Prev
+          </button>
+          {Array.from({ length: pageCount }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i)}
+              aria-label={`Page ${i + 1}`}
+              aria-current={i === current ? "page" : undefined}
+              className="num rounded-lg"
+              style={{
+                minWidth: 34,
+                padding: "6px 0",
+                border: "1px solid var(--border)",
+                background: i === current ? "var(--purple)" : "transparent",
+                color: i === current ? "#16141b" : "var(--muted)",
+                fontWeight: i === current ? 600 : 400,
+                cursor: "pointer",
+              }}
+            >
+              {i + 1}
+            </button>
+          ))}
+          <button
+            className="btn-ghost"
+            style={{ padding: "6px 12px", opacity: current === pageCount - 1 ? 0.4 : 1 }}
+            onClick={() => setPage(current + 1)}
+            disabled={current === pageCount - 1}
+          >
+            Next
+          </button>
+        </div>
       )}
     </section>
   );
