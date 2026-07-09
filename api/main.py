@@ -567,6 +567,12 @@ _AUTH_HITS: dict[str, list[float]] = {}
 
 def _auth_rate_limit(key: str, limit: int = 10, window: int = 300):
     now = time.time()
+    # Bounded memory: once the map is big, drop buckets idle past any window, so
+    # months of uptime (or an IP-rotating crawler) can't grow it without limit.
+    if len(_AUTH_HITS) > 5000:
+        stale = [k for k, v in _AUTH_HITS.items() if not v or now - v[-1] > 3600]
+        for k in stale:
+            _AUTH_HITS.pop(k, None)
     hits = [t for t in _AUTH_HITS.get(key, []) if now - t < window]
     if len(hits) >= limit:
         raise HTTPException(429, "Too many attempts. Wait a few minutes and try again.")
