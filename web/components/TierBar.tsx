@@ -39,7 +39,7 @@ export function TierBar({
   );
 }
 
-export function TierLegend() {
+export function TierLegend({ tiers }: { tiers?: Record<Tier, number> }) {
   return (
     <div className="text-sm" style={{ color: "var(--muted)" }}>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -50,12 +50,17 @@ export function TierLegend() {
               style={{ background: TIER_COLORS[t], boxShadow: "0 0 0 1px var(--border)" }}
             />
             <Term id={t.toLowerCase()}>{TIER_LABELS[t]}</Term>
+            {tiers && (
+              <span className="num" style={{ color: "var(--text)" }}>
+                {Math.round((tiers[t] ?? 0) * 100)}%
+              </span>
+            )}
           </span>
         ))}
       </div>
       <p className="mt-1.5" style={{ color: "var(--muted)" }}>
-        Each bar is the model&apos;s chance the player&apos;s first 4 NBA seasons land in that
-        tier. <Link href="/glossary" className="link">Full glossary →</Link>
+        Each segment is the chance his first 4 NBA seasons land in that tier.{" "}
+        <Link href="/glossary" className="link">Full glossary →</Link>
       </p>
     </div>
   );

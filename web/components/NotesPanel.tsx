@@ -269,16 +269,23 @@ export default function NotesPanel({
         )}
       </div>
       <p className="mt-1 max-w-prose text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
-        Write what you saw on film. The system reads your <Term id="scout_note">note</Term>{" "}
-        against a fixed checklist of skills and nudges the numbers, capped so a note is
-        evidence, never a veto. The bars below compare the model&apos;s{" "}
-        <Term id="prior">prior</Term> with the <Term id="posterior">posterior</Term>{" "}after your
-        note.{signedIn ? " Saved notes combine into your view, newest word per skill." : ""}
+        Write what you saw on film, the way you&apos;d tell another scout: &quot;the jumper
+        is real, but he loses his man off the ball.&quot; The desk reads your{" "}
+        <Term id="scout_note">note</Term>, scores the skills you mention, and moves his
+        chances a little, never all at once, so one hot take can&apos;t flip the board.
+        {signedIn
+          ? " Saved notes build your book on him; write a newer note on the same skill and it replaces the older word."
+          : " Save notes to build your book, and your view of him shows up beside the model's across the site."}
       </p>
 
       {myView && (
         <div className="mt-3 rounded-lg px-4 py-3" style={{ background: "var(--panel)" }}>
-          <PriorPosterior prior={tiers} posterior={myView.tiers} priorLabel={priorLabel} label={`Your view (${saved.length} note${saved.length === 1 ? "" : "s"})`} />
+          {/* the bar itself lives in the card above (your posterior overtakes it);
+              this panel keeps the comparison numbers and your comps */}
+          <p className="text-xs" style={{ color: "var(--purple)" }}>
+            Your view ({saved.length} note{saved.length === 1 ? "" : "s"}) · star chance{" "}
+            <span className="num">{Math.round(star(myView.tiers) * 100)}%</span>
+          </p>
           <CompChips
             comps={[...new Map(saved.flatMap((n) => n.comps ?? []).map((c) => [compName(c).toLowerCase(), c])).values()]}
             label="Your comps:"

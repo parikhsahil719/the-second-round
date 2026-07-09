@@ -4,7 +4,6 @@ import Headshot from "@/components/Headshot";
 import BookBar from "@/components/BookBar";
 import NotesPanel from "@/components/NotesPanel";
 import Term from "@/components/Term";
-import { TierLegend } from "@/components/TierBar";
 import YourComps from "@/components/YourComps";
 import { getPlayer, seasonLabel, TIER_LABELS } from "@/lib/api";
 import TeamBadge from "@/components/TeamBadge";
@@ -117,24 +116,14 @@ export default async function PlayerPage({
                 Chance of reaching All-Star level or better
               </p>
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
-              <div className="min-w-56 flex-1">
-                <BookBar slug={p.slug} tiers={p.tiers!} height={14} showGrid />
-              </div>
-              <div className="text-right">
-                <p className="leading-tight">
-                  <span className="num text-2xl" style={{ color: "var(--purple)" }}>
-                    {Math.round(p.p_star! * 100)}%
-                  </span>{" "}
-                  <span className="text-xs" style={{ color: "var(--muted)" }}>best guess</span>
-                </p>
-                <p className="mt-0.5 text-xs" style={{ color: "var(--faint)" }}>
-                  range {Math.round(p.p_star_lo! * 100)}% to {Math.round(p.p_star_hi! * 100)}% (wider = less sure)
-                </p>
-              </div>
-            </div>
             <div className="mt-3">
-              <TierLegend />
+              <BookBar
+                slug={p.slug}
+                tiers={p.tiers!}
+                height={14}
+                showLegend
+                star={{ p: p.p_star!, lo: p.p_star_lo!, hi: p.p_star_hi! }}
+              />
             </div>
             <div className="mt-4 grid grid-cols-3 gap-3 border-t pt-4 text-center" style={{ borderColor: "var(--border)" }}>
               <div>
