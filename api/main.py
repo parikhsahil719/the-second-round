@@ -172,12 +172,18 @@ def load_board() -> pd.DataFrame:
 
 def rank_chip(model_rank, pick) -> str:
     """A steal fell below the model's rank; a reach went above it. Nobody can be a
-    steal at pick 1 by definition. Threshold scales with pick (rank noise grows late)."""
+    steal at pick 1 by definition. Threshold scales with pick (rank noise grows late).
+
+    Undrafted players have no pick, so STEAL/REACH (which grade draft position) don't
+    apply. Instead: the ones the model would have drafted are SLEEPERs; the rest are
+    just UNDRAFTED. Same threshold, measured against an effective pick of 61."""
     if model_rank is None or (isinstance(model_rank, float) and np.isnan(model_rank)):
         return "N/A"
-    effective_pick = 61 if pick is None else pick  # undrafted = fell past everyone
-    threshold = max(3, round(0.2 * effective_pick))
-    gap = effective_pick - model_rank
+    if pick is None:
+        gap = 61 - model_rank
+        return "SLEEPER" if gap >= max(3, round(0.2 * 61)) else "UNDRAFTED"
+    threshold = max(3, round(0.2 * pick))
+    gap = pick - model_rank
     return "STEAL" if gap >= threshold else ("REACH" if gap <= -threshold else "FAIR")
 
 

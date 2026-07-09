@@ -71,14 +71,22 @@ export default async function PlayerPage({
       ) : (
         <>
           <section className="card mt-6 px-5 py-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <div className="flex flex-wrap items-start justify-between gap-2">
               <h2 className="serif text-xl" style={{ color: "var(--purple-bright)" }}>Fair-value distribution</h2>
-              <span className="num text-sm" style={{ color: "var(--purple)" }}>
-                <Term id="star_pct">Star chance</Term> {Math.round(p.p_star! * 100)}%{" "}
-                <span style={{ color: "var(--faint)" }}>
-                  (likely {Math.round(p.p_star_lo! * 100)}–{Math.round(p.p_star_hi! * 100)}%)
-                </span>
-              </span>
+              <div className="text-right">
+                <p className="text-xs" style={{ color: "var(--muted)" }}>
+                  Chance of reaching All-Star level or better
+                </p>
+                <p className="leading-tight">
+                  <span className="num text-2xl" style={{ color: "var(--purple)" }}>
+                    {Math.round(p.p_star! * 100)}%
+                  </span>{" "}
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>best guess</span>
+                </p>
+                <p className="mt-0.5 text-xs" style={{ color: "var(--faint)" }}>
+                  range {Math.round(p.p_star_lo! * 100)}% to {Math.round(p.p_star_hi! * 100)}% (wider = less sure)
+                </p>
+              </div>
             </div>
             <div className="mt-3">
               <TierBar tiers={p.tiers!} height={14} />

@@ -52,7 +52,7 @@ export interface BoardRow {
   ev_slot?: number;
   ev_consensus?: number | null;
   edge_slot?: number | null;
-  chip?: "STEAL" | "FAIR" | "REACH" | "N/A";
+  chip?: "STEAL" | "FAIR" | "REACH" | "SLEEPER" | "UNDRAFTED" | "N/A";
   age?: number | null;
   model_rank?: number | null;
   why_pos?: string[];

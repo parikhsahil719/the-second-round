@@ -56,6 +56,12 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     short: "Drafted well above where the model ranked him, a premium on draft rank.",
     category: "Board calls",
   },
+  sleeper: {
+    term: "SLEEPER",
+    short:
+      "An undrafted player the model rated as draftable. Steal and reach grade where a player was picked, so they don't fit someone who went undrafted; a sleeper is one the whole league passed on but the model would have taken.",
+    category: "Board calls",
+  },
 
   model_value: {
     term: "Model value",
@@ -84,7 +90,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   star_pct: {
     term: "STAR %",
     short:
-      "The model's best guess at his chance of reaching All-Star level or Elite. The bracket is how sure it is: a wide range like 26 to 80 means low confidence, a narrow one means high.",
+      "The model's best guess at his chance of reaching All-Star level or Elite. The range shows how sure it is: a wide spread like 26 to 80 means low confidence, a narrow one means high.",
     category: "Value",
   },
 

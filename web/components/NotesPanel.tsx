@@ -81,7 +81,13 @@ function PriorPosterior({
 }
 
 function chipCls(chip: string) {
-  return chip === "STEAL" ? "chip-buy" : chip === "REACH" ? "chip-fade" : chip === "FAIR" ? "chip-hold" : "chip-na";
+  return chip === "STEAL" || chip === "SLEEPER"
+    ? "chip-buy"
+    : chip === "REACH"
+      ? "chip-fade"
+      : chip === "FAIR"
+        ? "chip-hold"
+        : "chip-na";
 }
 
 function ViewLine({ view }: { view: YourView }) {

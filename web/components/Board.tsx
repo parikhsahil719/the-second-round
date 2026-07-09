@@ -10,8 +10,16 @@ import { TierBar, TierLegend } from "./TierBar";
 import Term from "./Term";
 
 function Chip({ chip }: { chip?: string }) {
+  // Green = the model likes him more than the market did (STEAL for drafted, SLEEPER
+  // for undrafted); red = REACH; gray = FAIR / UNDRAFTED / N/A.
   const cls =
-    chip === "STEAL" ? "chip-buy" : chip === "REACH" ? "chip-fade" : chip === "FAIR" ? "chip-hold" : "chip-na";
+    chip === "STEAL" || chip === "SLEEPER"
+      ? "chip-buy"
+      : chip === "REACH"
+        ? "chip-fade"
+        : chip === "FAIR"
+          ? "chip-hold"
+          : "chip-na";
   return <span className={`chip ${cls}`}>{chip ?? "N/A"}</span>;
 }
 
@@ -61,7 +69,7 @@ export function Row({ row }: { row: BoardRow }) {
             <span
               className="num w-28 whitespace-nowrap text-right text-xs"
               style={{ color: "var(--muted)" }}
-              title="Chance he reaches All-Star level or better. The range in brackets is the model's uncertainty."
+              title="His chance of reaching All-Star level or better. The bracket is the model's range: wider means less sure."
             >
               STAR {Math.round((row.p_star ?? 0) * 100)}%
               <span style={{ color: "var(--faint)" }}>
@@ -96,7 +104,7 @@ export function Row({ row }: { row: BoardRow }) {
 }
 
 type SortKey = "model" | "drafted" | "consensus" | "edge" | "age";
-type ViewKey = "all" | "steals" | "reaches";
+type ViewKey = "all" | "undrafted" | "steals" | "reaches";
 
 const PER_PAGE = 20;
 
@@ -139,6 +147,7 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
         )
       )
         return false;
+      if (view === "undrafted") return r.pick == null;
       if (view === "steals") return r.chip === "STEAL";
       if (view === "reaches") return r.chip === "REACH";
       return true;
@@ -163,6 +172,7 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
     : ["model", "drafted", "consensus", "age"];
   const views: { id: ViewKey; label: string }[] = [
     { id: "all", label: "All" },
+    { id: "undrafted", label: "Undrafted" },
     { id: "steals", label: "Steals" },
     { id: "reaches", label: "Reaches" },
   ];
@@ -183,7 +193,8 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
           The colored bar is the model&apos;s odds across six career tiers;{" "}
           <Term id="star_pct">STAR %</Term>{" "}is his chance at All-Star level or better. The chip is
           the model&apos;s call: <Term id="steal">STEAL</Term>, <Term id="fair">FAIR</Term>, or{" "}
-          <Term id="reach">REACH</Term>. A player{" "}
+          <Term id="reach">REACH</Term>. An undrafted player the model liked is a{" "}
+          <Term id="sleeper">SLEEPER</Term> instead. A player{" "}
           <Term id="coverage_outside">outside model coverage</Term> or with an{" "}
           <Term id="coverage_insufficient">insufficient sample</Term>{" "}shows market prices only.
           Hover or tap any underlined word for its meaning.
@@ -271,7 +282,9 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
               ? "No steals on the board right now."
               : view === "reaches"
                 ? "No reaches on the board right now."
-                : `No players match “${q}”`}
+                : view === "undrafted"
+                  ? "No undrafted players match."
+                  : `No players match “${q}”`}
           </p>
         )}
       </div>
