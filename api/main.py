@@ -36,8 +36,22 @@ GLOBAL_MONTHLY = 2000
 USAGE_FILE = ROOT / "api" / "usage.json"
 
 app = FastAPI(title="The Second Round")
-app.add_middleware(CORSMiddleware, allow_origins=["*"],
-                   allow_methods=["GET", "POST"], allow_headers=["content-type"])
+# Browsers may call this API only from our own origins (prod domain, Vercel
+# deployments of this project, local dev). No cookies are involved, so this is
+# defense-in-depth: it stops third-party pages from spending visitors' demo
+# caps or hammering the auth endpoints from inside their browsers.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://thesecondround.dev",
+        "https://www.thesecondround.dev",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_origin_regex=r"^https://the-second-round[a-z0-9.-]*\.vercel\.app$",
+    allow_methods=["GET", "POST"],
+    allow_headers=["content-type"],
+)
 
 # feature -> (phrase when it helps, phrase when it hurts). Fallback: prettified name.
 TRANSLATE = {
@@ -469,10 +483,14 @@ def _check_caps(ip: str, byo: bool):
 
 
 def _client_ip(request: Request) -> str:
-    """Behind Render's proxy every request shares the proxy IP; the real client is
-    the first hop in X-Forwarded-For."""
+    """Behind Render's proxy the trustworthy client IP is the RIGHTMOST entry in
+    X-Forwarded-For: that's the one Render's edge appends from the actual
+    connection. Leading entries arrive from the client and are spoofable; trusting
+    the first would let anyone rotate fake IPs straight past the per-IP limits."""
     fwd = request.headers.get("x-forwarded-for", "")
-    return fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else "?")
+    if fwd:
+        return fwd.split(",")[-1].strip()
+    return request.client.host if request.client else "?"
 
 
 @app.post("/notes")

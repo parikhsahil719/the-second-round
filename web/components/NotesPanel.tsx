@@ -325,7 +325,8 @@ export default function NotesPanel({
         </button>
         {showKey && (
           <input
-            type="text"
+            type="password"
+            autoComplete="off"
             placeholder="sk-ant-… (skips demo limits, never stored)"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
