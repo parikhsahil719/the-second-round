@@ -78,13 +78,27 @@ export function Row({ row, book }: { row: BoardRow; book?: BookEntry }) {
                 )}
               </p>
             </div>
-            <span
-              className="num w-28 whitespace-nowrap text-right text-xs"
-              style={{ color: "var(--muted)" }}
-              title="Your star chance: All-Star level or better under your posterior."
-            >
-              STAR {Math.round((yourStar ?? 0) * 100)}%
-            </span>
+            {row.p_star != null ? (
+              <span
+                className="num w-28 whitespace-nowrap text-right text-xs"
+                style={{ color: "var(--muted)" }}
+                title="His chance of reaching All-Star level or better. The bracket is the model's range: wider means less sure."
+              >
+                STAR {Math.round(row.p_star * 100)}%
+                <span style={{ color: "var(--faint)" }}>
+                  {" "}
+                  [{Math.round((row.p_star_lo ?? 0) * 100)}–{Math.round((row.p_star_hi ?? 0) * 100)}]
+                </span>
+              </span>
+            ) : (
+              <span
+                className="num w-28 whitespace-nowrap text-right text-xs"
+                style={{ color: "var(--muted)" }}
+                title="Your star chance: All-Star level or better under your posterior. No model range exists for this player."
+              >
+                STAR {Math.round((yourStar ?? 0) * 100)}%
+              </span>
+            )}
           </div>
         ) : row.coverage === "model" && row.tiers ? (
           <div className="mt-1.5 flex items-center gap-3">
@@ -142,15 +156,6 @@ export function Row({ row, book }: { row: BoardRow; book?: BookEntry }) {
       </div>
       <div className="flex w-24 flex-col items-end gap-1">
         <Chip chip={book ? book.view.your_chip : row.chip} />
-        {book && (
-          <span
-            className="num text-sm"
-            style={{ color: "var(--purple)" }}
-            title="Your EV: the expected career value under your posterior."
-          >
-            {book.view.ev_user.toFixed(1)}
-          </span>
-        )}
         {showEv && row.edge_slot != null && (
           <span
             className="num text-sm"

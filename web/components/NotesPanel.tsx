@@ -248,6 +248,9 @@ export default function NotesPanel({
     try {
       await saveNote(slug, note, result.traits, result.comps ?? []);
       setJustSaved(true);
+      // the note now lives in the book below; clear the desk for the next one
+      setNote("");
+      setResult(null);
       await refreshBook();
       window.dispatchEvent(new Event("book-updated"));
     } catch (e) {
