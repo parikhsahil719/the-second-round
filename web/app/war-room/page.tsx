@@ -141,7 +141,7 @@ export default function WarRoom() {
           </>
         ) : (
           <>
-            You hold a pick. We simulated the draft 10,000 times, calibrated on how far players
+            You hold a pick. I simulated the draft 10,000 times, calibrated on how far players
             actually slid from consensus in 2026. Here is who is likely to be there when
             you&apos;re <Term id="on_the_clock">on the clock</Term>.
           </>

@@ -23,9 +23,9 @@ export default function HowItWorks() {
 
       <Section title="What is this?">
         <p>
-          We taught a model to study every college prospect since 2009: how they scored,
+          I taught a model to study every college prospect since 2009: how they scored,
           passed, defended, and rebounded, how young they were, how big they were, and who
-          they did it against. Then we watched what those players actually became in the
+          they did it against. Then I watched what those players actually became in the
           NBA: stars, starters, role players, or guys who washed out.
         </p>
         <p>
@@ -38,13 +38,13 @@ export default function HowItWorks() {
 
       <Section title="Why should anyone trust it?">
         <p>
-          We tested it the hard way. For every draft from 2009 to 2021, we hid that class
+          I tested it the hard way. For every draft from 2009 to 2021, I hid that class
           from the model, asked it to grade those players using only what was knowable
           before draft night, then checked its answers against real careers.
         </p>
         <p>
           On the average pick, NBA teams beat the model. They should. They have
-          workouts, medicals, interviews, and intel we don&apos;t. But when the model
+          workouts, medicals, interviews, and intel I don&apos;t. But when the model
           disagreed loudly with where a player was drafted, it was right far more often
           than chance. Its favorite overlooked players outplayed their draft slots badly,
           and the players it liked least underplayed theirs. The lesson: don&apos;t use
@@ -52,13 +52,13 @@ export default function HowItWorks() {
         </p>
       </Section>
 
-      <Section title="What we mean by the market">
+      <Section title="What I mean by the market">
         <p>
           The market is the draft&apos;s collective opinion: where NBA front offices
           actually pick each player, and where public mock drafts and big boards rank him
-          before the night. When we say the market wins on the average pick, we mean
-          teams&apos; real choices predicted careers better than the model did. When we
-          show a pick number or a consensus rank next to a player, that is the
+          before the night. When I say the market wins on the average pick, I mean
+          teams&apos; real choices predicted careers better than the model did. When the
+          site shows a pick number or a consensus rank next to a player, that is the
           market&apos;s answer sitting beside the model&apos;s, so you can see exactly
           where they disagree. The model never reads any of it.
         </p>
@@ -110,7 +110,7 @@ export default function HowItWorks() {
         <p>
           Just as important is what it ignores: where the player was drafted, mock drafts,
           and big boards. You will see those numbers all over this site, next to the
-          model&apos;s, and that is the point. They are the answer key we grade the model
+          model&apos;s, and that is the point. They are the answer key I grade the model
           against, never its inputs. You cannot grade the room&apos;s opinion if you copied
           off the room.
         </p>
@@ -149,7 +149,7 @@ export default function HowItWorks() {
           Every NBA team gets a pick, in order, on draft night. Picking 9th means 8
           players are already gone by the time it&apos;s your turn. The war room lets you
           stand at any pick, 1 through 60, and see who realistically survives that long.
-          We ran the draft ten thousand times, letting players rise and slide the way they
+          I ran the draft ten thousand times, letting players rise and slide the way they
           actually do on draft night, including the occasional big fall, and used that to
           estimate the odds each player is still there when your pick comes up. That is
           the conversation a front office wants to have before draft week, not during it.

@@ -59,7 +59,7 @@ export default function ForgotPassword() {
         ) : (
           <>
             <p className="text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
-              Enter your email or username and we&apos;ll send a reset link to the email
+              Enter your email or username and you&apos;ll get a reset link at the email
               on the account.
             </p>
             <form

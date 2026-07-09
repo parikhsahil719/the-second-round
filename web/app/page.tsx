@@ -45,9 +45,9 @@ export default async function Home() {
       <section>
         <h1 className="serif text-4xl leading-snug">What the market missed in 2026</h1>
         <p className="mt-2 max-w-prose text-base leading-relaxed" style={{ color: "var(--muted)" }}>
-          We built a model that grades every college prospect on his college resume alone:
+          I built a model that grades every college prospect on his college resume alone:
           what he did on the court, how young he was, how big he was. It never sees mock
-          drafts or where anyone gets picked. Then we compare its grades to the market,
+          drafts or where anyone gets picked. Then I compare its grades to the market,
           meaning where NBA teams actually drafted each player and where the mock-draft
           consensus ranked him. Most of the time the market is right. But when the model
           disagrees loudly, history says the model usually wins. Below are this year&apos;s
