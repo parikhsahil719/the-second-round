@@ -48,8 +48,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               LinkedIn
             </a>
             ). Free public data: Barttorvik, Basketball-Reference, nba_api. Tested against
-            every draft from 2009 to 2021. On the average pick the market beats the model.
-            Trust it where it disagrees loudly.{" "}
+            every draft from 2009 to 2021. On the average pick, teams&apos; actual choices
+            beat the model. Trust the model where it disagrees loudly with the draft.{" "}
             <Link href="/glossary" className="link">Glossary</Link>
             {" · "}
             <Link href="/privacy" className="link">Privacy</Link>

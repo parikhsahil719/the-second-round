@@ -45,10 +45,13 @@ export default async function Home() {
       <section>
         <h1 className="serif text-4xl leading-snug">What the market missed in 2026</h1>
         <p className="mt-2 max-w-prose text-base leading-relaxed" style={{ color: "var(--muted)" }}>
-          A fair-value model priced every college prospect using only what was knowable
-          before draft night. No draft slots, no mock drafts. Then we compared its numbers
-          to where players actually went. On average the market wins. At the extremes of
-          disagreement, history says the model does. These are the loud disagreements.
+          We built a model that grades every college prospect on his college resume alone:
+          what he did on the court, how young he was, how big he was. It never sees mock
+          drafts or where anyone gets picked. Then we compare its grades to the market,
+          meaning where NBA teams actually drafted each player and where the mock-draft
+          consensus ranked him. Most of the time the market is right. But when the model
+          disagrees loudly, history says the model usually wins. Below are this year&apos;s
+          loudest disagreements.
         </p>
       </section>
 
@@ -56,7 +59,9 @@ export default async function Home() {
         The number on each card is the <Term id="value_gap">gap</Term>{" "}between what the model
         thinks the player is worth and what his{" "}
         <Term id="slot_price">draft slot historically returns</Term>, in career-value points.
-        Bigger number, louder disagreement.
+        Bigger number, louder disagreement. Pick numbers and consensus ranks appear
+        everywhere on this site. They are the market&apos;s opinion, shown so you can see
+        where the model differs. The model never uses them.
       </p>
 
       <section className="mt-3 grid gap-6 md:grid-cols-2">

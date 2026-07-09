@@ -52,6 +52,18 @@ export default function HowItWorks() {
         </p>
       </Section>
 
+      <Section title="What we mean by the market">
+        <p>
+          The market is the draft&apos;s collective opinion: where NBA front offices
+          actually pick each player, and where public mock drafts and big boards rank him
+          before the night. When we say the market wins on the average pick, we mean
+          teams&apos; real choices predicted careers better than the model did. When we
+          show a pick number or a consensus rank next to a player, that is the
+          market&apos;s answer sitting beside the model&apos;s, so you can see exactly
+          where they disagree. The model never reads any of it.
+        </p>
+      </Section>
+
       <Section title="What the model pays attention to">
         <p>
           The same things a good scout checks on the stat sheet, weighted by what has
@@ -62,10 +74,45 @@ export default function HowItWorks() {
           separate ordinary big men from special ones. And production against real
           competition beats production against nobody.
         </p>
+        <p>The full list of factors, in plain English:</p>
+        <ul className="space-y-1.5">
+          <li>
+            <strong>Age and body.</strong> Age on draft night, height, wingspan, standing
+            reach, vertical leap, sprint and agility times from the combine.
+          </li>
+          <li>
+            <strong>Shooting.</strong> Free-throw percentage, twos and threes, how often he
+            shoots from deep, how much of his scoring comes at the rim vs the mid-range,
+            dunk rate.
+          </li>
+          <li>
+            <strong>Production and efficiency.</strong> Scoring efficiency, offensive and
+            defensive ratings, overall impact numbers, all adjusted for the level of
+            competition.
+          </li>
+          <li>
+            <strong>Playmaking and ball security.</strong> Assist rate, turnover rate,
+            assist-to-turnover ratio.
+          </li>
+          <li>
+            <strong>Defense and rebounding.</strong> Steal rate, block rate, rebounding on
+            both ends.
+          </li>
+          <li>
+            <strong>Track record and trajectory.</strong> Total minutes and games, years in
+            college, whether he improved year over year.
+          </li>
+          <li>
+            <strong>Context.</strong> Recruiting rank out of high school, power-conference
+            or not, position.
+          </li>
+        </ul>
         <p>
           Just as important is what it ignores: where the player was drafted, mock drafts,
-          and big boards. The model forms its opinion blind to the market. That is the
-          whole point. You cannot grade the room&apos;s opinion if you copied off the room.
+          and big boards. You will see those numbers all over this site, next to the
+          model&apos;s, and that is the point. They are the answer key we grade the model
+          against, never its inputs. You cannot grade the room&apos;s opinion if you copied
+          off the room.
         </p>
       </Section>
 
