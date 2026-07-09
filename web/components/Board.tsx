@@ -204,6 +204,8 @@ function nullsLast(a: number | null | undefined, b: number | null | undefined, d
   return (a - b) * dir;
 }
 
+const STATE_KEY = "board-ui:v1";
+
 export default function Board({ rows }: { rows: BoardRow[] }) {
   const lensState = useLens();
   const { lens, signedIn, role } = lensState;
@@ -214,11 +216,31 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
   const [view, setView] = useState<ViewKey>("all");
   const [page, setPage] = useState(0);
 
+  // Leaving for a player page and coming back should land where you were:
+  // page/sort/filter/search persist for the session and restore on mount.
+  const restored = useRef<{ q: string; sort: SortKey; view: ViewKey } | null>(null);
+  const hadSaved = useRef(false);
+  useEffect(() => {
+    try {
+      const s = JSON.parse(sessionStorage.getItem(STATE_KEY) ?? "null");
+      if (s) {
+        hadSaved.current = true;
+        restored.current = { q: s.q ?? "", sort: s.sort ?? "model", view: s.view ?? "all" };
+        setQ(s.q ?? "");
+        setSort(s.sort ?? "model");
+        setView(s.view ?? "all");
+        setPage(s.page ?? 0);
+      }
+    } catch {
+      // corrupted state: fall back to defaults
+    }
+  }, []);
+
   // A scout with saved notes lands on their own board; auto-flip once, never
-  // fighting a manual sort choice afterwards.
+  // fighting a manual sort choice afterwards (or a restored one from this session).
   const flipped = useRef(false);
   useEffect(() => {
-    if (book.size > 0 && !flipped.current) {
+    if (book.size > 0 && !flipped.current && !hadSaved.current) {
       flipped.current = true;
       setSort("myboard");
     }
@@ -263,9 +285,28 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
   }, [rows, q, activeSort, view, book]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  // Any change to the result set collapses back to the first page.
-  useEffect(() => setPage(0), [q, activeSort, view]);
+  // Any USER change to the result set collapses back to the first page — but not
+  // the mount run, and not the echo of restoring this session's saved state.
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    const r = restored.current;
+    restored.current = null;
+    if (r && r.q === q && r.sort === sort && r.view === view) return;
+    setPage(0);
+  }, [q, sort, view]);
   const current = Math.min(page, pageCount - 1);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STATE_KEY, JSON.stringify({ q, sort, view, page: current }));
+    } catch {
+      // storage unavailable (private mode quota etc.): state just won't persist
+    }
+  }, [q, sort, view, current]);
   const visible = filtered.slice(current * PER_PAGE, current * PER_PAGE + PER_PAGE);
 
   const sortKeys: SortKey[] = [
