@@ -50,7 +50,7 @@ export function Row({ row }: { row: BoardRow }) {
   return (
     <Link
       href={`/player/${row.slug}`}
-      className="card card-link flex items-center gap-3 px-3.5 py-3"
+      className="card card-link reveal flex items-center gap-3 px-3.5 py-3"
       style={{ viewTransitionName: `row-${row.slug}` } as React.CSSProperties}
     >
       <PickSquare row={row} />

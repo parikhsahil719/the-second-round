@@ -276,7 +276,7 @@ export default function WarRoom() {
             <Link
               key={r.player_name}
               href={r.slug ? `/player/${r.slug}?from=war-room` : "#"}
-              className="card card-link flex items-center gap-3 px-3.5 py-2.5"
+              className="card card-link reveal flex items-center gap-3 px-3.5 py-2.5"
             >
               <Headshot url={r.headshot_url} name={r.player_name} size={36} />
               <div className="min-w-0 flex-1">
