@@ -111,15 +111,17 @@ export default async function PlayerPage({
       ) : (
         <>
           <section className="card mt-6 px-5 py-5">
-            <h2 className="serif text-xl" style={{ color: "var(--purple-bright)" }}>Fair-value distribution</h2>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="serif text-xl" style={{ color: "var(--purple-bright)" }}>Fair-value distribution</h2>
+              <p className="text-xs" style={{ color: "var(--muted)" }}>
+                Chance of reaching All-Star level or better
+              </p>
+            </div>
             <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
               <div className="min-w-56 flex-1">
                 <BookBar slug={p.slug} tiers={p.tiers!} height={14} showGrid />
               </div>
               <div className="text-right">
-                <p className="text-xs" style={{ color: "var(--muted)" }}>
-                  Chance of reaching All-Star level or better
-                </p>
                 <p className="leading-tight">
                   <span className="num text-2xl" style={{ color: "var(--purple)" }}>
                     {Math.round(p.p_star! * 100)}%
