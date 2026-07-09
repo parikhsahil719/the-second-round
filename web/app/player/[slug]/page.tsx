@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Headshot from "@/components/Headshot";
+import BookBar from "@/components/BookBar";
 import NotesPanel from "@/components/NotesPanel";
-import YourViewInline from "@/components/YourViewInline";
 import Term from "@/components/Term";
-import { TierBar, TierLegend } from "@/components/TierBar";
+import { TierLegend } from "@/components/TierBar";
 import YourComps from "@/components/YourComps";
-import { getPlayer, seasonLabel, TIERS, TIER_LABELS } from "@/lib/api";
+import { getPlayer, seasonLabel, TIER_LABELS } from "@/lib/api";
 import TeamBadge from "@/components/TeamBadge";
 
 export default async function PlayerPage({
@@ -84,9 +84,8 @@ export default async function PlayerPage({
                 </div>
               </div>
               <div className="mt-3">
-                <TierBar tiers={p.market_tiers} height={14} variant="market" reveal="load" />
+                <BookBar slug={p.slug} tiers={p.market_tiers} height={14} variant="market" />
               </div>
-              <YourViewInline slug={p.slug} />
               <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
                 This is{" "}
                 {p.market_basis === "slot" && p.pick != null
@@ -112,8 +111,11 @@ export default async function PlayerPage({
       ) : (
         <>
           <section className="card mt-6 px-5 py-5">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <h2 className="serif text-xl" style={{ color: "var(--purple-bright)" }}>Fair-value distribution</h2>
+            <h2 className="serif text-xl" style={{ color: "var(--purple-bright)" }}>Fair-value distribution</h2>
+            <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+              <div className="min-w-56 flex-1">
+                <BookBar slug={p.slug} tiers={p.tiers!} height={14} showGrid />
+              </div>
               <div className="text-right">
                 <p className="text-xs" style={{ color: "var(--muted)" }}>
                   Chance of reaching All-Star level or better
@@ -129,17 +131,6 @@ export default async function PlayerPage({
                 </p>
               </div>
             </div>
-            <div className="mt-3">
-              <TierBar tiers={p.tiers!} height={14} reveal="load" />
-            </div>
-            <div className="num mt-2 grid grid-cols-3 gap-1 text-xs sm:grid-cols-6" style={{ color: "var(--muted)" }}>
-              {TIERS.map((t) => (
-                <span key={t}>
-                  {TIER_LABELS[t]}: {Math.round((p.tiers![t] ?? 0) * 100)}%
-                </span>
-              ))}
-            </div>
-            <YourViewInline slug={p.slug} />
             <div className="mt-3">
               <TierLegend />
             </div>
