@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { type BoardRow } from "@/lib/api";
 import { useLens } from "@/lib/lens";
 import Headshot from "./Headshot";
+import TeamBadge from "./TeamBadge";
 import { TierBar, TierLegend } from "./TierBar";
 import Term from "./Term";
 
@@ -18,7 +19,17 @@ function PickSquare({ row }: { row: BoardRow }) {
   if (row.pick == null)
     return <div className="pick-square small-label">UDFA</div>;
   return (
-    <div className={`pick-square num ${row.pick <= 14 ? "lottery" : ""}`}>{row.pick}</div>
+    <div className="flex shrink-0 flex-col items-center gap-1">
+      <div className={`pick-square num ${row.pick <= 14 ? "lottery" : ""}`}>{row.pick}</div>
+      {row.team && (
+        <TeamBadge
+          code={row.team}
+          logoSize={14}
+          className="text-[10px] tracking-wide"
+          style={{ color: "var(--faint)" }}
+        />
+      )}
+    </div>
   );
 }
 

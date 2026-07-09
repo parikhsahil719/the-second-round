@@ -6,6 +6,7 @@ import Term from "@/components/Term";
 import { TierBar, TierLegend } from "@/components/TierBar";
 import YourComps from "@/components/YourComps";
 import { getPlayer, TIERS, TIER_LABELS } from "@/lib/api";
+import TeamBadge from "@/components/TeamBadge";
 
 export default async function PlayerPage({
   params,
@@ -37,6 +38,12 @@ export default async function PlayerPage({
         </div>
         <span className="max-w-sm text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
           {p.pick != null ? `Pick ${p.pick}` : "Undrafted"}
+          {p.pick != null && p.team ? (
+            <>
+              {" · "}
+              <TeamBadge code={p.team} showName logoSize={16} className="align-middle" />
+            </>
+          ) : null}
           {p.model_rank != null && (
             <>
               {" · "}

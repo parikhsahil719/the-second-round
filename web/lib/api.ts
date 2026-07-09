@@ -40,6 +40,7 @@ export interface BoardRow {
   college: string | null;
   headshot_url?: string | null;
   pick: number | null;
+  team: string | null;
   consensus_rank: number | null;
   coverage: "model" | "insufficient_sample" | "outside_coverage";
   pos: string | null;

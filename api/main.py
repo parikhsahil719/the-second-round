@@ -279,6 +279,7 @@ def public_row(r) -> dict:
          "college": None if pd.isna(r.college) else r.college,
          "headshot_url": HEADSHOTS.get(r.player_name),
          "pick": None if pd.isna(r.pick) else int(r.pick),
+         "team": None if pd.isna(r.team) else r.team,  # NBA team that drafted him
          "consensus_rank": None if pd.isna(r.consensus_rank) else int(r.consensus_rank),
          "coverage": r.coverage, "pos": None if pd.isna(r.pos) else r.pos}
     if r.coverage == "model":
