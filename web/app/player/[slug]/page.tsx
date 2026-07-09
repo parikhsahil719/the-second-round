@@ -63,11 +63,50 @@ export default async function PlayerPage({
       </div>
 
       {p.coverage !== "model" ? (
-        <div className="card mt-6 px-5 py-6 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
-          {p.coverage === "outside_coverage"
-            ? "This player didn't play a Division 1 college season, so the fair-value model doesn't score him. International and alternative-pathway prospects are outside coverage for now. His market prices still count in the slot base rates."
-            : "This player's college sample is below the reliability floor (40% of team minutes), so the model declines to score him rather than fake confidence. Market prices only."}
-        </div>
+        <>
+          <div className="card mt-6 px-5 py-6 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+            {p.coverage === "outside_coverage"
+              ? "This player didn't play a Division 1 college season, so the fair-value model doesn't score him. International and alternative-pathway prospects are outside coverage for now."
+              : "This player's college sample is below the reliability floor (40% of team minutes) with no earlier qualifying season, so the model declines to score him rather than fake confidence."}
+          </div>
+          {p.market_tiers && (
+            <section className="card mt-6 px-5 py-5">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <h2 className="serif text-xl" style={{ color: "var(--purple-bright)" }}>
+                  The market&apos;s price
+                </h2>
+                <div className="text-right">
+                  <p className="text-xs" style={{ color: "var(--muted)" }}>
+                    <Term id="market_prior">Market EV</Term>
+                  </p>
+                  <p className="num text-2xl leading-tight">{p.ev_market?.toFixed(1)}</p>
+                </div>
+              </div>
+              <div className="mt-3">
+                <TierBar tiers={p.market_tiers} height={14} variant="market" reveal="load" />
+              </div>
+              <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+                This is{" "}
+                {p.market_basis === "slot" && p.pick != null
+                  ? `what pick ${p.pick} has historically become`
+                  : p.market_basis === "consensus"
+                    ? `what consensus rank #${p.consensus_rank} has historically become`
+                    : "what undrafted prospects have historically become"}
+                . It is the market&apos;s expectation, not a model opinion; the model has no
+                D1 data to form one. Your notes below update this prior with what you saw.
+              </p>
+            </section>
+          )}
+          {p.market_tiers && (
+            <NotesPanel
+              slug={p.slug}
+              playerName={p.player_name}
+              seedNotes={p.seed_notes ?? []}
+              tiers={p.market_tiers}
+              priorLabel="Market prior"
+            />
+          )}
+        </>
       ) : (
         <>
           <section className="card mt-6 px-5 py-5">

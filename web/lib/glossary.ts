@@ -108,7 +108,13 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   coverage_outside: {
     term: "Outside coverage",
     short:
-      "No Division-1 college season on record, so the model cannot grade him. Market prices only.",
+      "No Division-1 college season on record, so the model cannot grade him. The market's prior is shown instead, as a dashed bar.",
+    category: "Coverage",
+  },
+  market_prior: {
+    term: "Market prior",
+    short:
+      "What his draft position has historically become: the market's expectation, shown as a dashed bar. Not a model opinion. Your notes can update it; the model stays silent.",
     category: "Coverage",
   },
   coverage_insufficient: {

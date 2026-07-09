@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { API, TIER_LABELS, TIERS, type SeedNote, type Tier } from "@/lib/api";
+import { API, TIER_LABELS, TIERS, type SeedNote, type Tier, type YourView } from "@/lib/api";
 import Term from "./Term";
 import {
   combineTraits,
@@ -14,15 +14,6 @@ import {
 import { canUseNotes, useLens } from "@/lib/lens";
 import ConfirmDialog from "./ConfirmDialog";
 import { TierBar } from "./TierBar";
-
-interface YourView {
-  ev_model: number;
-  ev_user: number;
-  model_rank: number | null;
-  your_rank: number;
-  model_chip: string;
-  your_chip: string;
-}
 
 // older saved notes hold plain strings; newer ones carry the historical tier,
 // whether the player made a real All-Star team in his first four seasons, his
@@ -57,18 +48,24 @@ function PriorPosterior({
   prior,
   posterior,
   label = "With this note",
+  priorLabel = "Stats prior",
 }: {
   prior: Record<Tier, number>;
   posterior: Record<Tier, number>;
   label?: string;
+  priorLabel?: string;
 }) {
   return (
     <div className="mt-3 space-y-2">
       <div>
         <p className="mb-1 text-xs" style={{ color: "var(--faint)" }}>
-          Stats prior · star chance {Math.round(star(prior) * 100)}%
+          {priorLabel} · star chance {Math.round(star(prior) * 100)}%
         </p>
-        <TierBar tiers={prior} height={9} />
+        <TierBar
+          tiers={prior}
+          height={9}
+          variant={priorLabel === "Market prior" ? "market" : "solid"}
+        />
       </div>
       <div>
         <p className="mb-1 text-xs" style={{ color: "var(--purple)" }}>
@@ -91,20 +88,27 @@ function chipCls(chip: string) {
 }
 
 function ViewLine({ view }: { view: YourView }) {
+  const baseline = view.ev_model ?? view.ev_market;
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3 text-xs" style={{ borderColor: "var(--border)", color: "var(--muted)" }}>
-      <span>
-        Model says <span className={`chip ${chipCls(view.model_chip)}`}>{view.model_chip}</span>
-        {view.model_rank != null ? <span className="num"> (rank #{view.model_rank})</span> : null}
-      </span>
+      {view.ev_model != null ? (
+        <span>
+          Model says <span className={`chip ${chipCls(view.model_chip)}`}>{view.model_chip}</span>
+          {view.model_rank != null ? <span className="num"> (rank #{view.model_rank})</span> : null}
+        </span>
+      ) : (
+        <span>Market EV <span className="num">{view.ev_market?.toFixed(1)}</span></span>
+      )}
       <span>·</span>
       <span>
         your book says <span className={`chip ${chipCls(view.your_chip)}`}>{view.your_chip}</span>
         <span className="num"> (rank #{view.your_rank})</span>
       </span>
-      <span className="num" style={{ color: "var(--faint)" }}>
-        value {view.ev_model.toFixed(1)} → {view.ev_user.toFixed(1)}
-      </span>
+      {baseline != null && (
+        <span className="num" style={{ color: "var(--faint)" }}>
+          value {baseline.toFixed(1)} → {view.ev_user.toFixed(1)}
+        </span>
+      )}
     </div>
   );
 }
@@ -165,11 +169,15 @@ export default function NotesPanel({
   playerName,
   seedNotes,
   tiers,
+  priorLabel = "Stats prior",
 }: {
   slug: string;
   playerName: string;
   seedNotes: SeedNote[];
   tiers: Record<Tier, number>;
+  // "Market prior" when the model abstains and notes update the market's
+  // distribution instead (internationals)
+  priorLabel?: string;
 }) {
   const lensState = useLens();
   const notesAllowed = canUseNotes(lensState);
@@ -267,7 +275,7 @@ export default function NotesPanel({
 
       {myView && (
         <div className="mt-3 rounded-lg px-4 py-3" style={{ background: "var(--panel)" }}>
-          <PriorPosterior prior={tiers} posterior={myView.tiers} label={`Your view (${saved.length} note${saved.length === 1 ? "" : "s"})`} />
+          <PriorPosterior prior={tiers} posterior={myView.tiers} priorLabel={priorLabel} label={`Your view (${saved.length} note${saved.length === 1 ? "" : "s"})`} />
           <CompChips
             comps={[...new Map(saved.flatMap((n) => n.comps ?? []).map((c) => [compName(c).toLowerCase(), c])).values()]}
             label="Your comps:"
@@ -358,7 +366,7 @@ export default function NotesPanel({
           </p>
           <TraitList traits={result.traits} />
           <CompChips comps={result.comps} />
-          <PriorPosterior prior={result.prior} posterior={result.posterior} />
+          <PriorPosterior prior={result.prior} posterior={result.posterior} priorLabel={priorLabel} />
           {result.view && <ViewLine view={result.view} />}
         </div>
       )}

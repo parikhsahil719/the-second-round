@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { seasonLabel, type BoardRow } from "@/lib/api";
-import { useLens } from "@/lib/lens";
+import { seasonLabel, type BoardRow, type BookEntry } from "@/lib/api";
+import { canUseNotes, useLens } from "@/lib/lens";
+import { useScoutBook } from "@/lib/useScoutBook";
 import Headshot from "./Headshot";
 import TeamBadge from "./TeamBadge";
 import { TierBar, TierLegend } from "./TierBar";
@@ -42,11 +43,14 @@ function PickSquare({ row }: { row: BoardRow }) {
   );
 }
 
-export function Row({ row }: { row: BoardRow }) {
+export function Row({ row, book }: { row: BoardRow; book?: BookEntry }) {
   const { lens, signedIn, role } = useLens();
   // Value/edge numbers are a Front-office thing. For visitors the Front-office
   // lens shows them; Fan and Scout keep the clean board (Scout's layer is notes).
   const showEv = signedIn ? role === "office" : lens === "office";
+  // A noted row shows the scout's read: their posterior bar, EV, and chip.
+  // Un-noted rows are untouched (posterior = prior by construction).
+  const yourStar = book ? (book.posterior.ALL_STAR ?? 0) + (book.posterior.ELITE ?? 0) : null;
   return (
     <Link
       href={`/player/${row.slug}`}
@@ -63,7 +67,26 @@ export function Row({ row }: { row: BoardRow }) {
             {row.pos ? ` · ${row.pos === "G" ? "Guard" : row.pos === "W" ? "Wing" : "Big"}` : ""}
           </span>
         </div>
-        {row.coverage === "model" && row.tiers ? (
+        {book ? (
+          <div className="mt-1.5 flex items-center gap-3">
+            <div className="flex-1">
+              <TierBar tiers={book.posterior} height={7} />
+              <p className="mt-1 text-[10px]" style={{ color: "var(--purple)" }}>
+                ✎ Your view · {book.noteCount} note{book.noteCount === 1 ? "" : "s"}
+                {book.tilt !== 0 && (
+                  <span className="num"> · tilt {book.tilt > 0 ? "+" : ""}{book.tilt.toFixed(2)}</span>
+                )}
+              </p>
+            </div>
+            <span
+              className="num w-28 whitespace-nowrap text-right text-xs"
+              style={{ color: "var(--muted)" }}
+              title="Your star chance: All-Star level or better under your posterior."
+            >
+              STAR {Math.round((yourStar ?? 0) * 100)}%
+            </span>
+          </div>
+        ) : row.coverage === "model" && row.tiers ? (
           <div className="mt-1.5 flex items-center gap-3">
             <div className="flex-1">
               <TierBar tiers={row.tiers} height={7} />
@@ -87,6 +110,28 @@ export function Row({ row }: { row: BoardRow }) {
               </span>
             </span>
           </div>
+        ) : row.market_tiers ? (
+          <div className="mt-1.5 flex items-center gap-3">
+            <div className="flex-1">
+              <TierBar tiers={row.market_tiers} height={7} variant="market" />
+              <p className="mt-1 text-[10px]" style={{ color: "var(--faint)" }}>
+                Market prior
+                {row.market_basis === "slot" && row.pick != null ? ` (pick ${row.pick})` :
+                 row.market_basis === "consensus" ? ` (consensus #${row.consensus_rank})` : ""}
+                {" · "}
+                {row.coverage === "outside_coverage"
+                  ? "outside model coverage (no D1 season)"
+                  : "insufficient college sample"}
+              </p>
+            </div>
+            <span
+              className="num w-28 whitespace-nowrap text-right text-xs"
+              style={{ color: "var(--faint)" }}
+              title="The market's expected career value: what his draft position has historically returned. Not a model opinion."
+            >
+              MKT EV {row.ev_market?.toFixed(1)}
+            </span>
+          </div>
         ) : (
           <p className="mt-1 text-xs" style={{ color: "var(--faint)" }}>
             {row.coverage === "outside_coverage"
@@ -96,7 +141,16 @@ export function Row({ row }: { row: BoardRow }) {
         )}
       </div>
       <div className="flex w-24 flex-col items-end gap-1">
-        <Chip chip={row.chip} />
+        <Chip chip={book ? book.view.your_chip : row.chip} />
+        {book && (
+          <span
+            className="num text-sm"
+            style={{ color: "var(--purple)" }}
+            title="Your EV: the expected career value under your posterior."
+          >
+            {book.view.ev_user.toFixed(1)}
+          </span>
+        )}
         {showEv && row.edge_slot != null && (
           <span
             className="num text-sm"
@@ -112,13 +166,14 @@ export function Row({ row }: { row: BoardRow }) {
   );
 }
 
-type SortKey = "model" | "drafted" | "consensus" | "edge" | "age";
+type SortKey = "model" | "myboard" | "drafted" | "consensus" | "edge" | "age";
 type ViewKey = "all" | "undrafted" | "steals" | "reaches";
 
 const PER_PAGE = 20;
 
 const SORT_LABELS: Record<SortKey, string> = {
   model: "Model value",
+  myboard: "My board",
   drafted: "As drafted",
   consensus: "Consensus board",
   age: "Age (youngest)",
@@ -145,16 +200,32 @@ function nullsLast(a: number | null | undefined, b: number | null | undefined, d
 }
 
 export default function Board({ rows }: { rows: BoardRow[] }) {
-  const { lens, signedIn, role } = useLens();
+  const lensState = useLens();
+  const { lens, signedIn, role } = lensState;
   const officeView = signedIn ? role === "office" : lens === "office";
+  const book = useScoutBook(canUseNotes(lensState));
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortKey>("model");
   const [view, setView] = useState<ViewKey>("all");
   const [page, setPage] = useState(0);
 
+  // A scout with saved notes lands on their own board; auto-flip once, never
+  // fighting a manual sort choice afterwards.
+  const flipped = useRef(false);
+  useEffect(() => {
+    if (book.size > 0 && !flipped.current) {
+      flipped.current = true;
+      setSort("myboard");
+    }
+  }, [book]);
+
   // "Value gap" is a Front-office concept (the edge number only shows there), so if the
-  // lens leaves office while it is selected, fall back to the model order.
-  const activeSort: SortKey = sort === "edge" && !officeView ? "model" : sort;
+  // lens leaves office while it is selected, fall back to the model order. "My board"
+  // needs a non-empty book.
+  const activeSort: SortKey =
+    (sort === "edge" && !officeView) || (sort === "myboard" && book.size === 0)
+      ? "model"
+      : sort;
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -174,12 +245,17 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
     });
     if (activeSort === "model") return list; // incoming order is already the model's valuation
     const sorted = [...list];
-    if (activeSort === "drafted") sorted.sort((a, b) => nullsLast(a.pick, b.pick, 1));
+    // Your EV where you have notes, the model's where it speaks, the market's where
+    // it abstains: the whole class ranks on one board.
+    const myEv = (r: BoardRow) =>
+      book.get(r.slug)?.view.ev_user ?? r.ev_model ?? r.ev_market ?? null;
+    if (activeSort === "myboard") sorted.sort((a, b) => nullsLast(myEv(a), myEv(b), -1));
+    else if (activeSort === "drafted") sorted.sort((a, b) => nullsLast(a.pick, b.pick, 1));
     else if (activeSort === "consensus") sorted.sort((a, b) => nullsLast(a.consensus_rank, b.consensus_rank, 1));
     else if (activeSort === "edge") sorted.sort((a, b) => nullsLast(a.edge_slot, b.edge_slot, -1));
     else if (activeSort === "age") sorted.sort((a, b) => nullsLast(a.age, b.age, 1));
     return sorted;
-  }, [rows, q, activeSort, view]);
+  }, [rows, q, activeSort, view, book]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   // Any change to the result set collapses back to the first page.
@@ -187,9 +263,11 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
   const current = Math.min(page, pageCount - 1);
   const visible = filtered.slice(current * PER_PAGE, current * PER_PAGE + PER_PAGE);
 
-  const sortKeys: SortKey[] = officeView
-    ? ["model", "drafted", "consensus", "age", "edge"]
-    : ["model", "drafted", "consensus", "age"];
+  const sortKeys: SortKey[] = [
+    ...(book.size > 0 ? ["myboard" as const] : []),
+    "model" as const, "drafted" as const, "consensus" as const, "age" as const,
+    ...(officeView ? ["edge" as const] : []),
+  ];
   const views: { id: ViewKey; label: string }[] = [
     { id: "all", label: "All" },
     { id: "undrafted", label: "Undrafted" },
@@ -297,7 +375,7 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
       </div>
       <div className="flex flex-col gap-2">
         {visible.map((r) => (
-          <Row key={r.slug} row={r} />
+          <Row key={r.slug} row={r} book={book.get(r.slug)} />
         ))}
         {filtered.length === 0 && (
           <p className="py-8 text-center text-sm" style={{ color: "var(--muted)" }}>

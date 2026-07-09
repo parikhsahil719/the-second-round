@@ -151,6 +151,13 @@ export default function HowItWorks() {
           note, however glowing, can turn a 3% star chance into a 30% one. Your eyes and
           the numbers each get a vote. Neither gets to overrule the other completely.
         </p>
+        <p>
+          Notes also work on international prospects the model cannot score. There, your
+          note updates the market&apos;s expectation for his draft position (shown as a
+          dashed bar) instead of a model prior; the model stays silent. And once you have
+          saved notes, the board can sort by your own valuations: your big board, with
+          the model as the reference underneath.
+        </p>
       </Section>
 
       <Section title="What the war room does">

@@ -6,19 +6,27 @@ export function TierBar({
   tiers,
   height = 8,
   reveal = "scroll",
+  variant = "solid",
 }: {
   tiers: Record<Tier, number>;
   height?: number;
   // "scroll" draws the bar as it scrolls into view; "load" draws it on mount
   // (for bars that sit above the fold); "none" renders it static.
   reveal?: "scroll" | "load" | "none";
+  // "market" = the market's prior, not a model opinion: same segments, muted,
+  // dashed outline. One grammar per signal — dashed always means market.
+  variant?: "solid" | "market";
 }) {
   const revealClass =
     reveal === "scroll" ? " tier-wipe" : reveal === "load" ? " tier-wipe-load" : "";
+  const marketStyle =
+    variant === "market"
+      ? { opacity: 0.72, outline: "1px dashed var(--faint)", outlineOffset: 1 }
+      : undefined;
   return (
     <div
       className={`flex w-full overflow-hidden rounded${revealClass}`}
-      style={{ height }}
+      style={{ height, ...marketStyle }}
       title={TIERS.map((t) => `${TIER_LABELS[t]}: ${Math.round(tiers[t] * 100)}%`).join(" · ")}
     >
       {TIERS.map((t) => (

@@ -262,17 +262,44 @@ def extract_comps(note: str) -> list[dict]:
     return out
 
 
+def market_prior(r) -> tuple[np.ndarray, str] | None:
+    """The market's tier distribution for a player the model can't score: what his
+    actual slot (post-draft) or consensus rank (pre-draft) historically becomes.
+    Returns (distribution, basis) or None when neither anchor exists."""
+    if pd.notna(r.pick):
+        key, basis = int(min(r.pick, 60)), "slot"
+    elif pd.notna(r.consensus_rank) and r.consensus_rank <= 60:
+        key, basis = int(r.consensus_rank), "consensus"
+    elif pd.notna(r.consensus_rank):
+        key, basis = 0, "undrafted"  # ranked outside 60: undrafted-pool base rates
+    else:
+        return None
+    return SLOT_PRIOR.loc[key, list(TIERS)].to_numpy(dtype=float), basis
+
+
+def note_prior(r) -> np.ndarray | None:
+    """The prior a scout's note updates: the model's posterior where one exists,
+    else the market prior. None only when the player has no anchor at all."""
+    if r.coverage == "model":
+        return np.array([float(getattr(r, f"p_{t}")) for t in TIERS])
+    mp = market_prior(r)
+    return None if mp is None else mp[0]
+
+
 def your_view(r, posterior: np.ndarray) -> dict:
-    """The scout-vs-model comparison: turn a posterior into the user's EV, where that
-    EV would rank in this class (against everyone else's model EV), and the chip that
-    rank implies. The model's numbers ride along so the UI can show both sides."""
+    """The scout-vs-baseline comparison: turn a posterior into the user's EV, where
+    that EV would rank in this class (against everyone else's model EV), and the chip
+    that rank implies. The baseline is the model where it speaks, the market where it
+    abstains (ev_model null, ev_market set) — never the market graded against itself."""
     util = np.array([UTILITY[t] for t in TIERS])
     ev_user = float(posterior @ util)
     others = BOARD.loc[BOARD.slug != r.slug, "ev_model"].dropna()
     your_rank = int((others > ev_user).sum()) + 1
     pick = None if pd.isna(r.pick) else int(r.pick)
+    mp = None if r.coverage == "model" else market_prior(r)
     return {
-        "ev_model": round(float(r.ev_model), 2),
+        "ev_model": None if pd.isna(r.ev_model) else round(float(r.ev_model), 2),
+        "ev_market": None if mp is None else round(float(mp[0] @ util), 2),
         "ev_user": round(ev_user, 2),
         "model_rank": None if pd.isna(r.model_rank) else int(r.model_rank),
         "your_rank": your_rank,
@@ -282,6 +309,9 @@ def your_view(r, posterior: np.ndarray) -> dict:
 
 
 BOARD = load_board()
+# pick (1-60, 0 = undrafted pool) -> historical 6-tier distribution; the market's
+# base rates, used for war-room pricing and as the notes prior for non-model players
+SLOT_PRIOR = pd.read_parquet(PROCESSED / "slot_prior.parquet").set_index("pick")
 SEEDS = json.loads((PROCESSED / "seed_note_results.json").read_text(encoding="utf-8")) \
     if (PROCESSED / "seed_note_results.json").exists() else []
 
@@ -323,6 +353,18 @@ def public_row(r) -> dict:
             "why_pos": [w["text"] for w in translate_why(r.why) if w["contribution"] > 0][:2],
             "why_neg": [w["text"] for w in translate_why(r.why) if w["contribution"] < 0][:2],
         })
+    else:
+        # the market's answer for players the model can't score: shown as a labeled
+        # prior, never compared against the market itself (no edge, no chip)
+        mp = market_prior(r)
+        if mp is not None:
+            dist, basis = mp
+            util = np.array([UTILITY[t] for t in TIERS])
+            d.update({
+                "market_tiers": {t: round(float(p), 4) for t, p in zip(TIERS, dist)},
+                "ev_market": round(float(dist @ util), 2),
+                "market_basis": basis,
+            })
     return d
 
 
@@ -392,9 +434,8 @@ def warroom(pick: int):
     if not 1 <= pick <= 60:
         raise HTTPException(400, "pick must be 1-60")
 
-    prior = pd.read_parquet(PROCESSED / "slot_prior.parquet").set_index("pick")
     util = np.array([UTILITY[t] for t in TIERS])
-    pick_price = float(prior.loc[pick, TIERS].to_numpy() @ util)
+    pick_price = float(SLOT_PRIOR.loc[pick, list(TIERS)].to_numpy() @ util)
 
     def value_chip(surplus):
         if surplus is None:
@@ -433,26 +474,57 @@ class TraitsIn(BaseModel):
     traits: list[dict]
 
 
-@app.post("/posterior")
-def posterior_from_traits(body: TraitsIn):
-    """Recompute a posterior from an explicit trait set (saved scout book); no LLM, no caps."""
-    hit = BOARD[BOARD.slug == body.slug]
-    if hit.empty or hit.iloc[0].coverage != "model":
-        raise HTTPException(404, "player not model-scored")
-    r = hit.iloc[0]
-    from notes import update
-    prior = np.array([float(getattr(r, f"p_{t}")) for t in TIERS])
+def _clean_traits(traits: list[dict]) -> dict:
     clean = {}
-    for t in body.traits[:24]:
+    for t in traits[:24]:
         try:
             clean[str(t["trait"])] = (int(t["score"]), float(t["confidence"]))
         except (KeyError, TypeError, ValueError):
             continue
-    post, tilt = update(prior, clean)
+    return clean
+
+
+def _posterior_payload(r, traits: list[dict]) -> dict:
+    """Shared /posterior body: prior (model or market), capped update, user's view."""
+    from notes import update
+    prior = note_prior(r)
+    if prior is None:
+        raise HTTPException(404, "player has no prior to update")
+    post, tilt = update(prior, _clean_traits(traits))
     return {"tilt": round(tilt, 3),
             "prior": {t: round(float(p), 4) for t, p in zip(TIERS, prior)},
             "posterior": {t: round(float(p), 4) for t, p in zip(TIERS, post)},
             "view": your_view(r, post)}
+
+
+@app.post("/posterior")
+def posterior_from_traits(body: TraitsIn):
+    """Recompute a posterior from an explicit trait set (saved scout book); no LLM, no caps."""
+    hit = BOARD[BOARD.slug == body.slug]
+    if hit.empty:
+        raise HTTPException(404, "unknown player")
+    return _posterior_payload(hit.iloc[0], body.traits)
+
+
+class TraitsBatchIn(BaseModel):
+    items: list[TraitsIn]
+
+
+@app.post("/posteriors")
+def posteriors_batch(body: TraitsBatchIn):
+    """Batch of /posterior for hydrating the scout's board in one round trip."""
+    if len(body.items) > 100:
+        raise HTTPException(400, "too many items (100 max)")
+    out = {}
+    for item in body.items:
+        hit = BOARD[BOARD.slug == item.slug]
+        if hit.empty:
+            continue
+        try:
+            out[item.slug] = _posterior_payload(hit.iloc[0], item.traits)
+        except HTTPException:
+            continue  # no prior for this player; the board just shows its default
+    return {"results": out}
 
 
 class NoteIn(BaseModel):
@@ -501,9 +573,12 @@ def notes(body: NoteIn, request: Request):
     if len(body.note) > 4000:
         raise HTTPException(400, "note too long (4000 chars max)")
     hit = BOARD[BOARD.slug == body.slug]
-    if hit.empty or hit.iloc[0].coverage != "model":
-        raise HTTPException(404, "player not model-scored")
+    if hit.empty:
+        raise HTTPException(404, "unknown player")
     r = hit.iloc[0]
+    prior = note_prior(r)
+    if prior is None:
+        raise HTTPException(404, "player has no prior to update")
 
     _check_caps(_client_ip(request), bool(body.api_key))
 
@@ -520,7 +595,6 @@ def notes(body: NoteIn, request: Request):
     except Exception:
         traits, mode = extract_mock(body.note), "mock_fallback"
 
-    prior = np.array([float(getattr(r, f"p_{t}")) for t in TIERS])
     posterior, tilt = update(prior, {t["trait"]: (t["score"], t["confidence"])
                                      for t in traits})
     return {"mode": mode, "traits": traits, "tilt": round(tilt, 3),

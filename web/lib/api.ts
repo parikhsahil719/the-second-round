@@ -60,6 +60,30 @@ export interface BoardRow {
   sample_blend?: number | null;
   why_pos?: string[];
   why_neg?: string[];
+  // non-model players only: the market's tier distribution and its EV — what his
+  // slot (post-draft) or consensus rank (pre-draft) historically becomes
+  market_tiers?: Record<Tier, number>;
+  ev_market?: number;
+  market_basis?: "slot" | "consensus" | "undrafted";
+}
+
+export interface YourView {
+  ev_model: number | null;
+  ev_market: number | null;
+  ev_user: number;
+  model_rank: number | null;
+  your_rank: number;
+  model_chip: string;
+  your_chip: string;
+}
+
+// one entry per noted player, from POST /posteriors
+export interface BookEntry {
+  tilt: number;
+  prior: Record<Tier, number>;
+  posterior: Record<Tier, number>;
+  view: YourView;
+  noteCount: number;
 }
 
 // 2025 -> "2024-25"
