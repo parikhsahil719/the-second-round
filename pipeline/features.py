@@ -122,12 +122,28 @@ def build() -> pd.DataFrame:
     final["pos"] = final.role.map(POS_MAP).fillna("W")
     final["height_in"] = final.height.map(height_inches)
 
-    # EB shrinkage toward position-group means
+    # EB shrinkage toward pedigree-conditioned means (D4b): the pad target is a
+    # weighted ridge fit of each rate on recruiting score, class, and position,
+    # so a small sample shrinks toward players LIKE him, not the bare position
+    # mean (PRISM's structure with pre-college recruiting rank in place of
+    # consensus rank, which stays excluded by identity).
+    from sklearn.linear_model import Ridge
+    Xp = pd.DataFrame({
+        "rec": final.rec_score.fillna(0),
+        "rec_miss": final.rec_score.isna().astype(float),
+        "cls": final.class_yr.map(CLASS_ORD).fillna(2),
+        **{f"pos_{p}": (final.pos == p).astype(float) for p in ["G", "W", "B"]},
+    })
     for rate, (made, att, m) in SHRINK.items():
-        prior = final.groupby("pos").apply(
-            lambda g: g[made].sum() / max(g[att].sum(), 1), include_groups=False)
-        p = final.pos.map(prior)
-        final[f"{rate}_shr"] = (final[made].fillna(0) + m * p) / (final[att].fillna(0) + m)
+        a, mk = final[att].fillna(0), final[made].fillna(0)
+        fit = a > 0
+        y = mk[fit] / a[fit]
+        reg = Ridge(alpha=1.0).fit(Xp[fit], y, sample_weight=a[fit])
+        # clip predictions to the observed range among decent samples so the
+        # linear fit can't extrapolate a rate no real player posts
+        solid = mk[a >= m / 2] / a[a >= m / 2]
+        p = np.clip(reg.predict(Xp), solid.quantile(0.05), solid.quantile(0.95))
+        final[f"{rate}_shr"] = (mk + m * p) / (a + m)
 
     f = pd.DataFrame({
         "bt_pid": final.bt_pid, "draft_year": final.draft_year, "pick": final.pick,
