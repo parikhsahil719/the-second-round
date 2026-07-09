@@ -22,7 +22,7 @@ export default async function PlayerPage({
 
   const back = from === "war-room"
     ? { href: "/war-room", label: "← Back to the war room" }
-    : { href: "/", label: "← Back to the board" };
+    : { href: "/#board", label: "← Back to the board" };
   const posLabel = p.pos === "G" ? "Guard" : p.pos === "W" ? "Wing" : p.pos === "B" ? "Big" : null;
 
   return (
