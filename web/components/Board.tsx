@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { flushSync } from "react-dom";
 import { type BoardRow } from "@/lib/api";
 import { useLens } from "@/lib/lens";
 import Headshot from "./Headshot";
@@ -50,6 +51,7 @@ export function Row({ row }: { row: BoardRow }) {
     <Link
       href={`/player/${row.slug}`}
       className="card card-link flex items-center gap-3 px-3.5 py-3"
+      style={{ viewTransitionName: `row-${row.slug}` } as React.CSSProperties}
     >
       <PickSquare row={row} />
       <Headshot url={row.headshot_url} name={row.player_name} size={36} />
@@ -115,6 +117,17 @@ const SORT_LABELS: Record<SortKey, string> = {
   age: "Age (youngest)",
   edge: "Value gap",
 };
+
+// Reorders (sort/filter/page) glide rows to their new spots via the View
+// Transitions API. Browsers without it, and reduced-motion users, update instantly.
+function withRowGlide(update: () => void) {
+  const vtDoc = document as Document & { startViewTransition?: (cb: () => void) => void };
+  if (vtDoc.startViewTransition && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    vtDoc.startViewTransition(() => flushSync(update));
+  } else {
+    update();
+  }
+}
 
 // Sort helper: ascending when dir=1, descending when dir=-1, missing values always last.
 function nullsLast(a: number | null | undefined, b: number | null | undefined, dir: number) {
@@ -223,7 +236,10 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
           Sort:
           <select
             value={activeSort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
+            onChange={(e) => {
+              const next = e.target.value as SortKey;
+              withRowGlide(() => setSort(next));
+            }}
             aria-label="Sort the board"
             style={{
               background: "var(--panel)",
@@ -254,7 +270,7 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
                 key={o.id}
                 role="tab"
                 aria-selected={view === o.id}
-                onClick={() => setView(o.id)}
+                onClick={() => withRowGlide(() => setView(o.id))}
                 className="px-3 py-2"
                 style={{
                   background: view === o.id ? "var(--purple)" : "transparent",
@@ -293,7 +309,7 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
           <button
             className="btn-ghost"
             style={{ padding: "6px 12px", opacity: current === 0 ? 0.4 : 1 }}
-            onClick={() => setPage(current - 1)}
+            onClick={() => withRowGlide(() => setPage(current - 1))}
             disabled={current === 0}
           >
             Prev
@@ -301,7 +317,7 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
           {Array.from({ length: pageCount }, (_, i) => (
             <button
               key={i}
-              onClick={() => setPage(i)}
+              onClick={() => withRowGlide(() => setPage(i))}
               aria-label={`Page ${i + 1}`}
               aria-current={i === current ? "page" : undefined}
               className="num rounded-lg"
@@ -321,7 +337,7 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
           <button
             className="btn-ghost"
             style={{ padding: "6px 12px", opacity: current === pageCount - 1 ? 0.4 : 1 }}
-            onClick={() => setPage(current + 1)}
+            onClick={() => withRowGlide(() => setPage(current + 1))}
             disabled={current === pageCount - 1}
           >
             Next

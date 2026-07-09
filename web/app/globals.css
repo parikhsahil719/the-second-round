@@ -20,6 +20,7 @@
   --t-starter: #8a7bd8;
   --t-allstar: #74b7c9;
   --t-elite: #5dcaa5;
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Everything in the app is rem-based (Tailwind), so raising the root size scales
@@ -111,6 +112,7 @@ button:disabled { cursor: default; }
   cursor: pointer;
 }
 .btn:disabled { opacity: 0.45; cursor: default; }
+.btn:hover:not(:disabled) { filter: brightness(1.1); }
 
 .btn-danger {
   background: var(--neg);
@@ -121,6 +123,7 @@ button:disabled { cursor: default; }
   cursor: pointer;
 }
 .btn-danger:disabled { opacity: 0.45; cursor: default; }
+.btn-danger:hover:not(:disabled) { filter: brightness(1.1); }
 .btn-ghost {
   border: 1px solid var(--border);
   color: var(--muted);
@@ -129,6 +132,15 @@ button:disabled { cursor: default; }
   cursor: pointer;
 }
 .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+/* Press feedback: buttons acknowledge the click before the result arrives. */
+.btn, .btn-danger, .btn-ghost {
+  transition: filter 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+}
+.btn:active:not(:disabled),
+.btn-danger:active:not(:disabled),
+.btn-ghost:active:not(:disabled) { transform: scale(0.97); }
+[role="tab"] { transition: background 0.15s, color 0.15s; }
 
 dialog.confirm {
   background: var(--card);
@@ -141,6 +153,21 @@ dialog.confirm {
   margin: auto;
 }
 dialog.confirm::backdrop { background: rgba(0, 0, 0, 0.55); }
+
+/* Confirm dialog settles in rather than popping; the backdrop dims with it. */
+dialog.confirm[open] {
+  opacity: 1;
+  transform: none;
+  transition: opacity 200ms var(--ease-out-quint), transform 200ms var(--ease-out-quint);
+}
+dialog.confirm[open]::backdrop {
+  opacity: 1;
+  transition: opacity 200ms ease-out;
+}
+@starting-style {
+  dialog.confirm[open] { opacity: 0; transform: translateY(6px) scale(0.97); }
+  dialog.confirm[open]::backdrop { opacity: 0; }
+}
 
 .menu { position: relative; }
 .menu > summary {
@@ -179,6 +206,13 @@ dialog.confirm::backdrop { background: rgba(0, 0, 0, 0.55); }
 .menu-item:hover { background: var(--card-hover); }
 .menu-item.danger { color: var(--neg); }
 
+/* The dropdown panel and inline disclosure content fade in on open. */
+.menu[open] .menu-panel { animation: rise-in 160ms var(--ease-out-quint); }
+details[open]:not(.menu) > :not(summary) { animation: rise-in 220ms var(--ease-out-quint); }
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(-4px); }
+}
+
 /* Errors should be impossible to miss. */
 .form-error {
   background: rgba(224, 138, 122, 0.13);
@@ -190,14 +224,58 @@ dialog.confirm::backdrop { background: rgba(0, 0, 0, 0.55); }
   line-height: 1.5;
 }
 
-/* A gentle settle-in on page load; heavier scroll animation deliberately skipped. */
+/* A gentle settle-in on page load. */
 main { animation: pagefade 0.3s ease-out; }
 @keyframes pagefade {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: none; }
 }
+
+/* Scroll-driven motion (progressive enhancement: browsers without support, and
+ * anyone preferring reduced motion, see the static page).
+ * .reveal: editorial sections settle in as they enter the viewport.
+ * .tier-wipe: a tier bar draws itself left-to-right as it scrolls in — the one
+ * signature reveal, reserved for the product's core visual metaphor.
+ * .tier-wipe-load: same draw, time-based, for the player-page hero bar. */
+@keyframes reveal-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes tier-draw {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+    .tier-wipe {
+      animation: tier-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 20% entry 100%;
+    }
+  }
+  .tier-wipe-load { animation: tier-draw 0.6s var(--ease-out-quint) 0.15s both; }
+}
+
+/* Board reorders (sort/filter/page) glide rows to their new spots via the
+ * native View Transitions API; browsers without it change instantly. */
+::view-transition-group(*) {
+  animation-duration: 240ms;
+  animation-timing-function: var(--ease-out-quint);
+}
+
 @media (prefers-reduced-motion: reduce) {
   main { animation: none; }
+  dialog.confirm[open], dialog.confirm[open]::backdrop { transition: none; }
+  .menu[open] .menu-panel,
+  details[open]:not(.menu) > :not(summary) { animation: none; }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
 }
 
 .locked-note {

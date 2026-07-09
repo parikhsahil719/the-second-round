@@ -2,7 +2,7 @@ export const metadata = { title: "How it works | The Second Round" };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mt-8">
+    <section className="reveal mt-8">
       <h2 className="serif text-3xl" style={{ color: "var(--purple-bright)" }}>{title}</h2>
       <div className="mt-2 space-y-3 text-base leading-relaxed" style={{ color: "var(--muted)" }}>
         {children}

@@ -27,5 +27,10 @@
   },
   "overrides": {
     "postcss": ">=8.5.10"
-  }
+  },
+  "browserslist": [
+    "chrome 121",
+    "edge 121",
+    "safari 26"
+  ]
 }

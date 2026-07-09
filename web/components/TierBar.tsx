@@ -2,10 +2,22 @@ import Link from "next/link";
 import { TIERS, TIER_COLORS, TIER_LABELS, type Tier } from "@/lib/api";
 import Term from "./Term";
 
-export function TierBar({ tiers, height = 8 }: { tiers: Record<Tier, number>; height?: number }) {
+export function TierBar({
+  tiers,
+  height = 8,
+  reveal = "scroll",
+}: {
+  tiers: Record<Tier, number>;
+  height?: number;
+  // "scroll" draws the bar as it scrolls into view; "load" draws it on mount
+  // (for bars that sit above the fold); "none" renders it static.
+  reveal?: "scroll" | "load" | "none";
+}) {
+  const revealClass =
+    reveal === "scroll" ? " tier-wipe" : reveal === "load" ? " tier-wipe-load" : "";
   return (
     <div
-      className="flex w-full overflow-hidden rounded"
+      className={`flex w-full overflow-hidden rounded${revealClass}`}
       style={{ height }}
       title={TIERS.map((t) => `${TIER_LABELS[t]}: ${Math.round(tiers[t] * 100)}%`).join(" · ")}
     >

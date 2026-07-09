@@ -7,7 +7,7 @@ function Callout({ row, side }: { row: BoardRow; side: "buy" | "fade" }) {
   return (
     <Link
       href={`/player/${row.slug}`}
-      className="card card-link block px-4 py-3.5"
+      className="card card-link reveal block px-4 py-3.5"
       style={{ borderColor: side === "buy" ? "rgba(93,202,165,0.35)" : "rgba(224,138,122,0.35)" }}
     >
       <div className="flex items-start justify-between gap-2">

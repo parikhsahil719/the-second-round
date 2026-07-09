@@ -89,7 +89,7 @@ export default async function PlayerPage({
               </div>
             </div>
             <div className="mt-3">
-              <TierBar tiers={p.tiers!} height={14} />
+              <TierBar tiers={p.tiers!} height={14} reveal="load" />
             </div>
             <div className="num mt-2 grid grid-cols-3 gap-1 text-xs sm:grid-cols-6" style={{ color: "var(--muted)" }}>
               {TIERS.map((t) => (
