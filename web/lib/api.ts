@@ -55,9 +55,15 @@ export interface BoardRow {
   chip?: "STEAL" | "FAIR" | "REACH" | "SLEEPER" | "UNDRAFTED" | "N/A";
   age?: number | null;
   model_rank?: number | null;
+  // anchor season (e.g. 2025 = the 2024-25 season) when the player's final college
+  // sample was too small alone and the model scored a minutes-weighted blend
+  sample_blend?: number | null;
   why_pos?: string[];
   why_neg?: string[];
 }
+
+// 2025 -> "2024-25"
+export const seasonLabel = (y: number) => `${y - 1}-${String(y).slice(2)}`;
 
 export interface WhyItem {
   text: string;

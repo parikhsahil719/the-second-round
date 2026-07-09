@@ -113,7 +113,14 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   },
   coverage_insufficient: {
     term: "Insufficient sample",
-    short: "Too little college data to grade reliably. Market prices only.",
+    short:
+      "Too little college data to grade reliably, and no earlier qualifying season to fall back on. Market prices only.",
+    category: "Coverage",
+  },
+  sample_blend: {
+    term: "Blended sample",
+    short:
+      "His final college season was too small to grade alone, so the model scores a minutes-weighted blend of his last full season plus everything after it. The tiny recent sample still counts, just at its real weight.",
     category: "Coverage",
   },
 

@@ -128,6 +128,15 @@ export default function HowItWorks() {
           It also only covers players from Division 1 college basketball. International
           prospects show market prices only, with a badge saying so.
         </p>
+        <p>
+          One more honesty rule about small samples. If a player&apos;s last college
+          season was only a handful of games, say an injury cut it short, the model does
+          not pretend those games are his resume, and it does not throw them away either.
+          It blends them with his last full season, each game counting at its real
+          weight, and the site labels the result so you know which seasons the score is
+          built on. A player with no full season at all gets no score, because grading
+          almost nothing would be guessing, and the market price is shown instead.
+        </p>
       </Section>
 
       <Section title="What the scout notes do">

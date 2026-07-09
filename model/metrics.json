@@ -1,14 +1,14 @@
 {
   "market_slot_prior": 1.1289,
-  "marginal": 1.4189,
-  "ordinal_a1_6tier": 1.2741,
-  "ordinal_a4_6tier": 1.2679,
-  "lgbm_6tier": 1.3053,
-  "ordinal_a1_5tier": 1.2719,
-  "ordinal_a4_5tier": 1.2661,
-  "lgbm_5tier": 1.3035,
-  "ordinal_a4_5tier_calibrated": 1.2196,
+  "marginal": 1.4196,
+  "ordinal_a1_6tier": 1.2803,
+  "ordinal_a4_6tier": 1.273,
+  "lgbm_6tier": 1.3124,
+  "ordinal_a1_5tier": 1.2778,
+  "ordinal_a4_5tier": 1.2711,
+  "lgbm_5tier": 1.2974,
+  "ordinal_a4_5tier_calibrated": 1.2237,
   "winner": "ordinal_a4_5tier",
   "gate_passed": false,
-  "n_train": 847
+  "n_train": 853
 }

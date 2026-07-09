@@ -5,7 +5,7 @@ import NotesPanel from "@/components/NotesPanel";
 import Term from "@/components/Term";
 import { TierBar, TierLegend } from "@/components/TierBar";
 import YourComps from "@/components/YourComps";
-import { getPlayer, TIERS, TIER_LABELS } from "@/lib/api";
+import { getPlayer, seasonLabel, TIERS, TIER_LABELS } from "@/lib/api";
 import TeamBadge from "@/components/TeamBadge";
 
 export default async function PlayerPage({
@@ -126,6 +126,14 @@ export default async function PlayerPage({
               The model&apos;s number is his fair price; the other two are what his draft slot
               and consensus rank usually buy. Hover any underlined term for its meaning.
             </p>
+            {p.sample_blend != null && (
+              <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--faint)" }}>
+                His final college season was too small to grade on its own, so the model
+                scores a <Term id="sample_blend">minutes-weighted blend</Term> anchored on
+                his {seasonLabel(p.sample_blend)} season. The model cannot see the injury
+                or absence itself; read the range accordingly.
+              </p>
+            )}
           </section>
 
           <section className="mt-6 grid gap-6 md:grid-cols-2">

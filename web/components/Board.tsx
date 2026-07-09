@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { flushSync } from "react-dom";
-import { type BoardRow } from "@/lib/api";
+import { seasonLabel, type BoardRow } from "@/lib/api";
 import { useLens } from "@/lib/lens";
 import Headshot from "./Headshot";
 import TeamBadge from "./TeamBadge";
@@ -67,6 +67,12 @@ export function Row({ row }: { row: BoardRow }) {
           <div className="mt-1.5 flex items-center gap-3">
             <div className="flex-1">
               <TierBar tiers={row.tiers} height={7} />
+              {row.sample_blend != null && (
+                <p className="mt-1 text-[10px]" style={{ color: "var(--faint)" }}>
+                  <Term id="sample_blend">Blended sample</Term> anchored on his{" "}
+                  {seasonLabel(row.sample_blend)} season
+                </p>
+              )}
             </div>
             <span
               className="num w-28 whitespace-nowrap text-right text-xs"

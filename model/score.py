@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
     feats26["nname"] = feats26.player_name.map(norm)
     fmap = feats26.drop_duplicates("nname").set_index("nname")
-    board = board.join(fmap[["bt_pid", "eligible", "pos", "team"] + FEATURES]
+    board = board.join(fmap[["bt_pid", "eligible", "pos", "team", "sample_blend"] + FEATURES]
                        .rename(columns={"team": "college_team"}), on="nname", rsuffix="_f")
 
     scored = board[board.eligible == True].copy()  # noqa: E712

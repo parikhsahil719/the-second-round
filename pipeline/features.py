@@ -31,6 +31,51 @@ POS_MAP = {"Pure PG": "G", "Scoring PG": "G", "Combo G": "G", "Wing G": "W",
 POWER_CONFS = {"ACC", "SEC", "B10", "B12", "P12", "BE"}
 CLASS_ORD = {"Fr": 1, "So": 2, "Jr": 3, "Sr": 4}
 
+# --- D4 extension: sub-floor final seasons blend with the last qualifying season ---
+# A drafted entity may blend only if its crosswalk match is name-verified; year+pick
+# matches are name-blind and can map internationals to random D1 players (Exum ->
+# a Providence player), so those need per-pid manual verification below.
+BLEND_ALLOWLIST = {127470.0}  # Jayden Quaintance: ASU 2025 -> Kentucky 2026, one bt_pid
+
+# counting stats pool by summing across seasons; season-level rates/metrics pool as
+# an mp_total-weighted mean (same convention as career_bpm)
+BLEND_SUMS = ["gp", "mp_total", "ftm", "fta", "two_m", "two_a", "three_m", "three_a",
+              "rim_m", "rim_a", "mid_m", "mid_a", "dunk_m", "dunk_a"]
+BLEND_MEANS = ["min_pct", "usg", "ts", "efg", "ortg", "adjoe", "porpag", "adrtg",
+               "dporpag", "bpm", "obpm", "dbpm", "ftr", "ast_pct", "tov_pct", "ast_tov",
+               "orb_pct", "drb_pct", "stl_pct", "blk_pct"]
+# context columns taken from the qualifying (anchor) season, the substantive sample
+BLEND_ANCHOR = ["team", "conf", "role", "class_yr", "height", "birthdate", "rec_score"]
+
+
+def blend_subfloor(final: pd.DataFrame, college: pd.DataFrame,
+                   xw: pd.DataFrame) -> pd.DataFrame:
+    """Score injury-shortened players on a minutes-weighted pool of their most
+    recent qualifying season plus everything after it, instead of not at all.
+    Players with no qualifying season ever are left sub-floor (D4 unchanged)."""
+    verified = xw[xw.match_method.isin(["pick+name", "name"]) |
+                  xw.bt_pid.isin(BLEND_ALLOWLIST)]
+    ok_drafted = set(zip(verified.bt_pid, verified.draft_year))
+    final["sample_blend"] = np.nan
+    floor = (final.min_pct >= 40) | (final.mp_total >= 500)
+    for i in final.index[~floor]:
+        row = final.loc[i]
+        if not row.undrafted and (row.bt_pid, row.draft_year) not in ok_drafted:
+            continue
+        hist = college[(college.bt_pid == row.bt_pid) & (college.season <= row.season)]
+        hist = hist.loc[hist.groupby("season").mp_total.idxmax()].sort_values("season")
+        qual = hist[(hist.min_pct >= 40) | (hist.mp_total >= 500)]
+        if qual.empty:
+            continue
+        pool = hist[hist.season >= qual.season.max()]
+        w = pool.mp_total.clip(lower=1)
+        anchor = pool.iloc[0]
+        final.loc[i, BLEND_ANCHOR] = anchor[BLEND_ANCHOR].values
+        final.loc[i, BLEND_SUMS] = pool[BLEND_SUMS].fillna(0).sum().values
+        final.loc[i, BLEND_MEANS] = (pool[BLEND_MEANS].mul(w, axis=0).sum() / w.sum()).values
+        final.loc[i, "sample_blend"] = float(anchor.season)
+    return final
+
 
 def height_inches(h) -> float | None:
     try:
@@ -72,6 +117,8 @@ def build() -> pd.DataFrame:
                           right_on=["bt_pid", "bt_final_season"], suffixes=("", "_e"))
     final = final.loc[final.groupby(["bt_pid", "draft_year"]).mp_total.idxmax()].copy()
 
+    final = blend_subfloor(final, college, xw)
+
     final["pos"] = final.role.map(POS_MAP).fillna("W")
     final["height_in"] = final.height.map(height_inches)
 
@@ -111,25 +158,30 @@ def build() -> pd.DataFrame:
         "orb_pct": final.orb_pct, "drb_pct": final.drb_pct,
         "stl_pct": final.stl_pct, "blk_pct": final.blk_pct,
         "pos": final.pos, "mp_total": final.mp_total, "gp": final.gp,
+        "sample_blend": final.sample_blend,
     })
     f["eligible"] = (final.min_pct >= 40) | (final.mp_total >= 500)
 
-    # trajectory: career rows for the same pid up to the final season
+    # trajectory: career rows up to each entity's scored season (no leakage from
+    # seasons after the draft), with the possibly-blended final row as the delta
+    # endpoint so a sub-floor final season never anchors d_* on its own
     career = college[college.bt_pid.isin(final.bt_pid)]
     career = career.loc[career.groupby(["bt_pid", "season"]).mp_total.idxmax()]
     traj = []
-    for pid, seasons in career.groupby("bt_pid"):
-        s = seasons.sort_values("season")
+    for _, row in final.iterrows():
+        s = career[(career.bt_pid == row.bt_pid) & (career.season <= row.season)]
+        s = s.sort_values("season")
         mp = s.mp_total.clip(lower=1)
+        first = s.iloc[0]
         traj.append({
-            "bt_pid": pid, "n_seasons": len(s),
+            "bt_pid": row.bt_pid, "draft_year": row.draft_year, "n_seasons": len(s),
             "career_bpm": (s.bpm * mp).sum() / mp.sum(),
-            "d_bpm": s.bpm.iloc[-1] - s.bpm.iloc[0],
-            "d_usg": s.usg.iloc[-1] - s.usg.iloc[0],
-            "d_ts": s.ts.iloc[-1] - s.ts.iloc[0],
-            "d_min_pct": s.min_pct.iloc[-1] - s.min_pct.iloc[0],
+            "d_bpm": row.bpm - first.bpm,
+            "d_usg": row.usg - first.usg,
+            "d_ts": row.ts - first.ts,
+            "d_min_pct": row.min_pct - first.min_pct,
         })
-    f = f.merge(pd.DataFrame(traj), on="bt_pid", how="left")
+    f = f.merge(pd.DataFrame(traj), on=["bt_pid", "draft_year"], how="left")
 
     # combine anthro/athleticism by name+year; informative missingness
     combine = combine.assign(nname=combine.player_name.map(norm))

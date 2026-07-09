@@ -317,6 +317,9 @@ def public_row(r) -> dict:
             "star_flag": bool(r.star_flag),
             "age": None if pd.isna(r.age_at_draft) else round(float(r.age_at_draft), 1),
             "model_rank": None if pd.isna(r.model_rank) else int(r.model_rank),
+            # anchor season of a minutes-weighted blend, for players whose final
+            # college season was too small on its own (D4 extension)
+            "sample_blend": None if pd.isna(r.sample_blend) else int(r.sample_blend),
             "why_pos": [w["text"] for w in translate_why(r.why) if w["contribution"] > 0][:2],
             "why_neg": [w["text"] for w in translate_why(r.why) if w["contribution"] < 0][:2],
         })
