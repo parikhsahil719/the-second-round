@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Headshot from "@/components/Headshot";
 import NotesPanel from "@/components/NotesPanel";
+import YourViewInline from "@/components/YourViewInline";
 import Term from "@/components/Term";
 import { TierBar, TierLegend } from "@/components/TierBar";
 import YourComps from "@/components/YourComps";
@@ -85,6 +86,7 @@ export default async function PlayerPage({
               <div className="mt-3">
                 <TierBar tiers={p.market_tiers} height={14} variant="market" reveal="load" />
               </div>
+              <YourViewInline slug={p.slug} />
               <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
                 This is{" "}
                 {p.market_basis === "slot" && p.pick != null
@@ -137,6 +139,7 @@ export default async function PlayerPage({
                 </span>
               ))}
             </div>
+            <YourViewInline slug={p.slug} />
             <div className="mt-3">
               <TierLegend />
             </div>
