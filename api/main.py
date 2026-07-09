@@ -15,6 +15,7 @@ import json
 import re
 import sys
 import time
+import unicodedata
 from pathlib import Path
 from urllib.parse import quote
 
@@ -173,7 +174,10 @@ def translate_why(why_json: str) -> list[dict]:
 
 
 def slugify(name: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    # transliterate accents first (López -> lopez), so diacritics don't leave
+    # holes in the URL (karim-l-pez)
+    ascii_name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "-", ascii_name.lower()).strip("-")
 
 
 def load_board() -> pd.DataFrame:
