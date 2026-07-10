@@ -14,7 +14,7 @@ information. It never sees draft slots, mock drafts, or consensus boards. We the
 its prices to where players actually went. Out of sample, across the 2009 to 2021 classes,
 **the market beats the model on average**. That is the honest headline, and it should
 raise, not lower, your confidence in what follows: **at the extremes of disagreement, the
-model is significantly right.** Its loudest 40 historical favorites returned +5.3 utility
+model is significantly right.** Its loudest 40 historical favorites returned +5.3 value
 points above their draft-slot price (permutation p < 0.0002). Its loudest 40 fades
 returned 2.1 points below (p < 0.0002). The recommendation is not to re-rank the board. It
 is this: when the model disagrees loudly with the room, schedule the extra film session.
@@ -60,7 +60,7 @@ this model pounds the table between picks 18 and 45, history says listen.
 Every historical outcome carries two independent judgments. The first is an absolute
 **tier**: what the player became (Out of League, Fringe, Rotation, Starter, All-Star
 level, or Elite), defined by production bands over the first four seasons, with voter
-accolades excluded. The second is a market-relative **value grade**: realized utility
+accolades excluded. The second is a market-relative **value grade**: realized value
 minus what the slot promised. Anthony Bennett (Fringe at #1, shortfall 11.6) grades Bust.
 Andrew Wiggins (Starter at #1, shortfall 4.6) grades Underdelivered, which is a
 disappointment but never a bust; he returned two-thirds of slot value. Jalen Brunson
@@ -147,7 +147,7 @@ leave-one-class-out, because the market must not see the held-out class either.
 fails structurally: the verdict is unchanged by adding classes, and the learning curve
 slope is about 0.008 per class. The blend test shows the model still carries real signal:
 25% model plus 75% market improves the market to 1.124. Edge realized (out of fold,
-calibrated): the top 40 favorites returned +5.33 utility above market price (permutation
+calibrated): the top 40 favorites returned +5.33 value above market price (permutation
 p < 0.0002), the top 40 fades 2.07 below (p < 0.0002). Calibration curves are tight for
 the four large tiers and honest but wide for STAR (n = 45).
 
@@ -157,7 +157,7 @@ count-matched cutoffs; usage-gated stars requiring at least league-average creat
 burden; accolade-defined stars), each with the market prior and model refit
 leave-one-class-out under that definition. Every variant reaches the same verdicts: the
 market wins on average, and picks 31 to 45 stay its inefficient region. The edge at the
-extremes survives all production-based definitions (+4.0 to +5.4 utility, p < 0.001) but
+extremes survives all production-based definitions (+4.0 to +5.4 value, p < 0.001) but
 collapses under accolade labels (+1.5, p = 0.08). That collapse is the point: the model
 finds players who produce value the market missed, not future vote-getters, and
 selections follow the narrative information the model is built to ignore. The variants
