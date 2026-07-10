@@ -2,7 +2,7 @@
 
 **Live at [thesecondround.dev](https://thesecondround.dev).**
 
-**A quant-style NBA Draft intelligence product.** It prices every prospect with
+**A data-driven NBA Draft intelligence product.** It prices every prospect with
 fair-value tier probabilities, then compares those prices to the market (draft slot +
 consensus boards) to show who was overdrafted, who was underdrafted, and why.
 
@@ -37,9 +37,9 @@ Full write-up: [report/memo.md](report/memo.md) (front-office memo + technical a
 rendered in-app at `/methodology`. Every modeling decision and its rationale:
 [DECISIONS.md](DECISIONS.md).
 
-Built on the framework a quant uses for any prediction market:
+Built on a disciplined forecasting framework:
 
-1. **Define the tradeable event**: six career tiers over a player's first 4 NBA seasons:
+1. **Define the outcome to forecast**: six career tiers over a player's first 4 NBA seasons:
    Out of League / Fringe / Rotation / Starter / All-Star / Elite
 2. **Convert the market to implied probability**: historical tier rates by draft slot,
    applied to both actual slots and consensus board ranks
