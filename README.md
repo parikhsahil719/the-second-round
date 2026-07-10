@@ -2,12 +2,17 @@
 
 **Live at [thesecondround.dev](https://thesecondround.dev).**
 
-**A quant-style NBA Draft intelligence product.** Fair-value tier probabilities for draft
-prospects, compared against the market (draft slot + consensus boards) to find who was
-overdrafted, who was underdrafted, and why. Plus a scout-notes layer (free-text notes →
-LLM extraction → capped Bayesian updates that produce your own EV, rank, and call beside
-the model's), personal player comps, a draft-day availability war room, free accounts
-with Fan / Scout / Front-office roles, and a private scout book per user.
+**A quant-style NBA Draft intelligence product.** It prices every prospect with
+fair-value tier probabilities, then compares those prices to the market (draft slot +
+consensus boards) to show who was overdrafted, who was underdrafted, and why.
+
+Layered on top of the model:
+
+- **Scout notes** — free-text notes run through LLM extraction and capped Bayesian
+  updates, producing your own EV, rank, and call beside the model's
+- **Personal comps** for every prospect
+- A **draft-day war room** that simulates who's still on the board at your pick
+- **Free accounts** (Fan / Scout / Front-office roles) with a private scout book per user
 
 ## Headline results (2009–2021 backtest, leave-one-class-out)
 
@@ -20,6 +25,11 @@ with Fan / Scout / Front-office roles, and a private scout book per user.
   out-of-sample log loss beats the slot prior. Bane, Kyle Anderson, and Brunson country.
 - A 25/75 model-market blend beats the market alone (1.124 vs 1.129): the box score still
   carries signal the league underweights.
+- **The headline survives relabeling.** Refit from scratch under four independent outcome
+  definitions (production bands, average-of-4-seasons, usage-based, accolade-inclusive),
+  the market-beats-model-on-average result holds in all four; the top-40 edge stays
+  significant in three, weakening only when voter accolades are folded in, which conflates
+  drafting with retention. Full grid: [report/robustness.md](report/robustness.md).
 
 ![OOF calibration](report/figs/calibration_oof.png)
 
@@ -46,14 +56,17 @@ Built on the framework a quant uses for any prediction market:
 
 Live in production at [thesecondround.dev](https://thesecondround.dev): model, board,
 scout-notes layer with personal EV/rank/comps, war room, accounts with role
-entitlements, and the full report. Currently in a friends testing round ahead of the
-2027 live mode (see the roadmap in the memo).
+entitlements, and the full report. The 2026 draft has now been held (June 23, 2026), so
+the board stands as the model's on-the-record 2026 call, still too early to grade against
+rookie play. Currently in a friends testing round ahead of the 2027 live mode (see the
+roadmap in the memo).
 
 ## Using it
 
 Go to [thesecondround.dev](https://thesecondround.dev). The product is free; an
 account (also free) keeps your scout book, your comps, and your role across visits.
-Self-hosting isn't a supported path: the hosted product is the product.
+The hosted product is the product, but everything below is open: fork it and tune the
+labels, features, or model however you like.
 
 ## Reproducing the research
 
@@ -77,6 +90,7 @@ python -m venv .venv
 .venv/Scripts/python model/score.py                  # 2026 board + artifacts
 .venv/Scripts/python model/simulate.py               # war-room availability sim
 .venv/Scripts/python model/notes.py                  # Bayesian layer self-test
+.venv/Scripts/python model/robustness.py             # relabeling robustness study
 ```
 
 Every number in the memo falls out of those scripts deterministically.
@@ -86,19 +100,21 @@ Every number in the memo falls out of those scripts deterministically.
 ```
 data/       raw cache (gitignored) + processed parquet
 pipeline/   scrapers, cleaning, entity resolution, labeling, features
-model/      training, calibration, bootstrap, slot base rates, bayes update, comps
-api/        FastAPI: /board, /player/{id}, /notes
+model/      training, calibration, bootstrap, slot base rates, bayes update, comps, robustness
+api/        FastAPI: board, player, war room, posterior, notes, auth
 web/        Next.js app
+supabase/   Postgres schema + auth email templates
 notebooks/  EDA, backtest, calibration plots
-report/     methodology writeup + final 2026 board
+report/     methodology memo, robustness study, 2026 board
 ```
 
 ## Data sources (all free)
 
 Barttorvik/T-Rank, Basketball-Reference, nba_api (combine), CBBpy/ESPN,
 RSCI (via Sports-Reference), Rookie Scale + NBADraft.net consensus boards.
-Raw scraped tables are **not** redistributed in this repo. The pipeline
-rebuilds them, politely rate-limited and cached.
+Player headshots are best-effort matched from ESPN's public API. Raw scraped
+tables are **not** redistributed in this repo. The pipeline rebuilds them,
+politely rate-limited and cached.
 
 ## Deployment
 
