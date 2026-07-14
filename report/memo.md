@@ -199,8 +199,9 @@ prediction of career outcomes (leave-one-year-out log-likelihood -678.5 versus -
 and rookies in the top tenth of summer production went on to clearly better careers
 than the bottom tenth. The history argued for more weight than we allow: the cap holds
 a full summer to half the influence of a full scout note, small samples shrink toward
-no effect, and skipping Summer League counts as no evidence at all. The draft-day
-numbers stay on the record; the updated view sits beside them, dated.
+no effect, and skipping Summer League counts as no evidence at all. The numbers on the
+board are the updated view, dated; the draft-day call stays on the record in the
+repository, and this memo's results are all draft-day results.
 
 **Reproducibility.** Every number in this memo regenerates from the public repository:
 pipeline (scrape, crosswalk, labels, features) and model (prior, train, score, simulate),

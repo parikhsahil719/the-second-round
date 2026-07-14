@@ -180,10 +180,44 @@ def slugify(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", ascii_name.lower()).strip("-")
 
 
+def _logit(p: float) -> float:
+    c = min(max(p, 1e-3), 1 - 1e-3)
+    return float(np.log(c / (1 - c)))
+
+
+def _sigmoid(x: float) -> float:
+    return float(1 / (1 + np.exp(-x)))
+
+
 def load_board() -> pd.DataFrame:
     b = pd.read_parquet(PROCESSED / "board_2026.parquet")
     b["slug"] = b.player_name.map(slugify)
-    # model's rank in this class (by valuation, among scored players)
+    # Summer League overlay (D22): the board IS the current view. Posterior tiers,
+    # EV, and edges replace the draft-day numbers wherever SL evidence exists (the
+    # draft-day call stays in git history and the memo), and the interval endpoints
+    # shift by the same logit displacement as the point estimate — the BookBar rule:
+    # the model's uncertainty tilted by the evidence, never a fabricated interval.
+    if SL_POST is not None:
+        for name, s in SL_POST[SL_POST.prior_basis == "model"].iterrows():
+            hit = b.index[b.player_name == name]
+            if hit.empty:
+                continue
+            i = hit[0]
+            d = _logit(float(s.p_STAR_sl)) - _logit(float(b.at[i, "p_STAR"]))
+            for t in TIERS:
+                b.at[i, f"p_{t}"] = float(s[f"p_{t}_sl"])
+            b.at[i, "p_STAR"] = float(s.p_STAR_sl)
+            b.at[i, "p_STAR_lo"] = _sigmoid(_logit(float(b.at[i, "p_STAR_lo"])) + d)
+            b.at[i, "p_STAR_hi"] = _sigmoid(_logit(float(b.at[i, "p_STAR_hi"])) + d)
+            b.at[i, "ev_model"] = float(s.ev_sl)
+            if pd.notna(b.at[i, "ev_slot"]):
+                b.at[i, "edge_slot"] = float(s.ev_sl) - float(b.at[i, "ev_slot"])
+            if pd.notna(b.at[i, "ev_consensus"]):
+                b.at[i, "edge_consensus"] = float(s.ev_sl) - float(b.at[i, "ev_consensus"])
+        b = b.sort_values("ev_model", ascending=False, na_position="last",
+                          kind="stable", ignore_index=True)
+    # model's rank in this class (by valuation, among scored players); chips derive
+    # from this rank, so they too follow the updated EV
     b["model_rank"] = b.ev_model.rank(ascending=False, method="min")
     return b
 
@@ -314,6 +348,11 @@ def your_view(r, posterior: np.ndarray) -> dict:
     }
 
 
+# loaded before the board: load_board() folds the SL posterior into it
+SL_POST = pd.read_parquet(PROCESSED / "sl_posterior.parquet").set_index("player_name") \
+    if (PROCESSED / "sl_posterior.parquet").exists() else None
+SL_BOX = pd.read_parquet(PROCESSED / "summer_league.parquet").set_index("player_name") \
+    if (PROCESSED / "summer_league.parquet").exists() else None
 BOARD = load_board()
 # pick (1-60, 0 = undrafted pool) -> historical 6-tier distribution; the market's
 # base rates, used for war-room pricing and as the notes prior for non-model players
@@ -323,10 +362,6 @@ SEEDS = json.loads((PROCESSED / "seed_note_results.json").read_text(encoding="ut
 
 AVAIL = pd.read_parquet(PROCESSED / "availability.parquet") \
     if (PROCESSED / "availability.parquet").exists() else None
-SL_POST = pd.read_parquet(PROCESSED / "sl_posterior.parquet").set_index("player_name") \
-    if (PROCESSED / "sl_posterior.parquet").exists() else None
-SL_BOX = pd.read_parquet(PROCESSED / "summer_league.parquet").set_index("player_name") \
-    if (PROCESSED / "summer_league.parquet").exists() else None
 if (PROCESSED / "headshots.parquet").exists():
     _hs = pd.read_parquet(PROCESSED / "headshots.parquet")
     HEADSHOTS = dict(zip(_hs.player_name, _hs.headshot_url))
@@ -435,6 +470,18 @@ def player(slug: str):
     d = public_row(r)
     if r.coverage == "model":
         d["why"] = translate_why(r.why)
+        # SL isn't a model feature, so it can't appear in the attribution — but it
+        # moved the price, so it leads the list as its own line (D22)
+        if "sl" in d and d["sl"]["prior_basis"] == "model":
+            s, b = SL_POST.loc[r.player_name], SL_BOX.loc[r.player_name]
+            up = float(s.tilt) >= 0
+            d["why"].insert(0, {
+                "text": (f"Summer League {'strengthened the case' if up else 'raised questions'}: "
+                         f"{float(b['min']):.0f}{' productive' if up else ' quiet'} minutes "
+                         f"across {b.events}"),
+                "feature": "summer_league",
+                "contribution": round(float(s.tilt), 2),
+            })
         # defensive dedupe: a comp list is five DIFFERENT players even if a stale
         # artifact slips a repeated season-row through
         comps, seen = [], set()

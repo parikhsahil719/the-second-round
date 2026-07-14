@@ -187,7 +187,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   sl_updated: {
     term: "SL-updated",
     short:
-      "The draft-day distribution after a reliability-weighted Summer League update. July evidence is minutes-shrunk and capped, so it can nudge the call but never overwhelm it.",
+      "These numbers fold in Summer League box scores as reliability-weighted evidence. July minutes are shrunk and capped, so a hot summer can nudge the call but never overwhelm it.",
     category: "Scouting",
   },
   prior: {

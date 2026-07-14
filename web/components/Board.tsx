@@ -43,11 +43,11 @@ function PickSquare({ row }: { row: BoardRow }) {
   );
 }
 
-export function Row({ row, book, slMode }: { row: BoardRow; book?: BookEntry; slMode?: boolean }) {
+export function Row({ row, book }: { row: BoardRow; book?: BookEntry }) {
   const { lens, signedIn, role } = useLens();
-  // The SL-updated view swaps in the posterior; a noted row keeps the scout's
-  // own posterior (which already stacks on SL evidence server-side).
-  const sl = slMode ? row.sl : undefined;
+  // Rows with SL evidence already carry it in their numbers (the API folds the
+  // posterior in); `sl` here only drives the freshness footnote and market rows.
+  const sl = row.sl;
   // Value/edge numbers are a Front-office thing. For visitors the Front-office
   // lens shows them; Fan and Scout keep the clean board (Scout's layer is notes).
   const showEv = signedIn ? role === "office" : lens === "office";
@@ -106,15 +106,12 @@ export function Row({ row, book, slMode }: { row: BoardRow; book?: BookEntry; sl
         ) : row.coverage === "model" && row.tiers ? (
           <div className="mt-1.5 flex items-center gap-3">
             <div className="flex-1">
-              <TierBar tiers={sl ? sl.tiers : row.tiers} height={7} />
+              <TierBar tiers={row.tiers} height={7} />
               {/* plain text, no Term: this sits inside the row Link and a term
                   popover's glossary link would nest <a> in <a> */}
               {sl ? (
                 <p className="mt-1 text-[10px]" style={{ color: "var(--faint)" }}>
-                  SL-updated · as of {shortDate(sl.as_of)} ·{" "}
-                  <span className="num">
-                    tilt {sl.tilt >= 0 ? "+" : ""}{sl.tilt.toFixed(2)}
-                  </span>
+                  SL-updated · as of {shortDate(sl.as_of)}
                 </p>
               ) : row.sample_blend != null && (
                 <p className="mt-1 text-[10px]" style={{ color: "var(--faint)" }}>
@@ -122,27 +119,17 @@ export function Row({ row, book, slMode }: { row: BoardRow; book?: BookEntry; sl
                 </p>
               )}
             </div>
-            {sl ? (
-              <span
-                className="num w-28 whitespace-nowrap text-right text-xs"
-                style={{ color: "var(--muted)" }}
-                title="His chance of reaching All-Star level or better, after capped Summer League evidence. The model's range belongs to the draft-day view."
-              >
-                STAR {Math.round(sl.p_star * 100)}%
+            <span
+              className="num w-28 whitespace-nowrap text-right text-xs"
+              style={{ color: "var(--muted)" }}
+              title="His chance of reaching All-Star level or better. The bracket is the model's range: wider means less sure."
+            >
+              STAR {Math.round((row.p_star ?? 0) * 100)}%
+              <span style={{ color: "var(--faint)" }}>
+                {" "}
+                [{Math.round((row.p_star_lo ?? 0) * 100)}–{Math.round((row.p_star_hi ?? 0) * 100)}]
               </span>
-            ) : (
-              <span
-                className="num w-28 whitespace-nowrap text-right text-xs"
-                style={{ color: "var(--muted)" }}
-                title="His chance of reaching All-Star level or better. The bracket is the model's range: wider means less sure."
-              >
-                STAR {Math.round((row.p_star ?? 0) * 100)}%
-                <span style={{ color: "var(--faint)" }}>
-                  {" "}
-                  [{Math.round((row.p_star_lo ?? 0) * 100)}–{Math.round((row.p_star_hi ?? 0) * 100)}]
-                </span>
-              </span>
-            )}
+            </span>
           </div>
         ) : row.market_tiers ? (
           <div className="mt-1.5 flex items-center gap-3">
@@ -243,13 +230,6 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
   const [sort, setSort] = useState<SortKey>("model");
   const [view, setView] = useState<ViewKey>("all");
   const [page, setPage] = useState(0);
-  // Default to the current, SL-updated view; the draft-day call stays one tap away.
-  const [slView, setSlView] = useState(true);
-  const slAsOf = useMemo(
-    () => rows.reduce<string | null>(
-      (m, r) => (r.sl && (m == null || r.sl.as_of > m) ? r.sl.as_of : m), null),
-    [rows],
-  );
 
   // Leaving for a player page and coming back should land where you were:
   // page/sort/filter/search persist for the session and restore on mount.
@@ -265,7 +245,6 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
         setSort(s.sort ?? "model");
         setView(s.view ?? "all");
         setPage(s.page ?? 0);
-        setSlView(s.slv ?? true);
       }
     } catch {
       // corrupted state: fall back to defaults
@@ -338,11 +317,11 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
 
   useEffect(() => {
     try {
-      sessionStorage.setItem(STATE_KEY, JSON.stringify({ q, sort, view, page: current, slv: slView }));
+      sessionStorage.setItem(STATE_KEY, JSON.stringify({ q, sort, view, page: current }));
     } catch {
       // storage unavailable (private mode quota etc.): state just won't persist
     }
-  }, [q, sort, view, current, slView]);
+  }, [q, sort, view, current]);
   const visible = filtered.slice(current * PER_PAGE, current * PER_PAGE + PER_PAGE);
 
   const sortKeys: SortKey[] = [
@@ -424,37 +403,6 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
             ))}
           </select>
         </label>
-        {slAsOf != null && (
-          <div className="flex items-center gap-2 text-sm" style={{ color: "var(--muted)" }}>
-            View:
-            <div
-              className="flex overflow-hidden rounded-lg border text-xs"
-              style={{ borderColor: "var(--border)" }}
-              role="tablist"
-              aria-label="Board view: Summer League updated or draft day"
-            >
-              {[
-                { id: true, label: `SL-updated · ${shortDate(slAsOf)}` },
-                { id: false, label: "Draft day" },
-              ].map((o) => (
-                <button
-                  key={o.label}
-                  role="tab"
-                  aria-selected={slView === o.id}
-                  onClick={() => withRowGlide(() => setSlView(o.id))}
-                  className="px-3 py-2"
-                  style={{
-                    background: slView === o.id ? "var(--purple)" : "transparent",
-                    color: slView === o.id ? "#16141b" : "var(--muted)",
-                    fontWeight: slView === o.id ? 600 : 400,
-                  }}
-                >
-                  {o.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
         <div className="flex items-center gap-2 text-sm" style={{ color: "var(--muted)" }}>
           Filter:
           <div
@@ -488,7 +436,7 @@ export default function Board({ rows }: { rows: BoardRow[] }) {
       </div>
       <div className="flex flex-col gap-2">
         {visible.map((r) => (
-          <Row key={r.slug} row={r} book={book.get(r.slug)} slMode={slView} />
+          <Row key={r.slug} row={r} book={book.get(r.slug)} />
         ))}
         {filtered.length === 0 && (
           <p className="py-8 text-center text-sm" style={{ color: "var(--muted)" }}>

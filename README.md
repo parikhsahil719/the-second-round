@@ -59,10 +59,10 @@ scout-notes layer with personal EV/rank/comps, war room, accounts with role
 entitlements, and the full report. The 2026 draft has now been held (June 23, 2026), so
 the board stands as the model's on-the-record 2026 call, still too early to grade against
 rookie play. Currently in a friends testing round ahead of the 2027 live mode (see the
-roadmap in the memo). Through July 2026 the board also carries a daily Summer League
-update beside the locked draft-day call: box scores become capped evidence, weighted by
-how much summer ball has historically told us, refreshed each morning until Vegas ends
-on July 19.
+roadmap in the memo). Through July 2026 the board folds in a daily Summer League
+update: box scores become capped evidence, weighted by how much summer ball has
+historically told us, refreshed each morning until Vegas ends on July 19. The
+draft-day call itself stays on the record in the repo and the memo.
 
 ## Using it
 
