@@ -47,8 +47,8 @@ Built on a disciplined forecasting framework:
 4. **Add signal features**: research-backed college signals with empirical-Bayes shrinkage
 5. **Model the full distribution**: calibrated tier probabilities with bootstrap intervals,
    never a single score
-6. **Update with new evidence**: scout notes → LLM extraction → capped likelihood ratios →
-   Bayesian posterior
+6. **Update with new evidence**: scout notes and Summer League box scores → capped
+   likelihood ratios → Bayesian posterior, with reliability weights measured on history
 7. **Compare fair value to market**: EV edge + star-tail disagreement flags
 8. **Backtest and calibrate**: leave-one-draft-class-out CV on the 2009-2021 classes
 
@@ -59,7 +59,10 @@ scout-notes layer with personal EV/rank/comps, war room, accounts with role
 entitlements, and the full report. The 2026 draft has now been held (June 23, 2026), so
 the board stands as the model's on-the-record 2026 call, still too early to grade against
 rookie play. Currently in a friends testing round ahead of the 2027 live mode (see the
-roadmap in the memo).
+roadmap in the memo). Through July 2026 the board also carries a daily Summer League
+update beside the locked draft-day call: box scores become capped evidence, weighted by
+how much summer ball has historically told us, refreshed each morning until Vegas ends
+on July 19.
 
 ## Using it
 
@@ -91,6 +94,11 @@ python -m venv .venv
 .venv/Scripts/python model/simulate.py               # war-room availability sim
 .venv/Scripts/python model/notes.py                  # Bayesian layer self-test
 .venv/Scripts/python model/robustness.py             # relabeling robustness study
+
+# Summer League evidence layer (July only)
+.venv/Scripts/python pipeline/summer.py --history    # 2010-2025 SL box scores (one-time)
+.venv/Scripts/python model/sl_calibrate.py           # reliability fit, leave-one-year-out
+.venv/Scripts/python model/summer.py                 # daily 2026 pull + posterior
 ```
 
 Every number in the memo falls out of those scripts deterministically.

@@ -184,6 +184,12 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       "Free text you write about what you saw. The model reads it and nudges the numbers, capped so a note is evidence, never a veto.",
     category: "Scouting",
   },
+  sl_updated: {
+    term: "SL-updated",
+    short:
+      "The draft-day distribution after a reliability-weighted Summer League update. July evidence is minutes-shrunk and capped, so it can nudge the call but never overwhelm it.",
+    category: "Scouting",
+  },
   prior: {
     term: "Prior",
     short: "The model's numbers before your notes are applied.",

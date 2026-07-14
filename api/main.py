@@ -282,8 +282,10 @@ def market_prior(r) -> tuple[np.ndarray, str] | None:
 
 
 def note_prior(r) -> np.ndarray | None:
-    """The prior a scout's note updates: the model's posterior where one exists,
-    else the market prior. None only when the player has no anchor at all."""
+    """Notes stack on live SL evidence, then the model, then the market."""
+    if SL_POST is not None and r.player_name in SL_POST.index:
+        s = SL_POST.loc[r.player_name]
+        return np.array([float(s[f"p_{t}_sl"]) for t in TIERS])
     if r.coverage == "model":
         return np.array([float(getattr(r, f"p_{t}")) for t in TIERS])
     mp = market_prior(r)
@@ -321,6 +323,10 @@ SEEDS = json.loads((PROCESSED / "seed_note_results.json").read_text(encoding="ut
 
 AVAIL = pd.read_parquet(PROCESSED / "availability.parquet") \
     if (PROCESSED / "availability.parquet").exists() else None
+SL_POST = pd.read_parquet(PROCESSED / "sl_posterior.parquet").set_index("player_name") \
+    if (PROCESSED / "sl_posterior.parquet").exists() else None
+SL_BOX = pd.read_parquet(PROCESSED / "summer_league.parquet").set_index("player_name") \
+    if (PROCESSED / "summer_league.parquet").exists() else None
 if (PROCESSED / "headshots.parquet").exists():
     _hs = pd.read_parquet(PROCESSED / "headshots.parquet")
     HEADSHOTS = dict(zip(_hs.player_name, _hs.headshot_url))
@@ -369,6 +375,27 @@ def public_row(r) -> dict:
                 "ev_market": round(float(dist @ util), 2),
                 "market_basis": basis,
             })
+    if SL_POST is not None and SL_BOX is not None and r.player_name in SL_POST.index \
+            and r.player_name in SL_BOX.index:
+        s, b = SL_POST.loc[r.player_name], SL_BOX.loc[r.player_name]
+        d["sl"] = {
+            "as_of": str(s.as_of),
+            "tilt": round(float(s.tilt), 3),
+            "tiers": {t: round(float(s[f"p_{t}_sl"]), 4) for t in TIERS},
+            "p_star": round(float(s.p_STAR_sl), 4),
+            "ev": round(float(s.ev_sl), 2),
+            "ev_delta": round(float(s.ev_delta), 2),
+            "prior_basis": s.prior_basis,
+            "moved": s.moved,
+            "box": {
+                "gp": int(b.gp),
+                "mpg": round(float(b.mpg), 1),
+                "pts": round(float(b.pts_pg), 1),
+                "reb": round(float(b.reb_pg), 1),
+                "ast": round(float(b.ast_pg), 1),
+                "ts": round(float(b.ts), 3),
+            },
+        }
     return d
 
 
@@ -395,7 +422,8 @@ def memo():
 @app.get("/board")
 def board():
     rows = [public_row(r) for r in BOARD.itertuples()]
-    return {"rows": rows, "tiers": TIERS}
+    sl_as_of = None if SL_POST is None or SL_POST.empty else str(SL_POST.as_of.max())
+    return {"rows": rows, "tiers": TIERS, "sl_as_of": sl_as_of}
 
 
 @app.get("/player/{slug}")

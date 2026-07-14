@@ -21,6 +21,18 @@ export const TIER_COLORS: Record<Tier, string> = {
   ELITE: "var(--t-elite)",
 };
 
+export interface SlBlock {
+  as_of: string;
+  tilt: number;
+  tiers: Record<Tier, number>;
+  p_star: number;
+  ev: number;
+  ev_delta: number;
+  prior_basis: "model" | "market";
+  moved: string;
+  box: { gp: number; mpg: number; pts: number; reb: number; ast: number; ts: number };
+}
+
 // Plain-language versions of the production bands in pipeline/labels.py. Tiers are
 // earned by what a player did on an NBA court (minutes, then role, then two-year
 // peak impact), never by All-Star votes; a real All-Star selection shows up
@@ -65,6 +77,7 @@ export interface BoardRow {
   market_tiers?: Record<Tier, number>;
   ev_market?: number;
   market_basis?: "slot" | "consensus" | "undrafted";
+  sl?: SlBlock;
 }
 
 export interface YourView {
@@ -88,6 +101,10 @@ export interface BookEntry {
 
 // 2025 -> "2024-25"
 export const seasonLabel = (y: number) => `${y - 1}-${String(y).slice(2)}`;
+
+// "2026-07-14" -> "Jul 14"
+export const shortDate = (iso: string) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 export interface WhyItem {
   text: string;

@@ -5,8 +5,55 @@ import BookBar from "@/components/BookBar";
 import NotesPanel from "@/components/NotesPanel";
 import Term from "@/components/Term";
 import YourComps from "@/components/YourComps";
-import { getPlayer, seasonLabel, TIER_LABELS } from "@/lib/api";
+import { getPlayer, seasonLabel, shortDate, TIER_LABELS, type PlayerDetail } from "@/lib/api";
 import TeamBadge from "@/components/TeamBadge";
+import { TierBar } from "@/components/TierBar";
+
+// The Summer League evidence card: draft-day call and SL-updated view stacked,
+// same bar grammar as everywhere else (dashed = market-based, solid = model).
+function SlCard({ p }: { p: PlayerDetail }) {
+  const sl = p.sl!;
+  const draftDay = p.tiers ?? p.market_tiers;
+  const variant = sl.prior_basis === "market" ? ("market" as const) : ("solid" as const);
+  return (
+    <section className="card mt-6 px-5 py-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="serif text-xl" style={{ color: "var(--purple-bright)" }}>Summer League</h2>
+        <p className="text-xs" style={{ color: "var(--faint)" }}>as of {shortDate(sl.as_of)}</p>
+      </div>
+      <p className="num mt-2 text-sm" style={{ color: "var(--muted)" }}>
+        {sl.box.gp} GP · {sl.box.mpg.toFixed(1)} MPG · {sl.box.pts.toFixed(1)} PTS ·{" "}
+        {sl.box.reb.toFixed(1)} REB · {sl.box.ast.toFixed(1)} AST · {Math.round(sl.box.ts * 100)} TS%
+      </p>
+      <div className="mt-4 space-y-3">
+        {draftDay && (
+          <div>
+            <p className="mb-1 text-xs" style={{ color: "var(--muted)" }}>
+              Draft day — the on-the-record call
+            </p>
+            <TierBar tiers={draftDay} height={10} variant={p.tiers ? "solid" : "market"} />
+          </div>
+        )}
+        <div>
+          <p className="mb-1 text-xs" style={{ color: "var(--muted)" }}>
+            <Term id="sl_updated">SL-updated</Term> — today
+          </p>
+          <TierBar tiers={sl.tiers} height={10} variant={variant} />
+        </div>
+      </div>
+      <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+        <span style={{ color: sl.ev_delta >= 0 ? "var(--pos)" : "var(--neg)" }}>
+          {sl.ev_delta >= 0 ? "▲" : "▼"}
+        </span>{" "}
+        {sl.moved}
+      </p>
+      <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--faint)" }}>
+        One July week, capped by design: Summer League can nudge the call, never overwhelm
+        it. The model&apos;s uncertainty range belongs to the draft-day numbers above.
+      </p>
+    </section>
+  );
+}
 
 export default async function PlayerPage({
   params,
@@ -97,6 +144,7 @@ export default async function PlayerPage({
               </p>
             </section>
           )}
+          {p.sl && <SlCard p={p} />}
           {p.market_tiers && (
             <NotesPanel
               slug={p.slug}
@@ -159,6 +207,8 @@ export default async function PlayerPage({
               </p>
             )}
           </section>
+
+          {p.sl && <SlCard p={p} />}
 
           <section className="mt-6 grid gap-6 md:grid-cols-2">
             <div className="card px-5 py-5">

@@ -190,6 +190,18 @@ absolute slide). Fat tails price real falls of 10 to 20 picks; the minimum proba
 simulation assigns to any actual 2026 outcome is 0.2%. Ten thousand simulations, no
 team-need modeling.
 
+**Summer League as evidence.** After the draft, July box scores update the board the
+same way scout notes do: as capped evidence on top of the frozen draft-day call, never a
+re-run of the model. How much weight a summer can carry was measured, not guessed.
+Across 585 drafted rookies from the 2010 to 2021 Summer Leagues, adding a
+minutes-weighted production signal to the draft-slot baseline improved held-out
+prediction of career outcomes (leave-one-year-out log-likelihood -678.5 versus -685.9),
+and rookies in the top tenth of summer production went on to clearly better careers
+than the bottom tenth. The history argued for more weight than we allow: the cap holds
+a full summer to half the influence of a full scout note, small samples shrink toward
+no effect, and skipping Summer League counts as no evidence at all. The draft-day
+numbers stay on the record; the updated view sits beside them, dated.
+
 **Reproducibility.** Every number in this memo regenerates from the public repository:
 pipeline (scrape, crosswalk, labels, features) and model (prior, train, score, simulate),
 one command each, all sources free, raw scrapes cached and never redistributed.
