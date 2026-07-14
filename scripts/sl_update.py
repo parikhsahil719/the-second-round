@@ -1,10 +1,10 @@
 """Daily Summer League refresh: build, commit only deploy artifacts, push.
 
 Register once (runs 08:00 daily through the morning after Vegas ends; the log
-lives in gitignored data/raw/sl/):
+lives in gitignored data/raw/sl/update.log via the sl_update.cmd wrapper):
 
-  schtasks /Create /TN "SecondRoundSL" /SC DAILY /ST 08:00 /ED 07/20/2026 /TR ^
-    "cmd /c \"\"C:\\Users\\parik\\Documents\\NBA Draft Intelligence Model\\.venv\\Scripts\\python.exe\" \"C:\\Users\\parik\\Documents\\NBA Draft Intelligence Model\\scripts\\sl_update.py\" >> \"C:\\Users\\parik\\Documents\\NBA Draft Intelligence Model\\data\\raw\\sl\\update.log\" 2>&1\""
+  schtasks /Create /TN "SecondRoundSL" /SC DAILY /ST 08:00 /ED 07/20/2026 ^
+    /TR "\"<repo>\scripts\sl_update.cmd\""
 
 Remove after Summer League: schtasks /Delete /TN "SecondRoundSL" /F
 """
