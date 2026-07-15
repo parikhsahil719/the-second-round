@@ -56,43 +56,51 @@ def calibration_rows() -> pd.DataFrame:
     return out[out.z.notna()].reset_index(drop=True)
 
 
-CANDIDATES = [(round(k, 3), m0) for k in np.arange(0, .401, .01)
-              for m0 in (25, 50, 75, 100, 150, 200, 300)]
+# The saturation asymptote (cap) is fitted alongside k and M0: history itself
+# says where the response to a monster summer flattens (LOYO degrades past ~1.0),
+# so the ceiling is measured, not asserted. 1.2 stays a hard grid bound — beyond
+# it the likelihood is flat and the tail (n~30) can't tell levels apart anyway.
+CANDIDATES = [(round(k, 2), m0, cap)
+              for k in np.arange(0.05, 1.21, 0.05)
+              for m0 in (25, 50, 75, 100, 150, 200, 300)
+              for cap in (0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2)]
 
 
-def log_likelihood(df: pd.DataFrame, k: float, m0: float, zcol: str = "z") -> float:
+def log_likelihood(df: pd.DataFrame, k: float, m0: float, cap: float,
+                   zcol: str = "z") -> float:
     priors = df[[f"prior_{t}" for t in TIERS]].to_numpy(float)
     y = df.tier.map(TIERS.index).to_numpy()
     m_eff = df["min"].to_numpy() / (df["min"].to_numpy() + m0)
-    cap = min(.4, 2 * k)
-    tilt = np.clip(k * df[zcol].to_numpy(float) * m_eff, -cap, cap)
+    raw = k * df[zcol].to_numpy(float) * m_eff
+    tilt = cap * np.tanh(raw / cap) if cap > 0 else raw * 0
     post = priors * np.exp(np.outer(tilt, GRADIENT))
     post /= post.sum(axis=1, keepdims=True)
     return float(np.log(np.clip(post[np.arange(len(df)), y], 1e-12, 1)).sum())
 
 
 def loyo(df: pd.DataFrame, zcol: str = "z") -> tuple[float, float]:
-    """Held-out log-likelihood: refit (k, M0) with each SL year left out, score it
-    on that year. The honest measure of whether SL adds signal beyond the slot."""
+    """Held-out log-likelihood: refit (k, M0, cap) with each SL year left out,
+    score it on that year. The honest measure of whether SL adds signal."""
     with_sl = without = 0.0
     for year in sorted(df.sl_year.unique()):
         train, held = df[df.sl_year != year], df[df.sl_year == year]
-        k, m0 = max(CANDIDATES, key=lambda c: log_likelihood(train, *c, zcol=zcol))
-        with_sl += log_likelihood(held, k, m0, zcol=zcol)
-        without += log_likelihood(held, 0, 100, zcol=zcol)
+        best = max(CANDIDATES, key=lambda c: log_likelihood(train, *c, zcol=zcol))
+        with_sl += log_likelihood(held, *best, zcol=zcol)
+        without += log_likelihood(held, 0, 100, 0.4, zcol=zcol)
     return with_sl, without
 
 
 def fit(df: pd.DataFrame) -> dict:
     loyo_with, loyo_without = loyo(df)
     if loyo_with > loyo_without:
-        k, m0 = max(CANDIDATES, key=lambda c: log_likelihood(df, *c))
+        k, m0, cap = max(CANDIDATES, key=lambda c: log_likelihood(df, *c))
     else:
-        k, m0 = 0.0, 100  # no held-out signal -> the layer ships inert
+        k, m0, cap = 0.0, 100, 0.0  # no held-out signal -> the layer ships inert
     return {
         "k": k,
         "M0": m0,
-        "cap": min(.4, 2 * k),
+        "cap": cap,
+        "form": "tanh",
         "loyo_ll_with": loyo_with,
         "loyo_ll_without": loyo_without,
         "n": len(df),
@@ -112,7 +120,8 @@ if __name__ == "__main__":
     prior = np.array([.1, .15, .35, .25, .1, .05])
     assert sl_update(prior, 2, 0, params["k"], params["cap"])[1] == 0
     if params["cap"]:
-        assert sl_update(prior, 99, 1, params["k"], params["cap"])[1] == params["cap"]
+        extreme = sl_update(prior, 99, 1, params["k"], params["cap"])[1]
+        assert np.isclose(extreme, params["cap"]), "asymptote must bind at extreme z"
 
     print(json.dumps(params, indent=2))
     print("\nrows by year:\n", rows.groupby("sl_year").size().to_string())

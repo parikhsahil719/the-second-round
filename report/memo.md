@@ -191,17 +191,21 @@ simulation assigns to any actual 2026 outcome is 0.2%. Ten thousand simulations,
 team-need modeling.
 
 **Summer League as evidence.** After the draft, July box scores update the board the
-same way scout notes do: as capped evidence on top of the frozen draft-day call, never a
-re-run of the model. How much weight a summer can carry was measured, not guessed.
+same way scout notes do: as bounded evidence on top of the frozen draft-day call, never
+a re-run of the model. How much weight a summer can carry was measured, not guessed.
 Across 585 drafted rookies from the 2010 to 2021 Summer Leagues, adding a
 minutes-weighted production signal to the draft-slot baseline improved held-out
-prediction of career outcomes (leave-one-year-out log-likelihood -678.5 versus -685.9),
+prediction of career outcomes (leave-one-year-out log-likelihood -676.1 versus -685.9),
 and rookies in the top tenth of summer production went on to clearly better careers
-than the bottom tenth. The history argued for more weight than we allow: the cap holds
-a full summer to half the influence of a full scout note, small samples shrink toward
-no effect, and skipping Summer League counts as no evidence at all. The numbers on the
-board are the updated view, dated; the draft-day call stays on the record in the
-repository, and this memo's results are all draft-day results.
+than the bottom tenth. The response saturates rather than stopping at a hard cap: each
+extra hot game adds less than the one before, with the saturation level itself fitted
+from history, which says the effect flattens right around the weight of one maxed-out
+scout note. Even the very best summers earn humility: among the top 5 percent of
+summer performances since 2010, one in five players still ended up a fringe NBA player
+or worse. Small samples shrink toward no effect, and skipping Summer League counts as
+no evidence at all. The numbers on the board are the updated view, dated; the draft-day
+call stays on the record in the repository, and this memo's results are all draft-day
+results.
 
 **Reproducibility.** Every number in this memo regenerates from the public repository:
 pipeline (scrape, crosswalk, labels, features) and model (prior, train, score, simulate),

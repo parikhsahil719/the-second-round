@@ -187,7 +187,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   sl_updated: {
     term: "SL-updated",
     short:
-      "These numbers fold in Summer League box scores as reliability-weighted evidence. July minutes are shrunk and capped, so a hot summer can nudge the call but never overwhelm it.",
+      "These numbers fold in Summer League box scores as reliability-weighted evidence. July minutes are weighted by sample size, and the hotter the summer, the less each extra game adds — history sets that curve, so a great July informs the call but never decides it.",
     category: "Scouting",
   },
   prior: {

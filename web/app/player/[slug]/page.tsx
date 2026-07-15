@@ -24,8 +24,8 @@ function SlCard({ sl }: { sl: SlBlock }) {
       </p>
       <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--faint)" }}>
         Already folded into the numbers above as{" "}
-        <Term id="sl_updated">capped evidence</Term>: one July week can nudge the call,
-        never overwhelm it.
+        <Term id="sl_updated">saturating evidence</Term>: the hotter the July, the less
+        each extra game adds, so a summer informs the call but never decides it.
       </p>
     </section>
   );

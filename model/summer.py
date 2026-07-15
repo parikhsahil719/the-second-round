@@ -26,7 +26,10 @@ SL_NAME_OVERRIDES: dict[str, str] = {}
 
 def sl_update(prior: np.ndarray, z: float, m_eff: float, k: float,
               cap: float) -> tuple[np.ndarray, float]:
-    tilt = float(np.clip(k * z * m_eff, -cap, cap))
+    # tanh saturation, not a hard clip (D22): an extreme summer keeps adding
+    # weight with diminishing returns. `cap` is the asymptote, fitted by LOYO —
+    # history itself says the response flattens, so the ceiling is measured.
+    tilt = float(cap * np.tanh(k * z * m_eff / cap)) if cap > 0 else 0.0
     if not np.isfinite(tilt):  # a NaN here would 500 the whole board
         tilt = 0.0
     posterior = np.asarray(prior, dtype=float) * np.exp(tilt * GRADIENT)
@@ -131,19 +134,21 @@ def build() -> tuple[pd.DataFrame, pd.DataFrame]:
     post.to_parquet(PROCESSED / "sl_posterior.parquet", index=False)
 
     print(post.nlargest(10, "ev_delta")[["player_name", "ev_delta", "tilt"]].to_string(index=False))
-    print(f"cap-bound: {np.isclose(post.tilt.abs(), params['cap']).sum()}")
+    print(f"near-saturation (>95% of cap): {(post.tilt.abs() > 0.95 * params['cap']).sum()}")
     return box, post
 
 
 def _self_test() -> None:
     prior = np.array([.1, .15, .35, .25, .1, .05])
-    up, _ = sl_update(prior, 1, 1, .2, .4)
+    up, t_up = sl_update(prior, 1, 1, .2, .4)
     down, _ = sl_update(prior, -1, 1, .2, .4)
     capped, tilt = sl_update(prior, 99, 1, .2, .4)
     zero, _ = sl_update(prior, 2, 0, .2, .4)
     assert up[4:].sum() > prior[4:].sum() > down[4:].sum()
-    assert tilt == .4 and np.isclose(capped.sum(), 1)
+    assert np.isclose(tilt, .4) and np.isclose(capped.sum(), 1)  # asymptote reached
+    assert 0 < t_up < .2  # saturation already discounts a mid-size signal
     assert np.allclose(zero, prior)
+    assert sl_update(prior, 99, 1, .2, 0)[1] == 0  # cap 0 -> layer inert
 
 
 if __name__ == "__main__":
