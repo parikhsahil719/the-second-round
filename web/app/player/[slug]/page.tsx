@@ -94,12 +94,14 @@ export default async function PlayerPage({
               {/* pick trades and player trades both land here; "traded to" is
                   the phrasing that's true for both (NBA.com reads the same way) */}
               {p.drafted_by ? (
-                <span
-                  title={`This pick was traded by the ${team(p.drafted_by)?.name ?? p.drafted_by}`}
-                  style={{ textDecorationLine: "underline", textDecorationStyle: "dotted", textUnderlineOffset: 3 }}
-                >
-                  traded to{" "}
-                </span>
+                <>
+                  <Term
+                    id="pick_traded"
+                    note={`This pick was traded by the ${team(p.drafted_by)?.name ?? p.drafted_by}.`}
+                  >
+                    traded to
+                  </Term>{" "}
+                </>
               ) : null}
               <TeamBadge code={p.team} showName logoSize={16} className="align-middle" />
             </>

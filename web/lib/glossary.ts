@@ -110,6 +110,12 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       "The model's rank and expected value frozen on draft night, before any Summer League evidence. Shown next to the current numbers as the receipt: what the model said then, versus what it says now.",
     category: "Ranking",
   },
+  pick_traded: {
+    term: "Traded pick",
+    short:
+      "The pick that selected this player changed hands, on draft night or after, so the team shown is where he actually is, not who was on the clock. The popover names the team that traded the pick.",
+    category: "Ranking",
+  },
 
   coverage_outside: {
     term: "Outside coverage",

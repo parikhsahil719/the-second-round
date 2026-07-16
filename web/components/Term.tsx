@@ -24,7 +24,17 @@ const MAX_W = 280;
  * MUST render outside any ancestor <a>/<Link>: it is a <button>, and a button inside
  * an anchor is invalid HTML that hijacks the link. See the design spec's hard constraint.
  */
-export default function Term({ id, children }: { id: string; children?: ReactNode }) {
+export default function Term({
+  id,
+  children,
+  note,
+}: {
+  id: string;
+  children?: ReactNode;
+  // per-use override of the glossary short text, for entries whose popover
+  // carries instance data (e.g. which team traded this particular pick)
+  note?: string;
+}) {
   const entry = GLOSSARY[id];
   const panelId = useId();
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -140,7 +150,7 @@ export default function Term({ id, children }: { id: string; children?: ReactNod
         onPointerEnter={(e) => mouse(e) && clearTimers()}
         onPointerLeave={(e) => mouse(e) && scheduleClose()}
       >
-        <span>{entry.short}</span>{" "}
+        <span>{note ?? entry.short}</span>{" "}
         <Link href={`/glossary#${id}`} className="link">
           Full glossary →
         </Link>
