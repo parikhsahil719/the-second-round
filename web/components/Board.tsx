@@ -112,6 +112,28 @@ export function Row({ row, book }: { row: BoardRow; book?: BookEntry }) {
               {sl ? (
                 <p className="mt-1 text-[10px]" style={{ color: "var(--faint)" }}>
                   SL-updated · as of {shortDate(sl.as_of)}
+                  {row.draft_rank != null && row.model_rank != null && (
+                    <span
+                      className="num"
+                      title={`Model rank on draft day: #${row.draft_rank}, now #${row.model_rank}`}
+                      style={{
+                        color:
+                          row.draft_rank > row.model_rank
+                            ? "var(--pos)"
+                            : row.draft_rank < row.model_rank
+                              ? "var(--neg)"
+                              : "var(--faint)",
+                      }}
+                    >
+                      {" · "}
+                      {row.draft_rank > row.model_rank
+                        ? `▲${row.draft_rank - row.model_rank}`
+                        : row.draft_rank < row.model_rank
+                          ? `▼${row.model_rank - row.draft_rank}`
+                          : "—"}{" "}
+                      since draft day
+                    </span>
+                  )}
                 </p>
               ) : row.sample_blend != null && (
                 <p className="mt-1 text-[10px]" style={{ color: "var(--faint)" }}>

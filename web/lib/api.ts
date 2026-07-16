@@ -67,6 +67,10 @@ export interface BoardRow {
   chip?: "STEAL" | "FAIR" | "REACH" | "SLEEPER" | "UNDRAFTED" | "N/A";
   age?: number | null;
   model_rank?: number | null;
+  // the draft-day call, frozen before any Summer League evidence; differs from
+  // model_rank/ev_model only once SL has moved the numbers
+  draft_rank?: number | null;
+  draft_ev?: number | null;
   // anchor season (e.g. 2025 = the 2024-25 season) when the player's final college
   // sample was too small alone and the model scored a minutes-weighted blend
   sample_blend?: number | null;

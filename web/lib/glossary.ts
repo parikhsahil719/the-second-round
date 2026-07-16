@@ -104,6 +104,12 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     short: "Where the model ranks the player within this class by expected value.",
     category: "Ranking",
   },
+  draft_day_call: {
+    term: "Draft-day call",
+    short:
+      "The model's rank and expected value frozen on draft night, before any Summer League evidence. Shown next to the current numbers as the receipt: what the model said then, versus what it says now.",
+    category: "Ranking",
+  },
 
   coverage_outside: {
     term: "Outside coverage",

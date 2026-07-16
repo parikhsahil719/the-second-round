@@ -192,6 +192,11 @@ def _sigmoid(x: float) -> float:
 def load_board() -> pd.DataFrame:
     b = pd.read_parquet(PROCESSED / "board_2026.parquet")
     b["slug"] = b.player_name.map(slugify)
+    # The parquet IS the draft-day board (frozen since commit 7efaa03; the SL fold
+    # below is in-memory only). Capture the draft-day call before folding so the
+    # receipt survives next to the updated numbers.
+    b["draft_ev"] = b.ev_model
+    b["draft_rank"] = b.ev_model.rank(ascending=False, method="min")
     # Summer League overlay (D22): the board IS the current view. Posterior tiers,
     # EV, and edges replace the draft-day numbers wherever SL evidence exists (the
     # draft-day call stays in git history and the memo), and the interval endpoints
@@ -392,6 +397,9 @@ def public_row(r) -> dict:
             "star_flag": bool(r.star_flag),
             "age": None if pd.isna(r.age_at_draft) else round(float(r.age_at_draft), 1),
             "model_rank": None if pd.isna(r.model_rank) else int(r.model_rank),
+            # the draft-day call, frozen: what the model said before any SL evidence
+            "draft_rank": None if pd.isna(r.draft_rank) else int(r.draft_rank),
+            "draft_ev": None if pd.isna(r.draft_ev) else round(float(r.draft_ev), 2),
             # anchor season of a minutes-weighted blend, for players whose final
             # college season was too small on its own (D4 extension)
             "sample_blend": None if pd.isna(r.sample_blend) else int(r.sample_blend),

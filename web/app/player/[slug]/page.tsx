@@ -10,8 +10,14 @@ import TeamBadge from "@/components/TeamBadge";
 
 // The Summer League stat line. The evidence itself is already folded into the
 // distribution and EV above (the API bakes the posterior in); this card is the
-// receipt: what he actually did in July.
-function SlCard({ sl }: { sl: SlBlock }) {
+// receipt: what he actually did in July, and what the model said before it.
+function SlCard({
+  sl,
+  draftCall,
+}: {
+  sl: SlBlock;
+  draftCall?: { rank: number; ev: number; rankNow: number; evNow: number };
+}) {
   return (
     <section className="card mt-6 px-5 py-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -22,6 +28,26 @@ function SlCard({ sl }: { sl: SlBlock }) {
         {sl.box.gp} GP · {sl.box.mpg.toFixed(1)} MPG · {sl.box.pts.toFixed(1)} PTS ·{" "}
         {sl.box.reb.toFixed(1)} REB · {sl.box.ast.toFixed(1)} AST · {Math.round(sl.box.ts * 100)} TS%
       </p>
+      {draftCall && (
+        <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
+          <Term id="draft_day_call">Draft-day call</Term>:{" "}
+          <span className="num">rank #{draftCall.rank} · EV {draftCall.ev.toFixed(1)}</span>
+          {" → "}after July:{" "}
+          <span
+            className="num"
+            style={{
+              color:
+                draftCall.rankNow < draftCall.rank
+                  ? "var(--pos)"
+                  : draftCall.rankNow > draftCall.rank
+                    ? "var(--neg)"
+                    : "var(--muted)",
+            }}
+          >
+            rank #{draftCall.rankNow} · EV {draftCall.evNow.toFixed(1)}
+          </span>
+        </p>
+      )}
       <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--faint)" }}>
         Already folded into the numbers above as{" "}
         <Term id="sl_updated">saturating evidence</Term>: the hotter the July, the less
@@ -71,6 +97,12 @@ export default async function PlayerPage({
             <>
               {" · "}
               <Term id="model_rank">model&apos;s rank</Term> #{p.model_rank}
+            </>
+          )}
+          {p.sl && p.draft_rank != null && (
+            <>
+              {" · "}
+              <Term id="draft_day_call">draft day</Term> #{p.draft_rank}
             </>
           )}
           {p.consensus_rank != null && (
@@ -194,7 +226,17 @@ export default async function PlayerPage({
             )}
           </section>
 
-          {p.sl && <SlCard sl={p.sl} />}
+          {p.sl && (
+            <SlCard
+              sl={p.sl}
+              draftCall={
+                p.draft_rank != null && p.draft_ev != null &&
+                p.model_rank != null && p.ev_model != null
+                  ? { rank: p.draft_rank, ev: p.draft_ev, rankNow: p.model_rank, evNow: p.ev_model }
+                  : undefined
+              }
+            />
+          )}
 
           <section className="mt-6 grid gap-6 md:grid-cols-2">
             <div className="card px-5 py-5">
