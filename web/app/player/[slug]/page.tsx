@@ -7,6 +7,7 @@ import Term from "@/components/Term";
 import YourComps from "@/components/YourComps";
 import { getPlayer, seasonLabel, shortDate, TIER_LABELS, type SlBlock } from "@/lib/api";
 import TeamBadge from "@/components/TeamBadge";
+import { team } from "@/lib/teams";
 
 // The Summer League stat line. The evidence itself is already folded into the
 // distribution and EV above (the API bakes the posterior in); this card is the
@@ -92,7 +93,14 @@ export default async function PlayerPage({
               {" · "}
               {/* pick trades and player trades both land here; "traded to" is
                   the phrasing that's true for both (NBA.com reads the same way) */}
-              {p.drafted_by ? "traded to " : ""}
+              {p.drafted_by ? (
+                <span
+                  title={`This pick was traded by the ${team(p.drafted_by)?.name ?? p.drafted_by}`}
+                  style={{ textDecorationLine: "underline", textDecorationStyle: "dotted", textUnderlineOffset: 3 }}
+                >
+                  traded to{" "}
+                </span>
+              ) : null}
               <TeamBadge code={p.team} showName logoSize={16} className="align-middle" />
             </>
           ) : null}
