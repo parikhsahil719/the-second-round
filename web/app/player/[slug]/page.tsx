@@ -87,12 +87,18 @@ export default async function PlayerPage({
         </div>
         <span className="max-w-sm text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
           {p.pick != null ? `Pick ${p.pick}` : "Undrafted"}
-          {p.pick != null && p.team ? (
+          {p.team ? (
             <>
               {" · "}
               <TeamBadge code={p.team} showName logoSize={16} className="align-middle" />
             </>
           ) : null}
+          {p.drafted_by && (
+            <span style={{ color: "var(--faint)" }}>
+              {" "}
+              (drafted by <TeamBadge code={p.drafted_by} logoSize={12} className="align-middle" />)
+            </span>
+          )}
           {p.model_rank != null && (
             <>
               {" · "}

@@ -52,7 +52,10 @@ export interface BoardRow {
   college: string | null;
   headshot_url?: string | null;
   pick: number | null;
+  // current NBA team (most recent SL affiliation, else the drafting team);
+  // drafted_by is set only when those differ (draft-night trade, UDFA signing)
   team: string | null;
+  drafted_by?: string | null;
   consensus_rank: number | null;
   coverage: "model" | "insufficient_sample" | "outside_coverage";
   pos: string | null;

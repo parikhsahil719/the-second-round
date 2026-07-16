@@ -125,7 +125,7 @@ def build() -> tuple[pd.DataFrame, pd.DataFrame]:
         })
 
     box = matched[[
-        "player_name", "player_id", "gp", "min", "mpg", "pts_pg", "reb_pg",
+        "player_name", "player_id", "team", "gp", "min", "mpg", "pts_pg", "reb_pg",
         "ast_pg", "stl_pg", "blk_pg", "tov_pg", "ts", "prod36", "z", "m_eff",
         "events", "as_of",
     ]].sort_values("player_name").reset_index(drop=True)

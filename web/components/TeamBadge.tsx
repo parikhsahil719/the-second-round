@@ -25,7 +25,7 @@ export default function TeamBadge({
     <span
       className={`inline-flex items-center gap-1 ${className}`}
       style={style}
-      title={showName ? undefined : `Drafted by the ${t.name}`}
+      title={showName ? undefined : t.name}
     >
       {t.logo && !logoFailed && (
         // eslint-disable-next-line @next/next/no-img-element

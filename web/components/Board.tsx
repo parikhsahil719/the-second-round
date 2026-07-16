@@ -26,11 +26,13 @@ function Chip({ chip }: { chip?: string }) {
 }
 
 function PickSquare({ row }: { row: BoardRow }) {
-  if (row.pick == null)
-    return <div className="pick-square small-label">UDFA</div>;
   return (
     <div className="flex shrink-0 flex-col items-center gap-1">
-      <div className={`pick-square num ${row.pick <= 14 ? "lottery" : ""}`}>{row.pick}</div>
+      {row.pick == null ? (
+        <div className="pick-square small-label">UDFA</div>
+      ) : (
+        <div className={`pick-square num ${row.pick <= 14 ? "lottery" : ""}`}>{row.pick}</div>
+      )}
       {row.team && (
         <TeamBadge
           code={row.team}

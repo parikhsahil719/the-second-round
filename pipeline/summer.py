@@ -132,11 +132,16 @@ def aggregate_games(games: pd.DataFrame) -> pd.DataFrame:
     # `teams` flags the rare cross-team namesake for the match report.
     keys = ["sl_year", "player_name"]
     sums = d.groupby(keys, as_index=False)[numeric].sum()
+    # Golden State fields two California Classic squads under their own codes;
+    # everything else is already the NBA-standard abbreviation.
+    d["team_abbreviation"] = d.team_abbreviation.replace({"GWB": "GSW", "GWG": "GSW"})
     meta = d.groupby(keys, as_index=False).agg(
         player_id=("player_id", "first"),
         gp=("game_id", "nunique"),
         events=("event", lambda x: " + ".join(sorted(set(x)))),
         teams=("team_abbreviation", "nunique"),
+        # rows are date-sorted, so this is the team he most recently suited up for
+        team=("team_abbreviation", "last"),
         as_of=("game_date", "max"),
     )
     out = meta.merge(sums, on=keys)

@@ -374,12 +374,26 @@ else:
     HEADSHOTS = {}
 
 
+# draft data uses Basketball-Reference codes, SL data NBA-standard ones; same team
+_BREF_TO_NBA = {"BRK": "BKN", "PHO": "PHX", "CHO": "CHA"}
+
+
 def public_row(r) -> dict:
+    # Current team: who he suited up for most recently in Summer League (catches
+    # draft-night trades and undrafted signings); the drafting team otherwise.
+    drafted_by = None if pd.isna(r.team) else r.team
+    current = drafted_by
+    if SL_BOX is not None and "team" in SL_BOX.columns and r.player_name in SL_BOX.index:
+        sl_team = SL_BOX.at[r.player_name, "team"]
+        if pd.notna(sl_team):
+            current = sl_team
+    same = drafted_by is not None and _BREF_TO_NBA.get(drafted_by, drafted_by) == current
     d = {"slug": r.slug, "player_name": r.player_name,
          "college": None if pd.isna(r.college) else r.college,
          "headshot_url": HEADSHOTS.get(r.player_name),
          "pick": None if pd.isna(r.pick) else int(r.pick),
-         "team": None if pd.isna(r.team) else r.team,  # NBA team that drafted him
+         "team": current,
+         "drafted_by": None if same or current == drafted_by else drafted_by,
          "consensus_rank": None if pd.isna(r.consensus_rank) else int(r.consensus_rank),
          "coverage": r.coverage, "pos": None if pd.isna(r.pos) else r.pos}
     if r.coverage == "model":
