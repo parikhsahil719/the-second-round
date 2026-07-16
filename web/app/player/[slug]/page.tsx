@@ -90,15 +90,12 @@ export default async function PlayerPage({
           {p.team ? (
             <>
               {" · "}
+              {/* pick trades and player trades both land here; "traded to" is
+                  the phrasing that's true for both (NBA.com reads the same way) */}
+              {p.drafted_by ? "traded to " : ""}
               <TeamBadge code={p.team} showName logoSize={16} className="align-middle" />
             </>
           ) : null}
-          {p.drafted_by && (
-            <span style={{ color: "var(--faint)" }}>
-              {" "}
-              (drafted by <TeamBadge code={p.drafted_by} logoSize={12} className="align-middle" />)
-            </span>
-          )}
           {p.model_rank != null && (
             <>
               {" · "}
