@@ -158,8 +158,48 @@ because a comp presents its outcome as settled. Comp logic itself is an annotati
 
 ## 9. Build order, when the time comes
 
-1. Publish the grading rule page (cheap, do before 2026-27 opener).
+1. Publish the grading rule page (cheap, do before 2026-27 opener). Fully specified
+   in section 10; no open decisions remain.
 2. Class dropdown with the frozen 2026 board (the archive skeleton).
 3. NBA Layer-1 updater (research project: fit k_s / cap_s LOYO on 2009-2021).
 4. On-pace tags + player-page "then vs now" view.
 5. Structured scout conviction + private scorecard.
+
+## 10. The /scoreboard page (planned 2026-07-17, decisions locked)
+
+**Route and title:** `/scoreboard`, titled "The scoreboard", subtitle "How every
+player gets graded, frozen before the games begin." Named for what it becomes: in
+2030 the first class's forecast-vs-outcome receipt lands here and the title needs
+no change. Static page, no auth, sibling to /methodology and /glossary in structure
+and register (plain English, first person, exact numbers welcome).
+
+**Sections, in order:**
+
+1. **The bet.** One short paragraph: the model commits to probabilities on draft
+   night, then reality grades it. No re-ranking after the fact, no partial credit.
+2. **The six outcomes.** The tier ladder translated to plain English, one row per
+   tier, with the exact frozen thresholds visible (a reader should be able to
+   compute a player's tier themselves from Basketball Reference). Same table as
+   section 4 of this doc.
+3. **The fine print.** The 4-season window (draft_year+1 through +4); the ELITE
+   VORP cutoff frozen at 10.03 and why recomputing it later would be cheating;
+   awards and All-Star selections never count (production only); source stats are
+   Basketball Reference, traded players use combined-season totals; discovered
+   bugs become errata notes, never silent regrades.
+4. **What happens next.** Each class is graded the summer its window closes; the
+   2026 class grades in summer 2030 and the results will appear on this page.
+   No mention of the live in-season updater or on-pace tags until they ship.
+5. **The freeze date.** Plain dated statement: rules frozen July 17, 2026, before
+   any 2026-class player took an NBA floor. No GitHub link, nothing technical.
+
+**Navigation:** linked from the site footer and from a one-line mention on
+/methodology. Nothing else changes.
+
+**Post-deploy step:** submit the live URL to the Internet Archive's Wayback
+Machine so a neutral third party holds the timestamped copy. This is an ops step,
+not page content.
+
+**Future growth:** when a class grades, this page gains its receipt (forecast vs
+realized tier per player). That UI is deliberately not designed now; nothing about
+today's page constrains it beyond the URL and the promise in section "What
+happens next."
