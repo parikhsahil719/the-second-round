@@ -102,6 +102,15 @@ Frozen details that would otherwise drift:
 This table is published on the site before the 2026-27 season opener. The model
 does not get to grade itself on a curve.
 
+**Grading requires no model.** The realized tier is arithmetic: the frozen ladder
+applied to actual NBA stats, by the same code that labeled the training data. Only
+the in-window live updater (section 3) is a new model. The scoreboard therefore
+never depends on anything built after the forecast was made.
+
+**Rule changes ride forward, never backward.** If a tier definition is ever revised,
+the revision applies only to classes forecast after the change. Every class is graded
+under the exact rule that was frozen when its snapshot was taken.
+
 ## 5. Interim display: the "on pace" tier
 
 Years 1-3 the archive shows the Layer-1 probabilities plus a provisional tier,
@@ -119,6 +128,13 @@ One entry per draft class. Each class page has three states:
    outlook and on-pace tags. "What we said" never moves; "where he stands" does.
 3. **Graded (year 4+):** forecast vs realized tier for every player, the calibration
    receipt. 2026 is the inaugural entry and reaches this state in summer 2030.
+
+**The comp pool refreshes itself.** Comps already display each historical neighbor's
+realized tier (score.py, D19). When a class is graded, it joins the comp pool, so a
+2031 prospect can comp to a 2026 player with his real outcome attached. Only fully
+graded players enter the pool; on-pace provisional tiers never appear in a comp line,
+because a comp presents its outcome as settled. Comp logic itself is an annotation
+(D19) and may be refined at any time.
 
 ## 7. Scout overlay mechanics (Layer 2)
 
