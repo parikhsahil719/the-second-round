@@ -21,6 +21,8 @@ api/usage.json
 
 # local agent/tooling config
 .claude/
+.agents/
+.codex/
 
 # private working notes: handoffs, session artifacts, internal scratch.
 # Never pushed; local memory only.
@@ -30,6 +32,8 @@ HANDOFF*.md
 # internal planning, design, and ops docs: kept local, not in the public repo.
 # The public-facing writeup lives in report/ and README.md.
 /CLAUDE.md
+/AGENTS.md
+/index.md
 /PRODUCT.md
 /DESIGN.md
 /DECISIONS.md
